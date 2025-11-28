@@ -3,90 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hichoux Store - Admin Dashboard</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>Hichoux Store - Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         body { font-family: 'Inter', sans-serif; }
         .page { display: none; }
         .page.active { display: block; }
-        .sidebar-item { transition: all 0.2s; }
+        .sidebar-item { transition: all 0.2s; cursor: pointer; }
         .sidebar-item.active { background: #dbeafe; color: #2563eb; }
         .sidebar-item:hover:not(.active) { background: #f3f4f6; }
         .toast { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="bg-gray-100">
-
-    <!-- Toast Container -->
+    <!-- Toast -->
     <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[90] hidden">
+    <!-- Loading -->
+    <div id="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[90] hidden">
         <div class="bg-white rounded-2xl p-8 flex flex-col items-center">
             <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p id="loading-text">Chargement...</p>
+            <p>Chargement...</p>
         </div>
     </div>
 
-    <!-- Config Modal -->
-    <div id="config-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-            <div class="flex items-center space-x-3 mb-6">
-                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl font-bold">H</div>
-                <div>
-                    <h3 class="text-xl font-bold">Hichoux Store Admin</h3>
-                    <p class="text-gray-500 text-sm">Configuration</p>
-                </div>
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 id="product-modal-title" class="text-xl font-bold">Ajouter Produit</h3>
+                <button onclick="closeProductModal()" class="text-2xl hover:text-red-500">×</button>
             </div>
-            
-            <div class="space-y-4">
+            <form id="product-form" class="p-6 space-y-4">
+                <input type="hidden" id="product-id">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Supabase URL *</label>
-                    <input type="text" id="config-url" placeholder="https://xxx.supabase.co" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium mb-1">Nom *</label>
+                    <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-xl">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Supabase Anon Key *</label>
-                    <input type="text" id="config-key" placeholder="eyJhbGciOiJIUzI1NiIs..." class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium mb-1">SKU</label>
+                    <input type="text" id="product-sku" class="w-full px-4 py-2 border rounded-xl" placeholder="AUTO">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Prix *</label>
+                        <input type="number" id="product-price" required class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Ancien Prix</label>
+                        <input type="number" id="product-compare-price" class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Stock *</label>
+                        <input type="number" id="product-stock" required value="100" class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Catégorie</label>
+                        <select id="product-category" class="w-full px-4 py-2 border rounded-xl">
+                            <option value="homme">Homme</option>
+                            <option value="femme">Femme</option>
+                            <option value="unisexe">Unisexe</option>
+                            <option value="cosmetique">Cosmétique</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Google Apps Script URL</label>
-                    <input type="text" id="config-gas" placeholder="https://script.google.com/macros/s/xxx/exec" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium mb-1">Image URL</label>
+                    <input type="url" id="product-image" class="w-full px-4 py-2 border rounded-xl" placeholder="https://...">
                 </div>
-            </div>
-            
-            <div class="bg-blue-50 rounded-xl p-4 mt-4">
-                <p class="text-sm text-blue-800">💡 Obtenir ces informations depuis votre <a href="https://supabase.com" target="_blank" class="underline font-medium">dashboard Supabase</a> → Settings → API</p>
-            </div>
-            
-            <div class="flex space-x-3 mt-6">
-                <button onclick="skipConfig()" class="flex-1 px-4 py-2.5 border-2 rounded-xl hover:bg-gray-50 transition font-medium">Mode Demo</button>
-                <button onclick="saveConfig()" class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium">Connecter</button>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Description</label>
+                    <textarea id="product-description" rows="3" class="w-full px-4 py-2 border rounded-xl"></textarea>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="product-featured" class="mr-2">
+                    <label for="product-featured">Produit vedette</label>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeProductModal()" class="flex-1 px-4 py-3 border rounded-xl hover:bg-gray-50">Annuler</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Enregistrer</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Order Detail Modal -->
-    <div id="order-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 hidden">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div class="p-6 border-b flex items-center justify-between">
-                <h3 class="text-xl font-bold">Commande <span id="modal-order-id"></span></h3>
-                <button onclick="closeOrderModal()" class="p-2 hover:bg-gray-100 rounded-lg transition text-xl">✕</button>
+    <!-- Order Modal -->
+    <div id="order-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Détails Commande <span id="order-modal-number"></span></h3>
+                <button onclick="closeOrderModal()" class="text-2xl hover:text-red-500">×</button>
             </div>
-            <div id="modal-content" class="p-6 overflow-y-auto flex-1"></div>
-            <div id="modal-actions" class="p-4 bg-gray-50 border-t flex flex-wrap gap-2 justify-end"></div>
+            <div id="order-modal-content" class="p-6"></div>
         </div>
     </div>
 
@@ -96,150 +113,100 @@
         <aside class="w-64 bg-white border-r flex flex-col shrink-0">
             <div class="p-6 border-b">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">H</div>
+                    <img id="sidebar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%232563eb'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-xl">
                     <div>
-                        <h1 class="font-bold text-gray-900">Hichoux Store</h1>
-                        <p class="text-xs" id="connection-status"><span class="text-gray-400">● Mode Demo</span></p>
+                        <h1 id="sidebar-store-name" class="font-bold">Hichoux Store</h1>
+                        <p id="connection-status" class="text-xs text-green-500">● Connecté</p>
                     </div>
                 </div>
             </div>
-
             <nav class="flex-1 p-4 space-y-1">
-                <button onclick="showPage('dashboard')" data-page="dashboard" class="sidebar-item active w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>📊</span><span>Dashboard</span></span>
-                </button>
-                <button onclick="showPage('orders')" data-page="orders" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>📦</span><span>Commandes</span></span>
-                    <span class="badge-orders bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="showPage('confirmation')" data-page="confirmation" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>📞</span><span>Confirmation</span></span>
-                    <span class="badge-confirmation bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="showPage('shipping')" data-page="shipping" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>🏷️</span><span>Shipping Labels</span></span>
-                </button>
-                <button onclick="showPage('products')" data-page="products" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>🛍️</span><span>Produits</span></span>
-                </button>
-                <button onclick="showPage('settings')" data-page="settings" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-left">
-                    <span class="flex items-center space-x-3"><span>⚙️</span><span>Paramètres</span></span>
-                </button>
-            </nav>
-
-            <div class="p-4 border-t">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">A</div>
-                    <div>
-                        <p class="text-sm font-medium">Admin</p>
-                        <p class="text-xs text-gray-500">Administrateur</p>
-                    </div>
+                <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('dashboard')">
+                    <span>📊</span><span>Dashboard</span>
                 </div>
-            </div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('orders')">
+                    <span>📦</span><span>Commandes</span>
+                    <span id="badge-orders" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                </div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('confirmation')">
+                    <span>📞</span><span>Confirmation</span>
+                    <span id="badge-confirm" class="ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                </div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('shipping')">
+                    <span>🚚</span><span>Expédition</span>
+                </div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('products')">
+                    <span>🏷️</span><span>Produits</span>
+                </div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('settings')">
+                    <span>⚙️</span><span>Paramètres</span>
+                </div>
+            </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 overflow-auto">
-            <div class="p-8">
-                
-                <!-- ==================== DASHBOARD PAGE ==================== -->
-                <div id="page-dashboard" class="page active">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
-                            <p class="text-gray-500">Vue d'ensemble de votre activité</p>
-                        </div>
-                        <p class="text-sm text-gray-500" id="current-date"></p>
+            <!-- Dashboard -->
+            <div id="page-dashboard" class="page active p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold">Dashboard</h2>
+                        <p id="current-date" class="text-gray-500"></p>
                     </div>
-
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="stats-cards">
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 text-sm">Nouvelles</p>
-                                    <p class="text-3xl font-bold mt-1" id="stat-new">0</p>
-                                    <p class="text-xs text-gray-400 mt-1">En attente</p>
-                                </div>
-                                <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center text-xl">📥</div>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">🔄 Actualiser</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Nouvelles</p>
+                                <p id="stat-new" class="text-3xl font-bold text-yellow-600">0</p>
                             </div>
-                        </div>
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 text-sm">Confirmées</p>
-                                    <p class="text-3xl font-bold mt-1" id="stat-confirmed">0</p>
-                                    <p class="text-xs text-gray-400 mt-1">Prêtes</p>
-                                </div>
-                                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl">✓</div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 text-sm">Expédiées</p>
-                                    <p class="text-3xl font-bold mt-1" id="stat-shipped">0</p>
-                                    <p class="text-xs text-gray-400 mt-1">En transit</p>
-                                </div>
-                                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-xl">🚚</div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 text-sm">Livrées</p>
-                                    <p class="text-3xl font-bold mt-1" id="stat-delivered">0</p>
-                                    <p class="text-xs text-green-600 mt-1" id="stat-revenue">0 DH</p>
-                                </div>
-                                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl">✅</div>
-                            </div>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-xl">🆕</div>
                         </div>
                     </div>
-
-                    <!-- Recent Orders -->
-                    <div class="bg-white rounded-2xl shadow-sm border">
-                        <div class="p-6 border-b flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-900">Commandes Récentes</h3>
-                            <button onclick="showPage('orders')" class="text-blue-600 text-sm hover:underline">Voir tout →</button>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Confirmées</p>
+                                <p id="stat-confirmed" class="text-3xl font-bold text-blue-600">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-xl">✅</div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ville</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Total</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recent-orders-table" class="divide-y"></tbody>
-                            </table>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Expédiées</p>
+                                <p id="stat-shipped" class="text-3xl font-bold text-purple-600">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-xl">🚚</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Livrées</p>
+                                <p id="stat-delivered" class="text-3xl font-bold text-green-600">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-xl">🎉</div>
                         </div>
                     </div>
                 </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <h3 class="font-bold mb-4">Commandes Récentes</h3>
+                    <div id="recent-orders" class="overflow-x-auto"></div>
+                </div>
+            </div>
 
-                <!-- ==================== ORDERS PAGE ==================== -->
-                <div id="page-orders" class="page">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">📦 Commandes</h2>
-                            <p class="text-gray-500">Gérez toutes vos commandes</p>
-                        </div>
-                        <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center space-x-2">
-                            <span>🔄</span><span>Actualiser</span>
-                        </button>
-                    </div>
-
-                    <!-- Filters -->
-                    <div class="flex flex-wrap gap-4 mb-6">
-                        <div class="relative flex-1 max-w-md">
-                            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" id="search-orders" placeholder="Rechercher par nom, téléphone, ID..." class="w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" onkeyup="filterOrders()">
-                        </div>
-                        <select id="filter-status" class="px-4 py-2.5 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500" onchange="filterOrders()">
-                            <option value="all">Tous les statuts</option>
+            <!-- Orders -->
+            <div id="page-orders" class="page p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Toutes les Commandes</h2>
+                    <div class="flex space-x-3">
+                        <input type="text" id="search-orders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl" oninput="filterOrders()">
+                        <select id="filter-status" class="px-4 py-2 border rounded-xl" onchange="filterOrders()">
+                            <option value="">Tous les statuts</option>
                             <option value="new">Nouvelles</option>
                             <option value="confirmed">Confirmées</option>
                             <option value="shipped">Expédiées</option>
@@ -247,356 +214,269 @@
                             <option value="cancelled">Annulées</option>
                         </select>
                     </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div id="orders-table" class="overflow-x-auto"></div>
+                </div>
+            </div>
 
-                    <!-- Orders Table -->
-                    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Commande</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Téléphone</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Ville</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Total</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tracking</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table" class="divide-y"></tbody>
-                        </table>
+            <!-- Confirmation -->
+            <div id="page-confirmation" class="page p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Confirmation Téléphonique</h2>
+                        <p class="text-gray-500"><span id="pending-count">0</span> commandes en attente</p>
                     </div>
                 </div>
+                <div id="confirmation-list" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+            </div>
 
-                <!-- ==================== CONFIRMATION PAGE ==================== -->
-                <div id="page-confirmation" class="page">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">📞 Confirmation</h2>
-                            <p class="text-gray-500" id="pending-count">0 commandes en attente</p>
-                        </div>
-                    </div>
-
-                    <div id="confirmation-list" class="space-y-4"></div>
-
-                    <div id="all-confirmed" class="hidden bg-white rounded-2xl p-12 text-center shadow-sm border">
-                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">✓</div>
-                        <h3 class="text-xl font-semibold text-gray-900">Tout est confirmé !</h3>
-                        <p class="text-gray-500 mt-2">Aucune commande en attente de confirmation</p>
-                    </div>
+            <!-- Shipping -->
+            <div id="page-shipping" class="page p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Bordereaux d'Expédition</h2>
+                    <button onclick="createShippingLabel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">+ Créer Bordereau</button>
                 </div>
-
-                <!-- ==================== SHIPPING PAGE ==================== -->
-                <div id="page-shipping" class="page">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">🏷️ Shipping Labels</h2>
-                            <p class="text-gray-500">Bordereaux d'expédition</p>
-                        </div>
-                        <button onclick="createShippingLabel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center space-x-2">
-                            <span>+</span><span>Créer Bordereau</span>
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">BL ID</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Transporteur</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Commandes</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Montant</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Paiement</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="shipping-table" class="divide-y"></tbody>
-                        </table>
-                    </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div id="shipping-table" class="overflow-x-auto"></div>
                 </div>
+            </div>
 
-                <!-- ==================== PRODUCTS PAGE ==================== -->
-                <div id="page-products" class="page">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">🛍️ Produits</h2>
-                            <p class="text-gray-500" id="products-count">0 produits</p>
-                        </div>
-                        <button onclick="showToast('Fonctionnalité à venir', 'info')" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center space-x-2">
-                            <span>+</span><span>Ajouter</span>
-                        </button>
+            <!-- Products -->
+            <div id="page-products" class="page p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Produits</h2>
+                        <p class="text-gray-500"><span id="products-count">0</span> produits</p>
                     </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Produit</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">SKU</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Catégorie</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Prix</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Stock</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="products-table" class="divide-y"></tbody>
-                        </table>
-                    </div>
+                    <button onclick="openProductModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">+ Ajouter Produit</button>
                 </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div id="products-table" class="overflow-x-auto"></div>
+                </div>
+            </div>
 
-                <!-- ==================== SETTINGS PAGE ==================== -->
-                <div id="page-settings" class="page">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">⚙️ Paramètres</h2>
-                        <p class="text-gray-500">Configuration de votre store</p>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        <div class="p-6 border-b flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold">H</div>
+            <!-- Settings -->
+            <div id="page-settings" class="page p-8">
+                <h2 class="text-2xl font-bold mb-6">Paramètres</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Store Info -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <h3 class="font-bold mb-4">🏪 Informations Boutique</h3>
+                        <div class="space-y-4">
                             <div>
-                                <h3 class="text-xl font-bold text-gray-900">Hichoux Store</h3>
-                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Store</span>
+                                <label class="block text-sm font-medium mb-1">Nom de la boutique</label>
+                                <input type="text" id="setting-store-name" class="w-full px-4 py-2 border rounded-xl" value="Hichoux Store">
                             </div>
-                        </div>
-
-                        <div class="p-6 space-y-6">
-                            <!-- Database -->
-                            <div class="border-b pb-6">
-                                <h4 class="font-semibold text-gray-900 mb-4">🗄️ Database (Supabase)</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-                                        <input type="text" id="settings-supabase-url" class="w-full px-4 py-2.5 border rounded-xl bg-gray-50" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                                        <p id="settings-supabase-status" class="px-4 py-2.5 bg-gray-100 rounded-xl">Non connecté</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Google Sheets -->
-                            <div class="border-b pb-6">
-                                <h4 class="font-semibold text-gray-900 mb-4">📊 Google Sheets</h4>
-                                <div class="bg-green-50 border border-green-200 rounded-xl p-4">
-                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                        <div>
-                                            <p class="font-medium text-green-800">✓ Sheet Connected</p>
-                                            <a href="https://docs.google.com/spreadsheets/d/1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw/edit" target="_blank" class="text-blue-600 text-sm hover:underline">Open Sheet ↗</a>
-                                            <p class="text-xs text-green-600 mt-1" id="last-sync">Last sync: -</p>
-                                        </div>
-                                        <button onclick="syncToGoogleSheet()" class="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition">
-                                            🔄 Sync Now
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Digylog -->
-                            <div class="border-b pb-6">
-                                <h4 class="font-semibold text-gray-900 mb-4">🚚 API Digylog</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Bearer Token</label>
-                                        <input type="password" id="digylog-token" placeholder="Votre token API" class="w-full px-4 py-2.5 border rounded-xl">
-                                    </div>
-                                    <button onclick="showToast('Test en cours...', 'info')" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition">
-                                        Tester la connexion
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Store Info -->
                             <div>
-                                <h4 class="font-semibold text-gray-900 mb-4">🏪 Informations Store</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom du Store</label>
-                                        <input type="text" id="store-name" value="Hichoux Store" class="w-full px-4 py-2.5 border rounded-xl">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                                        <input type="text" id="store-phone" value="0600000000" class="w-full px-4 py-2.5 border rounded-xl">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
-                                        <input type="text" id="store-whatsapp" value="212600000000" class="w-full px-4 py-2.5 border rounded-xl">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Frais livraison (DH)</label>
-                                        <input type="number" id="shipping-cost" value="30" class="w-full px-4 py-2.5 border rounded-xl">
-                                    </div>
-                                </div>
+                                <label class="block text-sm font-medium mb-1">Téléphone</label>
+                                <input type="tel" id="setting-phone" class="w-full px-4 py-2 border rounded-xl" value="0600000000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">WhatsApp</label>
+                                <input type="tel" id="setting-whatsapp" class="w-full px-4 py-2 border rounded-xl" value="212600000000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Frais de livraison (DH)</label>
+                                <input type="number" id="setting-shipping" class="w-full px-4 py-2 border rounded-xl" value="30">
                             </div>
                         </div>
+                    </div>
 
-                        <div class="p-6 bg-gray-50 border-t flex justify-between items-center">
-                            <button onclick="document.getElementById('config-modal').classList.remove('hidden')" class="text-blue-600 hover:underline text-sm">Modifier la configuration</button>
-                            <button onclick="saveSettings()" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
-                                💾 Sauvegarder
-                            </button>
+                    <!-- Logo -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <h3 class="font-bold mb-4">🎨 Logo</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <img id="preview-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%232563eb'/%3E%3Ctext x='40' y='52' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-20 h-20 rounded-xl object-cover border">
+                                <div>
+                                    <p class="font-medium">Logo actuel</p>
+                                    <p class="text-sm text-gray-500">Format: JPG, PNG, SVG</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">URL du logo</label>
+                                <input type="url" id="setting-logo-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://..." oninput="previewLogo(this.value)">
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500 mb-2">Ou uploadez sur <a href="https://imgur.com" target="_blank" class="text-blue-600">Imgur</a> et collez l'URL</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Database -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <h3 class="font-bold mb-4">🗄️ Base de Données</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Supabase URL</label>
+                                <input type="text" id="setting-supabase-url" class="w-full px-4 py-2 border rounded-xl bg-gray-50" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Statut</label>
+                                <div id="db-status" class="px-4 py-2 bg-green-100 text-green-800 rounded-xl">✓ Connecté</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Sheets -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm">
+                        <h3 class="font-bold mb-4">📊 Google Sheets</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Apps Script URL</label>
+                                <input type="url" id="setting-gas-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://script.google.com/...">
+                            </div>
+                            <a href="https://docs.google.com/spreadsheets/d/1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw/edit" target="_blank" class="block px-4 py-2 bg-green-100 text-green-800 rounded-xl text-center hover:bg-green-200">📊 Ouvrir Google Sheet</a>
                         </div>
                     </div>
                 </div>
-
+                <div class="mt-6">
+                    <button onclick="saveSettings()" class="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium">💾 Sauvegarder les Paramètres</button>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- JavaScript -->
     <script>
         // =============================================
-        // CONFIGURATION
+        // CONFIG
         // =============================================
         const CONFIG = {
             SUPABASE_URL: 'https://mbvskiaqfpbbnxhgzpga.supabase.co',
             SUPABASE_ANON_KEY: 'sb_secret_inwuQRRulHoEd6ihMrojsA_p_fxEDqR',
-            GOOGLE_SCRIPT_URL: '',
-            GOOGLE_SHEET_ID: '1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw',
-            CURRENCY: 'DH'
+            GOOGLE_SHEET_ID: '1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw'
         };
 
         // =============================================
         // STATE
         // =============================================
+        let supabaseClient = null;
         let orders = [];
         let products = [];
         let shippingLabels = [];
-        let supabaseClient = null;
+        let storeSettings = {
+            name: 'Hichoux Store',
+            phone: '0600000000',
+            whatsapp: '212600000000',
+            shipping: 30,
+            logoUrl: ''
+        };
 
         // Demo Data
         const demoOrders = [
-            { id: '1', order_number: 'HCX001234', customer_name: 'Ahmed Benali', customer_phone: '0661234567', shipping_address: 'Rue Hassan II, N°45', shipping_city: 'Casablanca', total: 300, status: 'new', created_at: '2025-11-27T10:00:00', order_items: [{ product_name: 'Parfum Royal Oud', quantity: 2, unit_price: 150 }] },
-            { id: '2', order_number: 'HCX001235', customer_name: 'Fatima Zahra', customer_phone: '0677889900', shipping_address: 'Avenue Mohammed V, Appt 12', shipping_city: 'Rabat', total: 200, status: 'new', created_at: '2025-11-27T11:00:00', order_items: [{ product_name: 'Essence de Rose', quantity: 1, unit_price: 200 }] },
-            { id: '3', order_number: 'HCX001236', customer_name: 'Youssef Alami', customer_phone: '0655443322', shipping_address: 'Quartier Gueliz', shipping_city: 'Marrakech', total: 360, status: 'new', notes: 'Client VIP', created_at: '2025-11-27T09:00:00', order_items: [{ product_name: 'Amber Nights', quantity: 3, unit_price: 120 }] },
-            { id: '4', order_number: 'HCX001237', customer_name: 'Khadija Mansouri', customer_phone: '0688776655', shipping_address: 'Hay Mohammadi', shipping_city: 'Agadir', total: 150, status: 'confirmed', created_at: '2025-11-26T14:00:00', order_items: [{ product_name: 'Parfum Royal Oud', quantity: 1, unit_price: 150 }] },
-            { id: '5', order_number: 'HCX001238', customer_name: 'Omar Tazi', customer_phone: '0699887766', shipping_address: 'Centre ville', shipping_city: 'Fès', total: 360, status: 'confirmed', created_at: '2025-11-26T10:00:00', order_items: [{ product_name: 'Musk Premium', quantity: 2, unit_price: 180 }] },
-            { id: '6', order_number: 'HCX001239', customer_name: 'Sara Bennani', customer_phone: '0612345678', shipping_address: 'Hay Riad', shipping_city: 'Rabat', total: 200, status: 'shipped', tracking_number: 'S2AD5795M', created_at: '2025-11-25T10:00:00', order_items: [{ product_name: 'Essence de Rose', quantity: 1, unit_price: 200 }] },
-            { id: '7', order_number: 'HCX001240', customer_name: 'Mohammed Idrissi', customer_phone: '0633221100', shipping_address: 'Zone Industrielle', shipping_city: 'Tanger', total: 240, status: 'delivered', tracking_number: 'S6AA79F4A', created_at: '2025-11-24T10:00:00', order_items: [{ product_name: 'Amber Nights', quantity: 2, unit_price: 120 }] },
+            { id: '1', order_number: 'HCX001234', customer_name: 'Ahmed Benali', customer_phone: '0661234567', shipping_address: 'Rue Hassan II, N°45', shipping_city: 'Casablanca', total: 300, status: 'new', created_at: new Date().toISOString(), items: [{name: 'Parfum Royal Oud', qty: 2, price: 150}] },
+            { id: '2', order_number: 'HCX001235', customer_name: 'Fatima Zahra', customer_phone: '0677889900', shipping_address: 'Avenue Mohammed V', shipping_city: 'Rabat', total: 200, status: 'new', created_at: new Date().toISOString(), items: [{name: 'Essence de Rose', qty: 1, price: 200}] },
+            { id: '3', order_number: 'HCX001236', customer_name: 'Youssef Amrani', customer_phone: '0655443322', shipping_address: 'Boulevard Zerktouni', shipping_city: 'Marrakech', total: 450, status: 'confirmed', created_at: new Date().toISOString(), items: [{name: 'Amber Nights', qty: 3, price: 150}] },
+            { id: '4', order_number: 'HCX001237', customer_name: 'Sara Idrissi', customer_phone: '0699887766', shipping_address: 'Rue de Fès', shipping_city: 'Tanger', total: 180, status: 'shipped', tracking_number: 'DG123456', created_at: new Date().toISOString(), items: [{name: 'Musk Premium', qty: 1, price: 180}] },
+            { id: '5', order_number: 'HCX001238', customer_name: 'Karim Tazi', customer_phone: '0611223344', shipping_address: 'Avenue des FAR', shipping_city: 'Agadir', total: 320, status: 'delivered', tracking_number: 'DG789012', created_at: new Date().toISOString(), items: [{name: 'Jasmin Oriental', qty: 2, price: 160}] },
         ];
 
         const demoProducts = [
-            { id: '1', sku: 'PARFUM-001', name: 'Parfum Royal Oud', price: 150, stock: 45, category: { name: 'Homme' } },
-            { id: '2', sku: 'PARFUM-002', name: 'Essence de Rose', price: 200, stock: 32, category: { name: 'Femme' } },
-            { id: '3', sku: 'PARFUM-003', name: 'Amber Nights', price: 120, stock: 28, category: { name: 'Unisexe' } },
-            { id: '4', sku: 'PARFUM-004', name: 'Musk Premium', price: 180, stock: 15, category: { name: 'Homme' } },
-            { id: '5', sku: 'COSM-001', name: 'Crème Hydratante', price: 89, stock: 60, category: { name: 'Cosmétique' } },
-        ];
-
-        const demoLabels = [
-            { id: '1', label_number: 'BL682045', carrier: 'digylog', orders_count: 4, total_amount: 1200, status: 'completed', payment_status: 'unpaid' },
-            { id: '2', label_number: 'BL682007', carrier: 'digylog', orders_count: 6, total_amount: 1800, status: 'completed', payment_status: 'paid' },
+            { id: '1', sku: 'PARFUM-001', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Royal+Oud', description: 'Parfum oriental riche' },
+            { id: '2', sku: 'PARFUM-002', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Rose', description: 'Parfum floral délicat' },
+            { id: '3', sku: 'PARFUM-003', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Amber', description: 'Parfum chaud et sensuel' },
+            { id: '4', sku: 'PARFUM-004', name: 'Musk Premium', price: 180, compare_price: 220, stock: 15, category: 'homme', is_featured: false, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Musk', description: 'Parfum musqué élégant' },
+            { id: '5', sku: 'PARFUM-005', name: 'Jasmin Oriental', price: 160, compare_price: 200, stock: 20, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Jasmin', description: 'Jasmin et notes épicées' },
         ];
 
         // =============================================
-        // INITIALIZATION
+        // INIT
         // =============================================
         document.addEventListener('DOMContentLoaded', function() {
-            loadSavedConfig();
-            
-            if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) {
-                document.getElementById('config-modal').classList.add('hidden');
-                initSupabase();
-            }
-            
+            loadSettings();
+            initSupabase();
             updateDate();
+            document.getElementById('product-form').addEventListener('submit', saveProduct);
         });
 
-        function loadSavedConfig() {
-            // Use hardcoded values as defaults, localStorage as override
-            const savedUrl = localStorage.getItem('hichoux_supabase_url');
-            const savedKey = localStorage.getItem('hichoux_supabase_key');
-            const savedGas = localStorage.getItem('hichoux_gas_url');
-            
-            if (savedUrl) CONFIG.SUPABASE_URL = savedUrl;
-            if (savedKey) CONFIG.SUPABASE_ANON_KEY = savedKey;
-            if (savedGas) CONFIG.GOOGLE_SCRIPT_URL = savedGas;
-            
-            document.getElementById('config-url').value = CONFIG.SUPABASE_URL;
-            document.getElementById('config-key').value = CONFIG.SUPABASE_ANON_KEY;
-            document.getElementById('config-gas').value = CONFIG.GOOGLE_SCRIPT_URL;
-        }
-
-        function saveConfig() {
-            const url = document.getElementById('config-url').value.trim();
-            const key = document.getElementById('config-key').value.trim();
-            const gas = document.getElementById('config-gas').value.trim();
-
-            if (!url || !key) {
-                showToast('URL et Anon Key requis', 'error');
-                return;
+        function loadSettings() {
+            const saved = localStorage.getItem('hichoux_settings');
+            if (saved) {
+                storeSettings = {...storeSettings, ...JSON.parse(saved)};
             }
-
-            localStorage.setItem('hichoux_supabase_url', url);
-            localStorage.setItem('hichoux_supabase_key', key);
-            localStorage.setItem('hichoux_gas_url', gas);
-
-            CONFIG.SUPABASE_URL = url;
-            CONFIG.SUPABASE_ANON_KEY = key;
-            CONFIG.GOOGLE_SCRIPT_URL = gas;
-
-            document.getElementById('config-modal').classList.add('hidden');
-            initSupabase();
-            showToast('Configuration sauvegardée!');
+            applySettings();
         }
 
-        function skipConfig() {
-            document.getElementById('config-modal').classList.add('hidden');
-            useDemoMode();
-        }
-
-        function useDemoMode() {
-            orders = [...demoOrders];
-            products = [...demoProducts];
-            shippingLabels = [...demoLabels];
+        function applySettings() {
+            document.getElementById('setting-store-name').value = storeSettings.name;
+            document.getElementById('setting-phone').value = storeSettings.phone;
+            document.getElementById('setting-whatsapp').value = storeSettings.whatsapp;
+            document.getElementById('setting-shipping').value = storeSettings.shipping;
+            document.getElementById('setting-logo-url').value = storeSettings.logoUrl || '';
+            document.getElementById('setting-supabase-url').value = CONFIG.SUPABASE_URL;
             
-            document.getElementById('connection-status').innerHTML = '<span class="text-gray-400">● Mode Demo</span>';
+            document.getElementById('sidebar-store-name').textContent = storeSettings.name;
             
-            updateUI();
-            showToast('Mode Demo activé', 'info');
+            if (storeSettings.logoUrl) {
+                document.getElementById('sidebar-logo').src = storeSettings.logoUrl;
+                document.getElementById('preview-logo').src = storeSettings.logoUrl;
+            }
         }
 
         async function initSupabase() {
             try {
                 supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
                 document.getElementById('connection-status').innerHTML = '<span class="text-green-500">● Connecté</span>';
-                
-                await loadDataFromSupabase();
-                updateUI();
-                showToast('Connecté à Supabase!');
-            } catch (error) {
-                console.error('Supabase error:', error);
-                showToast('Erreur de connexion', 'error');
-                useDemoMode();
+                document.getElementById('db-status').innerHTML = '✓ Connecté à Supabase';
+                document.getElementById('db-status').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl';
+                await loadData();
+            } catch (e) {
+                console.error('Supabase error:', e);
+                useDemoData();
             }
         }
 
-        async function loadDataFromSupabase() {
+        async function loadData() {
             try {
-                const [ordersRes, productsRes] = await Promise.all([
-                    supabaseClient.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
-                    supabaseClient.from('products').select('*, category:categories(id, name)').eq('is_active', true)
-                ]);
+                // Load orders
+                const { data: ordersData } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                // Load products
+                const { data: productsData } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-                if (ordersRes.data) orders = ordersRes.data;
-                if (productsRes.data) products = productsRes.data;
-            } catch (error) {
-                console.error('Load error:', error);
-                useDemoMode();
+                orders = ordersData?.length ? ordersData : demoOrders;
+                products = productsData?.length ? productsData : demoProducts;
+                
+                updateUI();
+            } catch (e) {
+                console.error('Load error:', e);
+                useDemoData();
             }
+        }
+
+        function useDemoData() {
+            orders = [...demoOrders];
+            products = [...demoProducts];
+            document.getElementById('connection-status').innerHTML = '<span class="text-yellow-500">● Mode Demo</span>';
+            updateUI();
         }
 
         function refreshData() {
-            if (supabaseClient) {
-                loadDataFromSupabase().then(() => {
-                    updateUI();
-                    showToast('Données actualisées');
-                });
-            } else {
-                showToast('Mode Demo - pas de données à actualiser', 'info');
-            }
+            showToast('Actualisation...', 'info');
+            loadData();
+        }
+
+        // =============================================
+        // NAVIGATION
+        // =============================================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+            
+            document.getElementById('page-' + pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if (pageId === 'orders') renderOrdersTable();
+            if (pageId === 'confirmation') renderConfirmation();
+            if (pageId === 'shipping') renderShipping();
+            if (pageId === 'products') renderProducts();
         }
 
         // =============================================
@@ -605,181 +485,193 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
-            const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
-
             const toast = document.createElement('div');
-            toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg flex items-center space-x-2`;
-            toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+            toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
+            toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
 
-        function showLoading(text = 'Chargement...') {
-            document.getElementById('loading-text').textContent = text;
-            document.getElementById('loading-overlay').classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.add('hidden');
-        }
-
         function updateDate() {
-            const el = document.getElementById('current-date');
-            if (el) {
-                el.textContent = new Date().toLocaleDateString('fr-FR', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                });
-            }
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', options);
         }
 
-        // =============================================
-        // NAVIGATION
-        // =============================================
-        function showPage(pageId) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Show selected page
-            const page = document.getElementById('page-' + pageId);
-            if (page) {
-                page.classList.add('active');
-            }
-
-            // Update sidebar
-            document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            const navBtn = document.querySelector(`[data-page="${pageId}"]`);
-            if (navBtn) {
-                navBtn.classList.add('active');
-            }
-
-            // Render page-specific content
-            if (pageId === 'confirmation') renderConfirmation();
-            if (pageId === 'orders') renderOrdersTable();
-            if (pageId === 'products') renderProducts();
-            if (pageId === 'shipping') renderShipping();
-            if (pageId === 'settings') populateSettings();
-        }
-
-        // =============================================
-        // UPDATE UI
-        // =============================================
         function updateUI() {
             updateStats();
-            renderRecentOrders();
             updateBadges();
+            renderRecentOrders();
         }
 
         function updateStats() {
-            const stats = {
-                new: orders.filter(o => o.status === 'new').length,
-                confirmed: orders.filter(o => o.status === 'confirmed').length,
-                shipped: orders.filter(o => o.status === 'shipped').length,
-                delivered: orders.filter(o => o.status === 'delivered').length,
-                revenue: orders.filter(o => o.status === 'delivered').reduce((s, o) => s + (o.total || 0), 0)
-            };
-
+            const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0 };
+            orders.forEach(o => { if (stats[o.status] !== undefined) stats[o.status]++; });
+            
             document.getElementById('stat-new').textContent = stats.new;
             document.getElementById('stat-confirmed').textContent = stats.confirmed;
             document.getElementById('stat-shipped').textContent = stats.shipped;
             document.getElementById('stat-delivered').textContent = stats.delivered;
-            document.getElementById('stat-revenue').textContent = stats.revenue + ' ' + CONFIG.CURRENCY;
         }
 
         function updateBadges() {
             const newCount = orders.filter(o => o.status === 'new').length;
+            const badgeOrders = document.getElementById('badge-orders');
+            const badgeConfirm = document.getElementById('badge-confirm');
             
-            document.querySelectorAll('.badge-orders, .badge-confirmation').forEach(badge => {
-                badge.textContent = newCount;
-                badge.classList.toggle('hidden', newCount === 0);
-            });
+            if (newCount > 0) {
+                badgeOrders.textContent = newCount;
+                badgeOrders.classList.remove('hidden');
+                badgeConfirm.textContent = newCount;
+                badgeConfirm.classList.remove('hidden');
+            } else {
+                badgeOrders.classList.add('hidden');
+                badgeConfirm.classList.add('hidden');
+            }
         }
 
         function getStatusBadge(status) {
-            const statuses = {
+            const config = {
                 new: { label: 'Nouvelle', color: 'bg-yellow-100 text-yellow-800' },
                 confirmed: { label: 'Confirmée', color: 'bg-blue-100 text-blue-800' },
                 shipped: { label: 'Expédiée', color: 'bg-purple-100 text-purple-800' },
                 delivered: { label: 'Livrée', color: 'bg-green-100 text-green-800' },
-                cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800' },
-                completed: { label: 'Terminé', color: 'bg-green-100 text-green-800' },
-                unpaid: { label: 'Non payé', color: 'bg-red-100 text-red-800' },
-                paid: { label: 'Payé', color: 'bg-green-100 text-green-800' }
+                cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800' }
             };
-            const config = statuses[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
-            return `<span class="px-3 py-1 rounded-full text-xs font-semibold ${config.color}">${config.label}</span>`;
+            const c = config[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
+            return `<span class="px-3 py-1 rounded-full text-xs font-semibold ${c.color}">${c.label}</span>`;
         }
 
         function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            return new Date(dateStr).toLocaleDateString('fr-FR', {
-                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
+            return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
         // =============================================
-        // RECENT ORDERS (DASHBOARD)
+        // ORDERS
         // =============================================
         function renderRecentOrders() {
-            const container = document.getElementById('recent-orders-table');
-            if (!container) return;
-
-            container.innerHTML = orders.slice(0, 5).map(o => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4">
-                        <p class="font-medium">${o.order_number || o.id}</p>
-                        <p class="text-xs text-gray-500">${formatDate(o.created_at)}</p>
-                    </td>
-                    <td class="px-6 py-4">${o.customer_name}</td>
-                    <td class="px-6 py-4">${o.shipping_city}</td>
-                    <td class="px-6 py-4 font-semibold">${o.total} ${CONFIG.CURRENCY}</td>
-                    <td class="px-6 py-4">${getStatusBadge(o.status)}</td>
-                    <td class="px-6 py-4">
-                        <button onclick="openOrderModal('${o.id}')" class="text-blue-600 hover:underline text-sm">Voir</button>
-                    </td>
-                </tr>
-            `).join('');
+            const recent = orders.slice(0, 5);
+            document.getElementById('recent-orders').innerHTML = recent.length ? `
+                <table class="w-full">
+                    <thead><tr class="text-left text-gray-500 text-sm border-b">
+                        <th class="pb-3">Commande</th><th class="pb-3">Client</th><th class="pb-3">Ville</th><th class="pb-3">Total</th><th class="pb-3">Statut</th>
+                    </tr></thead>
+                    <tbody>
+                        ${recent.map(o => `
+                            <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openOrderModal('${o.id}')">
+                                <td class="py-3 font-medium">${o.order_number}</td>
+                                <td class="py-3">${o.customer_name}</td>
+                                <td class="py-3">${o.shipping_city}</td>
+                                <td class="py-3 font-semibold">${o.total} DH</td>
+                                <td class="py-3">${getStatusBadge(o.status)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : '<p class="text-gray-500 text-center py-8">Aucune commande</p>';
         }
 
-        // =============================================
-        // ORDERS TABLE
-        // =============================================
         function renderOrdersTable() {
             filterOrders();
         }
 
         function filterOrders() {
-            const search = (document.getElementById('search-orders')?.value || '').toLowerCase();
-            const status = document.getElementById('filter-status')?.value || 'all';
-
-            const filtered = orders.filter(o => {
-                const matchSearch = !search ||
-                    o.customer_name?.toLowerCase().includes(search) ||
-                    o.customer_phone?.includes(search) ||
-                    o.order_number?.toLowerCase().includes(search);
-                const matchStatus = status === 'all' || o.status === status;
+            const search = document.getElementById('search-orders').value.toLowerCase();
+            const status = document.getElementById('filter-status').value;
+            
+            let filtered = orders.filter(o => {
+                const matchSearch = !search || o.order_number.toLowerCase().includes(search) || o.customer_name.toLowerCase().includes(search) || o.customer_phone.includes(search);
+                const matchStatus = !status || o.status === status;
                 return matchSearch && matchStatus;
             });
 
-            const container = document.getElementById('orders-table');
-            if (!container) return;
+            document.getElementById('orders-table').innerHTML = `
+                <table class="w-full">
+                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
+                        <th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Téléphone</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th><th class="p-4">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        ${filtered.map(o => `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-4 font-medium">${o.order_number}</td>
+                                <td class="p-4">${o.customer_name}</td>
+                                <td class="p-4">${o.customer_phone}</td>
+                                <td class="p-4">${o.shipping_city}</td>
+                                <td class="p-4 font-semibold">${o.total} DH</td>
+                                <td class="p-4">${getStatusBadge(o.status)}</td>
+                                <td class="p-4">
+                                    <button onclick="openOrderModal('${o.id}')" class="text-blue-600 hover:underline">Voir</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
 
-            container.innerHTML = filtered.map(o => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4">
-                        <p class="font-medium">${o.order_number || o.id}</p>
-                        <p class="text-xs text-gray-500">${formatDate(o.created_at)}</p>
-                    </td>
-                    <td class="px-6 py-4">${o.customer_name}</td>
-                    <td class="px-6 py-4">${o.customer_phone}</td>
-                    <td class="px-6 py-4">${o.shipping_city}</td>
-                    <td class="px-6 py-4 font-semibold">${o.total} ${CONFIG.CURRENCY}</td>
-                    <td class="px-6 py-4">${getStatusBadge(o.status)}</td>
-                    <td class="px-6 py-4 font-mono text-sm ${o.tracking_number ? 'text-blue-600' : 'text-gray-400'}">${o.tracking_number || '-'}</td>
-                    <td class="px-6 py-4">
-                        <button onclick="openOrderModal('${o.id}')" class="text-blue-600 hover:underline text-sm">Voir</button>
-                    </td>
-                </tr>
-            `).join('');
+        function openOrderModal(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            document.getElementById('order-modal-number').textContent = order.order_number;
+            document.getElementById('order-modal-content').innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div><p class="text-gray-500 text-sm">Client</p><p class="font-semibold">${order.customer_name}</p></div>
+                    <div><p class="text-gray-500 text-sm">Téléphone</p><p class="font-semibold">${order.customer_phone}</p></div>
+                    <div><p class="text-gray-500 text-sm">Ville</p><p class="font-semibold">${order.shipping_city}</p></div>
+                    <div><p class="text-gray-500 text-sm">Total</p><p class="font-semibold text-green-600">${order.total} DH</p></div>
+                    <div class="col-span-2"><p class="text-gray-500 text-sm">Adresse</p><p class="font-semibold">${order.shipping_address}</p></div>
+                    <div><p class="text-gray-500 text-sm">Statut</p><p>${getStatusBadge(order.status)}</p></div>
+                    ${order.tracking_number ? `<div><p class="text-gray-500 text-sm">Tracking</p><p class="font-mono font-semibold">${order.tracking_number}</p></div>` : ''}
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="tel:${order.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">📞 Appeler</a>
+                    <a href="https://wa.me/212${order.customer_phone.slice(1)}?text=${encodeURIComponent(`Bonjour ${order.customer_name}, concernant votre commande ${order.order_number}...`)}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600">💬 WhatsApp</a>
+                    ${order.status === 'new' ? `<button onclick="confirmOrder('${order.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">✅ Confirmer</button>` : ''}
+                    ${order.status === 'new' ? `<button onclick="cancelOrder('${order.id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">❌ Annuler</button>` : ''}
+                </div>
+            `;
+            document.getElementById('order-modal').classList.add('active');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.remove('active');
+        }
+
+        async function confirmOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            order.status = 'confirmed';
+            
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', id);
+                } catch (e) { console.error(e); }
+            }
+            
+            closeOrderModal();
+            updateUI();
+            showToast('Commande confirmée!');
+        }
+
+        async function cancelOrder(id) {
+            const reason = prompt('Raison de l\'annulation:');
+            if (!reason) return;
+            
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            order.status = 'cancelled';
+            
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('orders').update({ status: 'cancelled', notes: reason }).eq('id', id);
+                } catch (e) { console.error(e); }
+            }
+            
+            closeOrderModal();
+            updateUI();
+            showToast('Commande annulée');
         }
 
         // =============================================
@@ -787,329 +679,256 @@
         // =============================================
         function renderConfirmation() {
             const pending = orders.filter(o => o.status === 'new');
-            document.getElementById('pending-count').textContent = `${pending.length} commandes en attente`;
-
-            const listContainer = document.getElementById('confirmation-list');
-            const emptyContainer = document.getElementById('all-confirmed');
-
+            document.getElementById('pending-count').textContent = pending.length;
+            
             if (pending.length === 0) {
-                listContainer.innerHTML = '';
-                emptyContainer.classList.remove('hidden');
-            } else {
-                emptyContainer.classList.add('hidden');
-                listContainer.innerHTML = pending.map(o => `
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                            <div class="flex-1">
-                                <div class="flex flex-wrap items-center gap-3 mb-4">
-                                    <span class="text-lg font-bold">${o.order_number || o.id}</span>
-                                    ${getStatusBadge(o.status)}
-                                    ${o.notes ? `<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">${o.notes}</span>` : ''}
-                                </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    <div><p class="text-xs text-gray-500">Client</p><p class="font-medium">${o.customer_name}</p></div>
-                                    <div><p class="text-xs text-gray-500">Téléphone</p><p class="font-medium">${o.customer_phone}</p></div>
-                                    <div><p class="text-xs text-gray-500">Ville</p><p class="font-medium">${o.shipping_city}</p></div>
-                                    <div><p class="text-xs text-gray-500">Total</p><p class="font-bold text-blue-600 text-lg">${o.total} ${CONFIG.CURRENCY}</p></div>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-3">${o.shipping_address}</p>
-                                <div class="flex flex-wrap gap-2">
-                                    ${(o.order_items || []).map(item => `
-                                        <span class="px-2 py-1 bg-gray-100 rounded text-xs">${item.product_name} x${item.quantity}</span>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="flex flex-row lg:flex-col gap-2">
-                                <a href="tel:${o.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700 transition text-sm font-medium">📞 Appeler</a>
-                                <a href="https://wa.me/${o.customer_phone.replace(/^0/, '212')}?text=${encodeURIComponent('Bonjour ' + o.customer_name + ', concernant votre commande ' + (o.order_number || o.id))}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl text-center hover:bg-green-600 transition text-sm font-medium">💬 WhatsApp</a>
-                                <button onclick="confirmOrder('${o.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition text-sm font-medium">✓ Confirmer</button>
-                                <button onclick="cancelOrder('${o.id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition text-sm font-medium">✕ Annuler</button>
-                            </div>
-                        </div>
+                document.getElementById('confirmation-list').innerHTML = `
+                    <div class="col-span-2 text-center py-16">
+                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">✅</div>
+                        <h3 class="text-xl font-semibold">Tout est confirmé!</h3>
+                        <p class="text-gray-500">Aucune commande en attente</p>
                     </div>
-                `).join('');
-            }
-        }
-
-        async function confirmOrder(id) {
-            showLoading('Confirmation...');
-
-            const order = orders.find(o => o.id === id);
-            if (!order) { hideLoading(); return; }
-
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('orders').update({
-                        status: 'confirmed',
-                        confirmed_at: new Date().toISOString()
-                    }).eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-
-            order.status = 'confirmed';
-            order.confirmed_at = new Date().toISOString();
-
-            if (CONFIG.GOOGLE_SCRIPT_URL) {
-                try {
-                    await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: JSON.stringify({
-                            action: 'addOrder',
-                            order: {
-                                orderRef: order.order_number,
-                                name: order.customer_name,
-                                phone: order.customer_phone,
-                                address: order.shipping_address,
-                                city: order.shipping_city,
-                                codAmount: order.total,
-                                status: 'Confirmed'
-                            }
-                        })
-                    });
-                } catch (e) { console.error(e); }
-            }
-
-            hideLoading();
-            showToast(`Commande ${order.order_number || id} confirmée!`);
-            updateUI();
-            renderConfirmation();
-        }
-
-        async function cancelOrder(id) {
-            const reason = prompt('Raison de l\'annulation (optionnel):');
-            showLoading('Annulation...');
-
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('orders').update({
-                        status: 'cancelled',
-                        cancelled_at: new Date().toISOString(),
-                        cancelled_reason: reason
-                    }).eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-
-            const order = orders.find(o => o.id === id);
-            if (order) order.status = 'cancelled';
-
-            hideLoading();
-            showToast('Commande annulée', 'warning');
-            updateUI();
-            renderConfirmation();
-        }
-
-        // =============================================
-        // ORDER MODAL
-        // =============================================
-        function openOrderModal(id) {
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-
-            document.getElementById('modal-order-id').textContent = order.order_number || order.id;
-
-            document.getElementById('modal-content').innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div><p class="text-xs text-gray-500">Client</p><p class="font-semibold">${order.customer_name}</p></div>
-                    <div><p class="text-xs text-gray-500">Téléphone</p><p class="font-semibold">${order.customer_phone}</p></div>
-                    <div><p class="text-xs text-gray-500">Ville</p><p class="font-semibold">${order.shipping_city}</p></div>
-                    <div><p class="text-xs text-gray-500">Total</p><p class="font-bold text-blue-600 text-xl">${order.total} ${CONFIG.CURRENCY}</p></div>
-                </div>
-                <div class="mb-6">
-                    <p class="text-xs text-gray-500 mb-1">Adresse</p>
-                    <p class="bg-gray-50 p-3 rounded-lg">${order.shipping_address}</p>
-                </div>
-                <div class="mb-6">
-                    <p class="text-xs text-gray-500 mb-1">Statut</p>
-                    ${getStatusBadge(order.status)}
-                </div>
-                ${order.tracking_number ? `<div class="mb-6"><p class="text-xs text-gray-500 mb-1">Tracking</p><p class="font-mono text-blue-600">${order.tracking_number}</p></div>` : ''}
-                <div>
-                    <p class="text-xs text-gray-500 mb-2">Produits</p>
-                    <div class="space-y-2">
-                        ${(order.order_items || []).map(item => `
-                            <div class="flex justify-between bg-gray-50 p-3 rounded-lg">
-                                <span>${item.product_name} x${item.quantity}</span>
-                                <span class="font-semibold">${item.unit_price * item.quantity} ${CONFIG.CURRENCY}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-
-            let actions = `
-                <a href="tel:${order.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">📞 Appeler</a>
-                <a href="https://wa.me/${order.customer_phone.replace(/^0/, '212')}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition text-sm font-medium">💬 WhatsApp</a>
-            `;
-
-            if (order.status === 'new') {
-                actions += `
-                    <button onclick="confirmOrder('${order.id}'); closeOrderModal();" class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition text-sm font-medium">✓ Confirmer</button>
-                    <button onclick="cancelOrder('${order.id}'); closeOrderModal();" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition text-sm font-medium">✕ Annuler</button>
                 `;
+                return;
             }
 
-            document.getElementById('modal-actions').innerHTML = actions;
-            document.getElementById('order-modal').classList.remove('hidden');
-        }
-
-        function closeOrderModal() {
-            document.getElementById('order-modal').classList.add('hidden');
+            document.getElementById('confirmation-list').innerHTML = pending.map(o => `
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="font-bold text-lg">${o.order_number}</h4>
+                            <p class="text-gray-500 text-sm">${formatDate(o.created_at)}</p>
+                        </div>
+                        <span class="text-xl font-bold text-green-600">${o.total} DH</span>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <p><span class="text-gray-500">👤</span> ${o.customer_name}</p>
+                        <p><span class="text-gray-500">📞</span> ${o.customer_phone}</p>
+                        <p><span class="text-gray-500">📍</span> ${o.shipping_city}</p>
+                        <p class="text-sm text-gray-600">${o.shipping_address}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="tel:${o.customer_phone}" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700">📞 Appeler</a>
+                        <a href="https://wa.me/212${o.customer_phone.slice(1)}?text=${encodeURIComponent(`Bonjour ${o.customer_name}! Je vous contacte pour confirmer votre commande ${o.order_number} de ${o.total} DH. Est-ce que tout est correct?`)}" target="_blank" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-xl text-center hover:bg-green-600">💬 WhatsApp</a>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="confirmOrder('${o.id}')" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">✅ Confirmer</button>
+                        <button onclick="cancelOrder('${o.id}')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">❌ Annuler</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // =============================================
         // SHIPPING
         // =============================================
         function renderShipping() {
-            const container = document.getElementById('shipping-table');
-            if (!container) return;
-
-            container.innerHTML = shippingLabels.map(l => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium">${l.label_number}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs capitalize">${l.carrier}</span></td>
-                    <td class="px-6 py-4">${l.orders_count}</td>
-                    <td class="px-6 py-4 font-semibold">${l.total_amount} ${CONFIG.CURRENCY}</td>
-                    <td class="px-6 py-4">${getStatusBadge(l.status)}</td>
-                    <td class="px-6 py-4">${getStatusBadge(l.payment_status)}</td>
-                    <td class="px-6 py-4"><button class="p-2 hover:bg-gray-100 rounded-lg transition">⬇️</button></td>
-                </tr>
-            `).join('');
+            const confirmed = orders.filter(o => o.status === 'confirmed');
+            document.getElementById('shipping-table').innerHTML = `
+                <div class="p-4 bg-blue-50 border-b">
+                    <p><strong>${confirmed.length}</strong> commandes prêtes à expédier</p>
+                </div>
+                <table class="w-full">
+                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
+                        <th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        ${confirmed.map(o => `
+                            <tr class="border-b">
+                                <td class="p-4 font-medium">${o.order_number}</td>
+                                <td class="p-4">${o.customer_name}</td>
+                                <td class="p-4">${o.shipping_city}</td>
+                                <td class="p-4 font-semibold">${o.total} DH</td>
+                                <td class="p-4">
+                                    <button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">🚚 Expédier</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
         }
 
-        async function createShippingLabel() {
-            const confirmed = orders.filter(o => o.status === 'confirmed');
+        async function shipOrder(id) {
+            const tracking = 'DG' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            order.status = 'shipped';
+            order.tracking_number = tracking;
+            
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('orders').update({ status: 'shipped', tracking_number: tracking }).eq('id', id);
+                } catch (e) { console.error(e); }
+            }
+            
+            renderShipping();
+            updateUI();
+            showToast(`Expédiée! Tracking: ${tracking}`);
+        }
 
+        function createShippingLabel() {
+            const confirmed = orders.filter(o => o.status === 'confirmed');
             if (confirmed.length === 0) {
-                showToast('Aucune commande confirmée', 'warning');
+                showToast('Aucune commande à expédier', 'warning');
                 return;
             }
-
-            showLoading('Création du bordereau...');
-            await new Promise(r => setTimeout(r, 1500));
-
-            for (const order of confirmed) {
-                order.status = 'shipped';
-                order.tracking_number = 'S' + Math.random().toString(36).substr(2, 8).toUpperCase();
-
-                if (supabaseClient) {
-                    try {
-                        await supabaseClient.from('orders').update({
-                            status: 'shipped',
-                            shipped_at: new Date().toISOString()
-                        }).eq('id', order.id);
-                    } catch (e) { console.error(e); }
-                }
-            }
-
-            const newLabel = {
-                id: Date.now().toString(),
-                label_number: 'BL' + Date.now().toString().slice(-6),
-                carrier: 'digylog',
-                orders_count: confirmed.length,
-                total_amount: confirmed.reduce((s, o) => s + o.total, 0),
-                status: 'completed',
-                payment_status: 'unpaid'
-            };
-
-            shippingLabels.unshift(newLabel);
-
-            hideLoading();
-            showToast(`Bordereau créé: ${newLabel.label_number}`);
-            updateUI();
-            renderShipping();
+            
+            confirmed.forEach(o => shipOrder(o.id));
+            showToast(`${confirmed.length} commandes expédiées!`);
         }
 
         // =============================================
         // PRODUCTS
         // =============================================
         function renderProducts() {
-            document.getElementById('products-count').textContent = `${products.length} produits`;
+            document.getElementById('products-count').textContent = products.length;
+            document.getElementById('products-table').innerHTML = `
+                <table class="w-full">
+                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
+                        <th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">SKU</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                        ${products.map(p => `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-4"><img src="${p.image_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"></td>
+                                <td class="p-4">
+                                    <p class="font-medium">${p.name}</p>
+                                    <p class="text-xs text-gray-500">${p.category}</p>
+                                </td>
+                                <td class="p-4 font-mono text-sm">${p.sku}</td>
+                                <td class="p-4">
+                                    <p class="font-semibold">${p.price} DH</p>
+                                    ${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price} DH</p>` : ''}
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span>
+                                </td>
+                                <td class="p-4 space-x-2">
+                                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:underline">✏️</button>
+                                    <button onclick="deleteProduct('${p.id}')" class="text-red-600 hover:underline">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
 
-            const container = document.getElementById('products-table');
-            if (!container) return;
+        function openProductModal(product = null) {
+            document.getElementById('product-modal-title').textContent = product ? 'Modifier Produit' : 'Ajouter Produit';
+            document.getElementById('product-id').value = product?.id || '';
+            document.getElementById('product-name').value = product?.name || '';
+            document.getElementById('product-sku').value = product?.sku || '';
+            document.getElementById('product-price').value = product?.price || '';
+            document.getElementById('product-compare-price').value = product?.compare_price || '';
+            document.getElementById('product-stock').value = product?.stock || 100;
+            document.getElementById('product-category').value = product?.category || 'homme';
+            document.getElementById('product-image').value = product?.image_url || '';
+            document.getElementById('product-description').value = product?.description || '';
+            document.getElementById('product-featured').checked = product?.is_featured || false;
+            document.getElementById('product-modal').classList.add('active');
+        }
 
-            container.innerHTML = products.map(p => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium">${p.name}</td>
-                    <td class="px-6 py-4 text-gray-600 font-mono text-sm">${p.sku}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 rounded-full text-xs">${p.category?.name || '-'}</span></td>
-                    <td class="px-6 py-4 font-semibold">${p.price} ${CONFIG.CURRENCY}</td>
-                    <td class="px-6 py-4 ${p.stock < 20 ? 'text-red-600 font-semibold' : 'text-green-600'}">${p.stock}</td>
-                    <td class="px-6 py-4"><button class="text-blue-600 hover:underline text-sm">Modifier</button></td>
-                </tr>
-            `).join('');
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.remove('active');
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (product) openProductModal(product);
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('product-id').value;
+            const productData = {
+                name: document.getElementById('product-name').value,
+                sku: document.getElementById('product-sku').value || 'SKU-' + Date.now(),
+                price: parseFloat(document.getElementById('product-price').value),
+                compare_price: parseFloat(document.getElementById('product-compare-price').value) || null,
+                stock: parseInt(document.getElementById('product-stock').value),
+                category: document.getElementById('product-category').value,
+                image_url: document.getElementById('product-image').value,
+                description: document.getElementById('product-description').value,
+                is_featured: document.getElementById('product-featured').checked
+            };
+
+            if (id) {
+                // Update
+                const idx = products.findIndex(p => p.id === id);
+                if (idx !== -1) products[idx] = {...products[idx], ...productData};
+                
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('products').update(productData).eq('id', id);
+                    } catch (e) { console.error(e); }
+                }
+                showToast('Produit modifié!');
+            } else {
+                // Create
+                const newProduct = { id: Date.now().toString(), ...productData };
+                products.unshift(newProduct);
+                
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('products').insert(productData);
+                    } catch (e) { console.error(e); }
+                }
+                showToast('Produit ajouté!');
+            }
+
+            closeProductModal();
+            renderProducts();
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Supprimer ce produit?')) return;
+            
+            products = products.filter(p => p.id !== id);
+            
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('products').delete().eq('id', id);
+                } catch (e) { console.error(e); }
+            }
+            
+            renderProducts();
+            showToast('Produit supprimé');
         }
 
         // =============================================
         // SETTINGS
         // =============================================
-        function populateSettings() {
-            document.getElementById('settings-supabase-url').value = CONFIG.SUPABASE_URL || 'Non configuré';
-
-            const statusEl = document.getElementById('settings-supabase-status');
-            if (supabaseClient) {
-                statusEl.textContent = '✓ Connecté';
-                statusEl.className = 'px-4 py-2.5 bg-green-100 text-green-700 rounded-xl';
-            } else {
-                statusEl.textContent = '✕ Non connecté';
-                statusEl.className = 'px-4 py-2.5 bg-red-100 text-red-700 rounded-xl';
+        function previewLogo(url) {
+            if (url) {
+                document.getElementById('preview-logo').src = url;
             }
         }
 
         function saveSettings() {
+            storeSettings = {
+                name: document.getElementById('setting-store-name').value,
+                phone: document.getElementById('setting-phone').value,
+                whatsapp: document.getElementById('setting-whatsapp').value,
+                shipping: parseFloat(document.getElementById('setting-shipping').value),
+                logoUrl: document.getElementById('setting-logo-url').value,
+                gasUrl: document.getElementById('setting-gas-url').value
+            };
+            
+            localStorage.setItem('hichoux_settings', JSON.stringify(storeSettings));
+            applySettings();
             showToast('Paramètres sauvegardés!');
         }
 
-        async function syncToGoogleSheet() {
-            if (!CONFIG.GOOGLE_SCRIPT_URL) {
-                showToast('URL Google Apps Script non configurée', 'warning');
-                return;
-            }
-
-            const confirmed = orders.filter(o => o.status === 'confirmed');
-            if (confirmed.length === 0) {
-                showToast('Aucune commande à synchroniser', 'info');
-                return;
-            }
-
-            showLoading('Synchronisation...');
-
-            try {
-                await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'addOrders',
-                        orders: confirmed.map(o => ({
-                            orderRef: o.order_number,
-                            name: o.customer_name,
-                            phone: o.customer_phone,
-                            address: o.shipping_address,
-                            city: o.shipping_city,
-                            codAmount: o.total,
-                            status: 'Confirmed'
-                        }))
-                    })
-                });
-
-                document.getElementById('last-sync').textContent = 'Last sync: ' + new Date().toLocaleString('fr-FR');
-                showToast(`${confirmed.length} commandes synchronisées`);
-            } catch (e) {
-                showToast('Erreur de synchronisation', 'error');
-            }
-
-            hideLoading();
-        }
-
-        // Close modal on escape
+        // Close modals on escape
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeOrderModal();
-        });
-
-        // Close modal on outside click
-        document.getElementById('order-modal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeOrderModal();
+            if (e.key === 'Escape') {
+                closeProductModal();
+                closeOrderModal();
+            }
         });
     </script>
 </body>
