@@ -8,513 +8,655 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .sidebar-item { transition: all 0.2s; cursor: pointer; }
-        .sidebar-item.active { background: #dbeafe; color: #2563eb; }
-        .sidebar-item:hover:not(.active) { background: #f3f4f6; }
-        .toast { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .modal { display: none; }
-        .modal.active { display: flex; }
-        .upload-zone { border: 2px dashed #d1d5db; transition: all 0.3s; }
-        .upload-zone:hover, .upload-zone.dragover { border-color: #2563eb; background: #eff6ff; }
+        body{font-family:'Inter',sans-serif}
+        .page{display:none}.page.active{display:block}
+        .sidebar-item{transition:all .2s;cursor:pointer}
+        .sidebar-item.active{background:#dbeafe;color:#2563eb}
+        .sidebar-item:hover:not(.active){background:#f3f4f6}
+        .toast{animation:slideIn .3s}
+        @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+        .modal{display:none}.modal.active{display:flex}
+        .upload-zone{border:2px dashed #d1d5db;transition:all .2s}
+        .upload-zone:hover{border-color:#2563eb;background:#eff6ff}
+        .order-row:hover{background:#f9fafb}
+        .status-new{background:#fef3c7;color:#92400e}
+        .status-confirmed{background:#dbeafe;color:#1e40af}
+        .status-shipped{background:#e9d5ff;color:#7c3aed}
+        .status-delivered{background:#d1fae5;color:#065f46}
+        .status-cancelled{background:#fee2e2;color:#991b1b}
     </style>
 </head>
 <body class="bg-gray-100">
     <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
 
-    <!-- Config Modal -->
-    <div id="config-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md">
-            <div class="p-6 border-b">
-                <h3 class="text-xl font-bold">🔧 Configuration</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Supabase URL</label>
-                    <input type="text" id="config-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://xxx.supabase.co">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Anon Key <span class="text-xs text-gray-400">(commence par eyJ...)</span></label>
-                    <input type="text" id="config-key" class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="eyJhbGciOiJIUzI1NiIs...">
-                </div>
-                <div class="flex space-x-3 pt-4">
-                    <button onclick="useDemoMode()" class="flex-1 px-4 py-3 border rounded-xl hover:bg-gray-50">Mode Local</button>
-                    <button onclick="connectSupabase()" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Connecter</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Product Modal -->
     <div id="product-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 id="product-modal-title" class="text-xl font-bold">Ajouter Produit</h3>
-                <button onclick="closeProductModal()" class="text-2xl hover:text-red-500">×</button>
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 id="product-modal-title" class="text-lg font-bold">Ajouter Produit</h3>
+                <button onclick="closeProductModal()" class="text-2xl hover:text-red-500">&times;</button>
             </div>
-            <form id="product-form" class="p-6 space-y-4">
+            <form id="product-form" class="p-5 space-y-4">
                 <input type="hidden" id="product-id">
                 <input type="hidden" id="product-image-data">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Nom *</label>
-                    <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-xl">
+                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="product-name" required class="w-full px-3 py-2 border rounded-lg"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm font-medium mb-1">Prix *</label><input type="number" id="product-price" required class="w-full px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium mb-1">Ancien Prix</label><input type="number" id="product-compare-price" class="w-full px-3 py-2 border rounded-lg"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Prix *</label>
-                        <input type="number" id="product-price" required class="w-full px-4 py-2 border rounded-xl">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Ancien Prix</label>
-                        <input type="number" id="product-compare-price" class="w-full px-4 py-2 border rounded-xl">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Stock</label>
-                        <input type="number" id="product-stock" value="100" class="w-full px-4 py-2 border rounded-xl">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Catégorie</label>
-                        <select id="product-category" class="w-full px-4 py-2 border rounded-xl">
-                            <option value="homme">Homme</option>
-                            <option value="femme">Femme</option>
-                            <option value="unisexe">Unisexe</option>
-                            <option value="cosmetique">Cosmétique</option>
-                        </select>
-                    </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm font-medium mb-1">Stock</label><input type="number" id="product-stock" value="100" class="w-full px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium mb-1">Catégorie</label><select id="product-category" class="w-full px-3 py-2 border rounded-lg"><option value="homme">Homme</option><option value="femme">Femme</option><option value="unisexe">Unisexe</option><option value="cosmetique">Cosmétique</option></select></div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Image</label>
-                    <div id="product-upload-zone" class="upload-zone rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('product-image-input').click()">
+                    <label class="block text-sm font-medium mb-1">Image</label>
+                    <div class="upload-zone rounded-lg p-3 text-center cursor-pointer" onclick="document.getElementById('product-image-input').click()">
                         <input type="file" id="product-image-input" accept="image/*" class="hidden" onchange="handleProductImage(this)">
-                        <div id="product-image-preview" class="hidden">
-                            <img id="product-preview-img" class="w-24 h-24 object-cover rounded-xl mx-auto mb-2">
-                            <p class="text-sm text-green-600">✓ Image sélectionnée</p>
-                        </div>
-                        <div id="product-image-placeholder">
-                            <div class="text-2xl mb-1">📷</div>
-                            <p class="text-gray-500 text-sm">Cliquez pour ajouter une image</p>
-                        </div>
+                        <div id="product-image-preview" class="hidden"><img id="product-preview-img" class="w-20 h-20 object-cover rounded mx-auto mb-1"><p class="text-xs text-green-600">✓ Image</p></div>
+                        <div id="product-image-placeholder"><p class="text-gray-500 text-sm">📷 Cliquez pour ajouter</p></div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Description</label>
-                    <textarea id="product-description" rows="2" class="w-full px-4 py-2 border rounded-xl"></textarea>
-                </div>
-                <label class="flex items-center"><input type="checkbox" id="product-featured" class="mr-2">Produit vedette</label>
-                <div class="flex space-x-3 pt-4">
-                    <button type="button" onclick="closeProductModal()" class="flex-1 px-4 py-3 border rounded-xl">Annuler</button>
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl">Enregistrer</button>
-                </div>
+                <div><label class="block text-sm font-medium mb-1">Description</label><textarea id="product-description" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea></div>
+                <label class="flex items-center text-sm"><input type="checkbox" id="product-featured" class="mr-2">⭐ Vedette</label>
+                <div class="flex gap-3 pt-2"><button type="button" onclick="closeProductModal()" class="flex-1 px-4 py-2 border rounded-lg">Annuler</button><button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">Enregistrer</button></div>
             </form>
         </div>
     </div>
 
-    <!-- Order Modal -->
+    <!-- Order Detail Modal -->
     <div id="order-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold">Commande <span id="order-modal-number"></span></h3>
-                <button onclick="closeOrderModal()" class="text-2xl hover:text-red-500">×</button>
+        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="font-bold">Commande <span id="order-modal-number"></span></h3>
+                <button onclick="closeOrderModal()" class="text-2xl hover:text-red-500">&times;</button>
             </div>
-            <div id="order-modal-content" class="p-6"></div>
+            <div id="order-modal-content" class="p-5"></div>
         </div>
     </div>
 
-    <!-- Main Layout -->
+    <!-- Layout -->
     <div class="flex h-screen">
-        <aside class="w-64 bg-white border-r flex flex-col shrink-0">
-            <div class="p-6 border-b">
-                <div class="flex items-center space-x-3">
-                    <img id="sidebar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' rx='8' fill='%232563eb'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='18' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-xl">
-                    <div>
-                        <h1 id="sidebar-store-name" class="font-bold">Hichoux Store</h1>
-                        <p id="connection-status" class="text-xs text-gray-400">● Déconnecté</p>
-                    </div>
+        <aside class="w-56 bg-white border-r flex flex-col shrink-0">
+            <div class="p-4 border-b">
+                <div class="flex items-center space-x-2">
+                    <img id="sidebar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' rx='8' fill='%232563eb'/%3E%3Ctext x='18' y='24' text-anchor='middle' fill='white' font-size='16' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-9 h-9 rounded-lg">
+                    <div><h1 id="sidebar-store-name" class="font-bold text-sm">Hichoux Store</h1><p id="connection-status" class="text-xs text-gray-400">● Connexion...</p></div>
                 </div>
             </div>
-            <nav class="flex-1 p-4 space-y-1">
-                <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('dashboard')">📊 <span>Dashboard</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('orders')">📦 <span>Commandes</span><span id="badge-orders" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('confirmation')">📞 <span>Confirmation</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('shipping')">🚚 <span>Expédition</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('products')">🏷️ <span>Produits</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('settings')">⚙️ <span>Paramètres</span></div>
+            <nav class="flex-1 p-3 space-y-1 text-sm">
+                <div class="sidebar-item active flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('dashboard')">📊 <span>Dashboard</span></div>
+                <div class="sidebar-item flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('confirmation')">📞 <span>Confirmation</span><span id="badge-confirm" class="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">0</span></div>
+                <div class="sidebar-item flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('shipping')">🚚 <span>Expédition</span><span id="badge-ship" class="ml-auto bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">0</span></div>
+                <div class="sidebar-item flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('orders')">📦 <span>Commandes</span></div>
+                <div class="sidebar-item flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('products')">🏷️ <span>Produits</span></div>
+                <div class="sidebar-item flex items-center space-x-2 px-3 py-2 rounded-lg" onclick="showPage('settings')">⚙️ <span>Paramètres</span></div>
             </nav>
+            <div class="p-3 border-t"><button onclick="refreshAll()" class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">🔄 Actualiser</button></div>
         </aside>
 
         <main class="flex-1 overflow-auto">
             <!-- Dashboard -->
-            <div id="page-dashboard" class="page active p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-bold">Dashboard</h2>
-                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄 Actualiser</button>
+            <div id="page-dashboard" class="page active p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div><h2 class="text-xl font-bold">Dashboard</h2><p id="last-update" class="text-xs text-gray-500"></p></div>
+                    <button onclick="refreshAll()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">🔄 Actualiser tout</button>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Nouvelles</p><p id="stat-new" class="text-3xl font-bold text-yellow-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Confirmées</p><p id="stat-confirmed" class="text-3xl font-bold text-blue-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Expédiées</p><p id="stat-shipped" class="text-3xl font-bold text-purple-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Livrées</p><p id="stat-delivered" class="text-3xl font-bold text-green-600">0</p></div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md" onclick="showPage('confirmation')"><p class="text-gray-500 text-xs">🆕 Nouvelles</p><p id="stat-new" class="text-2xl font-bold text-yellow-600">0</p></div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md" onclick="showPage('shipping')"><p class="text-gray-500 text-xs">✅ Confirmées</p><p id="stat-confirmed" class="text-2xl font-bold text-blue-600">0</p></div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm"><p class="text-gray-500 text-xs">🚚 Expédiées</p><p id="stat-shipped" class="text-2xl font-bold text-purple-600">0</p></div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm"><p class="text-gray-500 text-xs">🎉 Livrées</p><p id="stat-delivered" class="text-2xl font-bold text-green-600">0</p></div>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-sm">
-                    <h3 class="font-bold mb-4">Commandes Récentes</h3>
-                    <div id="recent-orders"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl p-4 shadow-sm"><h3 class="font-bold text-sm mb-3">Commandes Récentes</h3><div id="recent-orders" class="text-sm"></div></div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm"><h3 class="font-bold text-sm mb-3">Stats</h3><div class="space-y-2 text-sm"><div class="flex justify-between p-2 bg-gray-50 rounded"><span>Total</span><span id="total-orders" class="font-bold">0</span></div><div class="flex justify-between p-2 bg-gray-50 rounded"><span>CA Livré</span><span id="total-revenue" class="font-bold text-green-600">0 DH</span></div><div class="flex justify-between p-2 bg-gray-50 rounded"><span>Produits</span><span id="total-products" class="font-bold">0</span></div></div></div>
                 </div>
             </div>
 
-            <!-- Orders -->
-            <div id="page-orders" class="page p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Commandes</h2>
-                    <div class="flex space-x-3">
-                        <input type="text" id="search-orders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl" oninput="filterOrders()">
-                        <select id="filter-status" class="px-4 py-2 border rounded-xl" onchange="filterOrders()">
+            <!-- Confirmation - COMPACT TABLE -->
+            <div id="page-confirmation" class="page p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div><h2 class="text-xl font-bold">📞 Confirmation</h2><p class="text-gray-500 text-sm"><span id="pending-count">0</span> en attente</p></div>
+                    <button onclick="refreshAll()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">🔄</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><div id="confirmation-list"></div></div>
+            </div>
+
+            <!-- Shipping -->
+            <div id="page-shipping" class="page p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div><h2 class="text-xl font-bold">🚚 Expédition</h2><p class="text-gray-500 text-sm"><span id="to-ship-count">0</span> à expédier</p></div>
+                    <button onclick="refreshAll()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">🔄</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><div id="shipping-list"></div></div>
+            </div>
+
+            <!-- All Orders -->
+            <div id="page-orders" class="page p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">📦 Toutes les Commandes</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="search-orders" placeholder="Rechercher..." class="px-3 py-2 border rounded-lg text-sm w-40" oninput="renderOrders()">
+                        <select id="filter-status" class="px-3 py-2 border rounded-lg text-sm" onchange="renderOrders()">
                             <option value="">Tous</option>
                             <option value="new">Nouvelles</option>
                             <option value="confirmed">Confirmées</option>
                             <option value="shipped">Expédiées</option>
                             <option value="delivered">Livrées</option>
+                            <option value="cancelled">Annulées</option>
                         </select>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm"><div id="orders-table" class="overflow-x-auto"></div></div>
-            </div>
-
-            <!-- Confirmation -->
-            <div id="page-confirmation" class="page p-8">
-                <h2 class="text-2xl font-bold mb-6">Confirmation - <span id="pending-count">0</span> en attente</h2>
-                <div id="confirmation-list" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
-            </div>
-
-            <!-- Shipping -->
-            <div id="page-shipping" class="page p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Expédition</h2>
-                    <button onclick="createShippingLabel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Créer Bordereau</button>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm"><div id="shipping-table"></div></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><div id="orders-table"></div></div>
             </div>
 
             <!-- Products -->
-            <div id="page-products" class="page p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Produits (<span id="products-count">0</span>)</h2>
-                    <button onclick="openProductModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button>
+            <div id="page-products" class="page p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div><h2 class="text-xl font-bold">🏷️ Produits</h2><p class="text-gray-500 text-sm"><span id="products-count">0</span> produits</p></div>
+                    <button onclick="openProductModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">+ Ajouter</button>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm"><div id="products-table"></div></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><div id="products-table"></div></div>
             </div>
 
             <!-- Settings -->
-            <div id="page-settings" class="page p-8">
-                <h2 class="text-2xl font-bold mb-6">Paramètres</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🏪 Boutique</h3>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium mb-1">Nom</label><input type="text" id="setting-store-name" class="w-full px-4 py-2 border rounded-xl" value="Hichoux Store"></div>
-                            <div><label class="block text-sm font-medium mb-1">Téléphone</label><input type="tel" id="setting-phone" class="w-full px-4 py-2 border rounded-xl" value="0600000000"></div>
-                            <div><label class="block text-sm font-medium mb-1">WhatsApp</label><input type="tel" id="setting-whatsapp" class="w-full px-4 py-2 border rounded-xl" value="212600000000"></div>
-                            <div><label class="block text-sm font-medium mb-1">Frais livraison (DH)</label><input type="number" id="setting-shipping" class="w-full px-4 py-2 border rounded-xl" value="30"></div>
+            <div id="page-settings" class="page p-6">
+                <h2 class="text-xl font-bold mb-4">⚙️ Paramètres</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Boutique -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">🏪 Boutique</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><label class="block font-medium mb-1">Nom</label><input type="text" id="setting-store-name" class="w-full px-3 py-2 border rounded-lg" value="Hichoux Store"></div>
+                            <div><label class="block font-medium mb-1">Téléphone</label><input type="tel" id="setting-phone" class="w-full px-3 py-2 border rounded-lg" value="0600000000"></div>
+                            <div><label class="block font-medium mb-1">WhatsApp (212...)</label><input type="tel" id="setting-whatsapp" class="w-full px-3 py-2 border rounded-lg" value="212600000000"></div>
+                            <div><label class="block font-medium mb-1">Frais livraison (DH)</label><input type="number" id="setting-shipping" class="w-full px-3 py-2 border rounded-lg" value="30"></div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🎨 Logo</h3>
-                        <div class="flex items-center space-x-4 mb-4">
-                            <img id="preview-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' rx='16' fill='%232563eb'/%3E%3Ctext x='40' y='52' text-anchor='middle' fill='white' font-size='36' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-20 h-20 rounded-xl object-cover border">
-                            <div><p class="font-medium">Logo actuel</p><p class="text-sm text-gray-500">Cliquez ci-dessous</p></div>
-                        </div>
-                        <div class="upload-zone rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('logo-input').click()">
-                            <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="handleLogoUpload(this)">
-                            <p class="text-gray-600">📤 Cliquez pour uploader</p>
+                    <!-- Logo -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">🎨 Logo</h3>
+                        <div class="flex items-center gap-3 mb-3"><img id="preview-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' rx='12' fill='%232563eb'/%3E%3Ctext x='30' y='40' text-anchor='middle' fill='white' font-size='28' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-14 h-14 rounded-xl object-cover border"></div>
+                        <div class="upload-zone rounded-lg p-3 text-center cursor-pointer text-sm" onclick="document.getElementById('logo-input').click()"><input type="file" id="logo-input" accept="image/*" class="hidden" onchange="handleLogoUpload(this)"><p>📤 Uploader logo</p></div>
+                    </div>
+                    <!-- Supabase -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">🗄️ Supabase</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><label class="block font-medium mb-1">URL</label><input type="text" id="setting-supabase-url" class="w-full px-3 py-2 border rounded-lg text-xs"></div>
+                            <div><label class="block font-medium mb-1">Anon Key</label><input type="password" id="setting-supabase-key" class="w-full px-3 py-2 border rounded-lg text-xs"></div>
+                            <div id="db-status" class="px-3 py-2 bg-gray-100 rounded-lg text-xs">⚪ Non testé</div>
+                            <button onclick="testConnection()" class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg">🔌 Tester</button>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🗄️ Base de Données</h3>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium mb-1">Supabase URL</label><input type="text" id="setting-supabase-url" class="w-full px-4 py-2 border rounded-xl"></div>
-                            <div><label class="block text-sm font-medium mb-1">Anon Key</label><input type="password" id="setting-supabase-key" class="w-full px-4 py-2 border rounded-xl"></div>
-                            <div id="db-status" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl">⚪ Non configuré</div>
-                            <button onclick="testConnection()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl">🔌 Tester</button>
+                    <!-- Google Sheets -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">📊 Google Sheets</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><label class="block font-medium mb-1">Apps Script URL</label><input type="url" id="setting-gas-url" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="https://script.google.com/..."></div>
+                            <div><label class="block font-medium mb-1">Sheet ID</label><input type="text" id="setting-sheet-id" class="w-full px-3 py-2 border rounded-lg text-xs"></div>
+                            <a id="sheet-link" href="#" target="_blank" class="text-blue-600 text-xs block">📄 Ouvrir Sheet</a>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">💾 Données</h3>
-                        <div class="space-y-4">
-                            <button onclick="exportData()" class="w-full px-4 py-2 bg-green-600 text-white rounded-xl">📥 Exporter JSON</button>
-                            <div><label class="block text-sm font-medium mb-1">Importer</label><input type="file" id="import-input" accept=".json" class="w-full" onchange="importData(this)"></div>
+                    <!-- Digylog -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">🚚 Digylog (Livraison)</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><label class="block font-medium mb-1">Email Digylog</label><input type="email" id="setting-digylog-email" class="w-full px-3 py-2 border rounded-lg"></div>
+                            <div><label class="block font-medium mb-1">Mot de passe</label><input type="password" id="setting-digylog-password" class="w-full px-3 py-2 border rounded-lg"></div>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-800">💡 Inscrivez-vous sur <a href="https://www.digylog.com" target="_blank" class="underline font-bold">digylog.com</a></div>
+                            <a href="https://www.digylog.com/suivi-de-colis/" target="_blank" class="text-blue-600 text-xs">🔍 Suivi Digylog</a>
+                        </div>
+                    </div>
+                    <!-- Google Drive -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-sm mb-3">📁 Google Drive</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><label class="block font-medium mb-1">Folder ID (Images)</label><input type="text" id="setting-drive-folder" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="1ABC...XYZ"></div>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-800">⚠️ Optionnel - Images stockées en base64 localement</div>
+                            <p class="text-xs text-gray-500">Partagez le dossier en "Tout le monde peut voir"</p>
+                        </div>
+                    </div>
+                    <!-- Data -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm lg:col-span-2">
+                        <h3 class="font-bold text-sm mb-3">💾 Sauvegarde</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="exportData()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm">📥 Export JSON</button>
+                            <label class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm cursor-pointer">📤 Import<input type="file" accept=".json" class="hidden" onchange="importData(this)"></label>
+                            <button onclick="syncToSupabase()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">☁️ Sync Supabase</button>
+                            <button onclick="clearLocalData()" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm">🗑️ Effacer local</button>
                         </div>
                     </div>
                 </div>
-                <button onclick="saveSettings()" class="mt-6 px-8 py-3 bg-blue-600 text-white rounded-xl font-medium">💾 Sauvegarder</button>
+                <button onclick="saveSettings()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg">💾 Sauvegarder Paramètres</button>
             </div>
         </main>
     </div>
 
     <script>
-        const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='100' y='105' text-anchor='middle' fill='%239ca3af' font-size='14'%3EProduit%3C/text%3E%3C/svg%3E";
-        
+        // CONFIG
+        const SUPABASE_URL = 'https://mbvskiaqfpbbnxhgzpga.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
+        const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23f3f4f6'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%239ca3af' font-size='12'%3EProduit%3C/text%3E%3C/svg%3E";
+
         let supabaseClient = null, isConnected = false;
         let orders = [], products = [];
-        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoData: '', supabaseUrl: '', supabaseKey: '' };
+        let settings = {
+            name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoData: '',
+            supabaseUrl: SUPABASE_URL, supabaseKey: SUPABASE_KEY,
+            gasUrl: '', sheetId: '1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw',
+            digylogEmail: '', digylogPassword: '', driveFolder: ''
+        };
 
-        const demoOrders = [
-            { id: '1', order_number: 'HCX001234', customer_name: 'Ahmed Benali', customer_phone: '0661234567', shipping_address: 'Rue Hassan II', shipping_city: 'Casablanca', total: 300, status: 'new', created_at: new Date().toISOString() },
-            { id: '2', order_number: 'HCX001235', customer_name: 'Fatima Zahra', customer_phone: '0677889900', shipping_address: 'Avenue Mohammed V', shipping_city: 'Rabat', total: 200, status: 'new', created_at: new Date().toISOString() },
-            { id: '3', order_number: 'HCX001236', customer_name: 'Youssef Amrani', customer_phone: '0655443322', shipping_address: 'Boulevard Zerktouni', shipping_city: 'Marrakech', total: 450, status: 'confirmed', created_at: new Date().toISOString() },
-        ];
-        const demoProducts = [
-            { id: '1', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_data: '', description: 'Parfum oriental' },
-            { id: '2', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_data: '', description: 'Parfum floral' },
-            { id: '3', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_data: '', description: 'Parfum chaud' },
-        ];
-
+        // INIT
         document.addEventListener('DOMContentLoaded', () => {
             loadSettings();
+            loadLocalData();
+            initSupabase();
             document.getElementById('product-form').addEventListener('submit', saveProduct);
-            if (settings.supabaseUrl && settings.supabaseKey) tryConnect();
-            else document.getElementById('config-modal').classList.add('active');
+            
+            // Auto-refresh every 15s
+            setInterval(autoRefresh, 15000);
+            
+            // Listen for storage changes (sync between tabs)
+            window.addEventListener('storage', e => {
+                if (e.key === 'hichoux_orders' || e.key === 'hichoux_products') {
+                    loadLocalData();
+                    updateAllUI();
+                }
+            });
         });
 
         function loadSettings() {
             const s = localStorage.getItem('hichoux_settings');
             if (s) settings = {...settings, ...JSON.parse(s)};
-            const p = localStorage.getItem('hichoux_products');
-            if (p) products = JSON.parse(p);
-            const o = localStorage.getItem('hichoux_orders');
-            if (o) orders = JSON.parse(o);
-            applySettings();
+            settings.supabaseUrl = SUPABASE_URL;
+            settings.supabaseKey = SUPABASE_KEY;
+            applySettingsToUI();
         }
 
-        function applySettings() {
+        function applySettingsToUI() {
             document.getElementById('setting-store-name').value = settings.name;
             document.getElementById('setting-phone').value = settings.phone;
             document.getElementById('setting-whatsapp').value = settings.whatsapp;
             document.getElementById('setting-shipping').value = settings.shipping;
             document.getElementById('setting-supabase-url').value = settings.supabaseUrl;
             document.getElementById('setting-supabase-key').value = settings.supabaseKey;
-            document.getElementById('config-url').value = settings.supabaseUrl;
-            document.getElementById('config-key').value = settings.supabaseKey;
+            document.getElementById('setting-gas-url').value = settings.gasUrl || '';
+            document.getElementById('setting-sheet-id').value = settings.sheetId || '';
+            document.getElementById('setting-digylog-email').value = settings.digylogEmail || '';
+            document.getElementById('setting-digylog-password').value = settings.digylogPassword || '';
+            document.getElementById('setting-drive-folder').value = settings.driveFolder || '';
             document.getElementById('sidebar-store-name').textContent = settings.name;
+            if (settings.sheetId) document.getElementById('sheet-link').href = `https://docs.google.com/spreadsheets/d/${settings.sheetId}`;
             if (settings.logoData) {
                 document.getElementById('sidebar-logo').src = settings.logoData;
                 document.getElementById('preview-logo').src = settings.logoData;
             }
         }
 
-        async function tryConnect() {
+        function loadLocalData() {
+            const o = localStorage.getItem('hichoux_orders');
+            const p = localStorage.getItem('hichoux_products');
+            if (o) orders = JSON.parse(o);
+            if (p) products = JSON.parse(p);
+        }
+
+        async function initSupabase() {
             try {
-                supabaseClient = supabase.createClient(settings.supabaseUrl, settings.supabaseKey);
-                const { error } = await supabaseClient.from('products').select('id').limit(1);
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { error } = await supabaseClient.from('orders').select('id').limit(1);
                 if (error) throw error;
                 isConnected = true;
                 setStatus('green', 'Connecté');
+                document.getElementById('db-status').className = 'px-3 py-2 bg-green-100 text-green-800 rounded-lg text-xs';
+                document.getElementById('db-status').textContent = '✓ Connecté à Supabase';
                 await loadFromSupabase();
-            } catch (e) { console.log('Using local mode'); useDemoMode(); }
-        }
-
-        async function connectSupabase() {
-            const url = document.getElementById('config-url').value.trim();
-            const key = document.getElementById('config-key').value.trim();
-            if (!url || !key) { showToast('Entrez URL et Key', 'error'); return; }
-            try {
-                supabaseClient = supabase.createClient(url, key);
-                const { error } = await supabaseClient.from('products').select('id').limit(1);
-                if (error) throw error;
-                settings.supabaseUrl = url;
-                settings.supabaseKey = key;
-                saveToStorage();
-                isConnected = true;
-                document.getElementById('config-modal').classList.remove('active');
-                setStatus('green', 'Connecté');
-                showToast('Connecté!');
-                await loadFromSupabase();
-            } catch (e) { showToast('Erreur: ' + e.message, 'error'); }
-        }
-
-        async function testConnection() {
-            const url = document.getElementById('setting-supabase-url').value.trim();
-            const key = document.getElementById('setting-supabase-key').value.trim();
-            if (!url || !key) { showToast('Entrez URL et Key', 'error'); return; }
-            try {
-                const c = supabase.createClient(url, key);
-                await c.from('products').select('id').limit(1);
-                document.getElementById('db-status').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl';
-                document.getElementById('db-status').textContent = '✓ Connexion OK!';
-                showToast('Connexion réussie!');
             } catch (e) {
-                document.getElementById('db-status').className = 'px-4 py-2 bg-red-100 text-red-800 rounded-xl';
-                document.getElementById('db-status').textContent = '✗ Erreur';
-                showToast('Échec', 'error');
+                console.error('Supabase:', e);
+                setStatus('yellow', 'Mode Local');
+                document.getElementById('db-status').className = 'px-3 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-xs';
+                document.getElementById('db-status').textContent = '⚠️ Mode hors ligne';
+                updateAllUI();
             }
         }
 
         async function loadFromSupabase() {
             try {
-                const { data: o } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
-                const { data: p } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-                if (o?.length) orders = o;
-                if (p?.length) products = p;
-                saveToStorage();
-                updateUI();
-            } catch (e) { useDemoMode(); }
+                const { data: ordersData } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+                const { data: productsData } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+                
+                // Merge products with local images
+                const localP = JSON.parse(localStorage.getItem('hichoux_products') || '[]');
+                
+                if (ordersData) {
+                    orders = ordersData;
+                    localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+                }
+                if (productsData) {
+                    products = productsData.map(p => {
+                        const lp = localP.find(x => x.id == p.id || x.sku === p.sku);
+                        return {...p, image_data: lp?.image_data || p.image_data || ''};
+                    });
+                    localStorage.setItem('hichoux_products', JSON.stringify(products));
+                }
+                
+                updateAllUI();
+                updateLastUpdate();
+            } catch (e) {
+                console.error('Load error:', e);
+            }
         }
 
-        function useDemoMode() {
-            document.getElementById('config-modal').classList.remove('active');
-            if (!orders.length) orders = [...demoOrders];
-            if (!products.length) products = [...demoProducts];
-            setStatus('yellow', 'Mode Local');
-            document.getElementById('db-status').className = 'px-4 py-2 bg-yellow-100 text-yellow-800 rounded-xl';
-            document.getElementById('db-status').textContent = '⚪ Mode Local';
-            updateUI();
+        function setStatus(c, t) {
+            document.getElementById('connection-status').innerHTML = `<span class="text-${c}-500">● ${t}</span>`;
         }
 
-        function setStatus(color, text) {
-            document.getElementById('connection-status').innerHTML = `<span class="text-${color}-500">● ${text}</span>`;
+        function updateLastUpdate() {
+            document.getElementById('last-update').textContent = 'MAJ: ' + new Date().toLocaleTimeString('fr-FR');
         }
 
-        function refreshData() {
+        async function refreshAll() {
+            showToast('Actualisation...', 'info');
+            if (isConnected) await loadFromSupabase();
+            else { loadLocalData(); updateAllUI(); }
+            showToast('Actualisé!');
+        }
+
+        function autoRefresh() {
             if (isConnected) loadFromSupabase();
-            else updateUI();
-            showToast('Actualisé!', 'info');
         }
 
+        // NAVIGATION
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            if (pageId === 'orders') filterOrders();
+            document.getElementById('page-' + pageId)?.classList.add('active');
+            event?.currentTarget?.classList.add('active');
+            
+            // Render on page show
+            if (pageId === 'orders') renderOrders();
             if (pageId === 'confirmation') renderConfirmation();
             if (pageId === 'shipping') renderShipping();
             if (pageId === 'products') renderProducts();
+            if (pageId === 'dashboard') updateAllUI();
         }
 
         function showToast(msg, type = 'success') {
             const c = document.getElementById('toast-container');
-            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
             const t = document.createElement('div');
-            t.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
+            t.className = `toast ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg text-sm`;
             t.textContent = msg;
             c.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+            setTimeout(() => t.remove(), 2500);
         }
 
-        function updateUI() {
-            const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0 };
-            orders.forEach(o => stats[o.status] !== undefined && stats[o.status]++);
+        // UI UPDATE
+        function updateAllUI() {
+            updateStats();
+            updateBadges();
+            renderRecentOrders();
+            renderConfirmation();
+            renderShipping();
+            renderOrders();
+            renderProducts();
+            document.getElementById('total-products').textContent = products.length;
+        }
+
+        function updateStats() {
+            const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0, cancelled: 0 };
+            let revenue = 0;
+            orders.forEach(o => {
+                if (stats[o.status] !== undefined) stats[o.status]++;
+                if (o.status === 'delivered') revenue += parseFloat(o.total) || 0;
+            });
             document.getElementById('stat-new').textContent = stats.new;
             document.getElementById('stat-confirmed').textContent = stats.confirmed;
             document.getElementById('stat-shipped').textContent = stats.shipped;
             document.getElementById('stat-delivered').textContent = stats.delivered;
-            
-            const badge = document.getElementById('badge-orders');
-            if (stats.new > 0) { badge.textContent = stats.new; badge.classList.remove('hidden'); }
-            else badge.classList.add('hidden');
-            
-            renderRecentOrders();
+            document.getElementById('total-orders').textContent = orders.length;
+            document.getElementById('total-revenue').textContent = revenue.toLocaleString() + ' DH';
+        }
+
+        function updateBadges() {
+            const n = orders.filter(o => o.status === 'new').length;
+            const c = orders.filter(o => o.status === 'confirmed').length;
+            setBadge('badge-confirm', n);
+            setBadge('badge-ship', c);
+        }
+
+        function setBadge(id, count) {
+            const el = document.getElementById(id);
+            if (count > 0) { el.textContent = count; el.classList.remove('hidden'); }
+            else el.classList.add('hidden');
         }
 
         function getImg(p) { return p.image_data || p.image_url || DEFAULT_IMG; }
+        
         function getBadge(s) {
-            const c = { new: 'bg-yellow-100 text-yellow-800', confirmed: 'bg-blue-100 text-blue-800', shipped: 'bg-purple-100 text-purple-800', delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800' };
-            const l = { new: 'Nouvelle', confirmed: 'Confirmée', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée' };
-            return `<span class="px-2 py-1 rounded-full text-xs ${c[s]}">${l[s]}</span>`;
+            const cfg = {
+                new: ['Nouvelle', 'status-new'],
+                confirmed: ['Confirmée', 'status-confirmed'],
+                shipped: ['Expédiée', 'status-shipped'],
+                delivered: ['Livrée', 'status-delivered'],
+                cancelled: ['Annulée', 'status-cancelled']
+            };
+            const [l, c] = cfg[s] || [s, 'bg-gray-100'];
+            return `<span class="px-2 py-0.5 rounded text-xs font-medium ${c}">${l}</span>`;
+        }
+
+        function formatDate(d) {
+            return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
         }
 
         function renderRecentOrders() {
             const r = orders.slice(0, 5);
             document.getElementById('recent-orders').innerHTML = r.length ? r.map(o => `
-                <div class="flex justify-between items-center py-3 border-b cursor-pointer hover:bg-gray-50" onclick="openOrderModal('${o.id}')">
-                    <div><p class="font-medium">${o.order_number}</p><p class="text-sm text-gray-500">${o.customer_name}</p></div>
-                    <div class="text-right"><p class="font-semibold">${o.total} DH</p>${getBadge(o.status)}</div>
+                <div class="flex justify-between items-center py-2 border-b last:border-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded" onclick="openOrderModal('${o.id}')">
+                    <div><p class="font-medium">${o.order_number}</p><p class="text-xs text-gray-500">${o.customer_name}</p></div>
+                    <div class="text-right"><p class="font-bold">${o.total} DH</p>${getBadge(o.status)}</div>
                 </div>
-            `).join('') : '<p class="text-gray-500 text-center py-8">Aucune commande</p>';
+            `).join('') : '<p class="text-gray-400 text-center py-4">Aucune commande</p>';
         }
 
-        function filterOrders() {
-            const search = document.getElementById('search-orders').value.toLowerCase();
-            const status = document.getElementById('filter-status').value;
-            const f = orders.filter(o => (!search || o.order_number.toLowerCase().includes(search) || o.customer_name.toLowerCase().includes(search)) && (!status || o.status === status));
-            document.getElementById('orders-table').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th></tr></thead><tbody>${f.map(o => `<tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openOrderModal('${o.id}')"><td class="p-4 font-medium">${o.order_number}</td><td class="p-4">${o.customer_name}</td><td class="p-4">${o.shipping_city}</td><td class="p-4 font-semibold">${o.total} DH</td><td class="p-4">${getBadge(o.status)}</td></tr>`).join('')}</tbody></table>`;
+        // CONFIRMATION - COMPACT TABLE (only status='new')
+        function renderConfirmation() {
+            const pending = orders.filter(o => o.status === 'new');
+            document.getElementById('pending-count').textContent = pending.length;
+            
+            if (pending.length === 0) {
+                document.getElementById('confirmation-list').innerHTML = '<div class="text-center py-8"><div class="text-3xl mb-2">✅</div><p class="text-gray-500">Tout confirmé!</p></div>';
+                return;
+            }
+
+            document.getElementById('confirmation-list').innerHTML = `
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-gray-500 bg-gray-50 text-xs"><th class="p-2">Commande</th><th class="p-2">Client</th><th class="p-2">Tél</th><th class="p-2">Ville</th><th class="p-2">Total</th><th class="p-2">Actions</th></tr></thead>
+                    <tbody>${pending.map(o => `
+                        <tr class="order-row border-b">
+                            <td class="p-2"><p class="font-medium">${o.order_number}</p><p class="text-xs text-gray-400">${formatDate(o.created_at)}</p></td>
+                            <td class="p-2">${o.customer_name}</td>
+                            <td class="p-2"><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></td>
+                            <td class="p-2">${o.shipping_city}</td>
+                            <td class="p-2 font-bold text-green-600">${o.total} DH</td>
+                            <td class="p-2">
+                                <div class="flex gap-1">
+                                    <a href="tel:${o.customer_phone}" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">📞</a>
+                                    <a href="https://wa.me/212${o.customer_phone.replace(/^0/,'')}?text=${encodeURIComponent(`Bonjour ${o.customer_name}! Commande ${o.order_number} - ${o.total} DH`)}" target="_blank" class="px-2 py-1 bg-green-500 text-white rounded text-xs">💬</a>
+                                    <button onclick="confirmOrder('${o.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs">✅</button>
+                                    <button onclick="cancelOrder('${o.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">❌</button>
+                                    <button onclick="openOrderModal('${o.id}')" class="px-2 py-1 bg-gray-200 rounded text-xs">👁️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
         }
 
+        // SHIPPING (only status='confirmed')
+        function renderShipping() {
+            const toShip = orders.filter(o => o.status === 'confirmed');
+            document.getElementById('to-ship-count').textContent = toShip.length;
+            
+            if (toShip.length === 0) {
+                document.getElementById('shipping-list').innerHTML = '<div class="text-center py-8"><div class="text-3xl mb-2">📦</div><p class="text-gray-500">Aucune à expédier</p></div>';
+                return;
+            }
+
+            document.getElementById('shipping-list').innerHTML = `
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-gray-500 bg-gray-50 text-xs"><th class="p-2">Commande</th><th class="p-2">Client</th><th class="p-2">Adresse</th><th class="p-2">Ville</th><th class="p-2">Total</th><th class="p-2">Actions</th></tr></thead>
+                    <tbody>${toShip.map(o => `
+                        <tr class="order-row border-b">
+                            <td class="p-2 font-medium">${o.order_number}</td>
+                            <td class="p-2">${o.customer_name}<br><span class="text-xs text-gray-500">${o.customer_phone}</span></td>
+                            <td class="p-2 text-xs">${o.shipping_address || '-'}</td>
+                            <td class="p-2">${o.shipping_city}</td>
+                            <td class="p-2 font-bold">${o.total} DH</td>
+                            <td class="p-2">
+                                <button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded text-xs">🚚 Expédier</button>
+                            </td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+
+        // ALL ORDERS
+        function renderOrders() {
+            const search = document.getElementById('search-orders')?.value.toLowerCase() || '';
+            const status = document.getElementById('filter-status')?.value || '';
+            
+            const filtered = orders.filter(o => {
+                const matchSearch = !search || o.order_number?.toLowerCase().includes(search) || o.customer_name?.toLowerCase().includes(search) || o.customer_phone?.includes(search);
+                const matchStatus = !status || o.status === status;
+                return matchSearch && matchStatus;
+            });
+
+            document.getElementById('orders-table').innerHTML = `
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-gray-500 bg-gray-50 text-xs"><th class="p-2">Commande</th><th class="p-2">Client</th><th class="p-2">Tél</th><th class="p-2">Ville</th><th class="p-2">Total</th><th class="p-2">Statut</th><th class="p-2">Date</th></tr></thead>
+                    <tbody>${filtered.map(o => `
+                        <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openOrderModal('${o.id}')">
+                            <td class="p-2 font-medium">${o.order_number}</td>
+                            <td class="p-2">${o.customer_name}</td>
+                            <td class="p-2">${o.customer_phone}</td>
+                            <td class="p-2">${o.shipping_city}</td>
+                            <td class="p-2 font-bold">${o.total} DH</td>
+                            <td class="p-2">${getBadge(o.status)}</td>
+                            <td class="p-2 text-xs text-gray-500">${formatDate(o.created_at)}</td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+
+        // ORDER ACTIONS
         function openOrderModal(id) {
             const o = orders.find(x => x.id == id);
             if (!o) return;
+            
             document.getElementById('order-modal-number').textContent = o.order_number;
             document.getElementById('order-modal-content').innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div><p class="text-gray-500 text-sm">Client</p><p class="font-semibold">${o.customer_name}</p></div>
-                    <div><p class="text-gray-500 text-sm">Téléphone</p><p class="font-semibold">${o.customer_phone}</p></div>
-                    <div><p class="text-gray-500 text-sm">Ville</p><p class="font-semibold">${o.shipping_city}</p></div>
-                    <div><p class="text-gray-500 text-sm">Total</p><p class="font-semibold text-green-600">${o.total} DH</p></div>
-                    <div class="col-span-2"><p class="text-gray-500 text-sm">Adresse</p><p>${o.shipping_address}</p></div>
+                <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+                    <div><p class="text-gray-500 text-xs">Client</p><p class="font-semibold">${o.customer_name}</p></div>
+                    <div><p class="text-gray-500 text-xs">Téléphone</p><p class="font-semibold">${o.customer_phone}</p></div>
+                    <div><p class="text-gray-500 text-xs">Ville</p><p class="font-semibold">${o.shipping_city}</p></div>
+                    <div><p class="text-gray-500 text-xs">Total</p><p class="font-semibold text-green-600">${o.total} DH</p></div>
+                    <div class="col-span-2"><p class="text-gray-500 text-xs">Adresse</p><p>${o.shipping_address || '-'}</p></div>
+                    <div><p class="text-gray-500 text-xs">Statut</p>${getBadge(o.status)}</div>
+                    <div><p class="text-gray-500 text-xs">Date</p><p>${formatDate(o.created_at)}</p></div>
+                    ${o.tracking_number ? `<div class="col-span-2"><p class="text-gray-500 text-xs">Tracking</p><p class="font-mono font-bold">${o.tracking_number}</p><a href="https://www.digylog.com/suivi-de-colis/?tracking=${o.tracking_number}" target="_blank" class="text-blue-600 text-xs">Suivre Digylog →</a></div>` : ''}
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <a href="tel:${o.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl">📞 Appeler</a>
-                    <a href="https://wa.me/212${o.customer_phone.slice(1)}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl">💬 WhatsApp</a>
-                    ${o.status === 'new' ? `<button onclick="confirmOrder('${o.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl">✅ Confirmer</button><button onclick="cancelOrder('${o.id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl">❌ Annuler</button>` : ''}
-                    ${o.status === 'confirmed' ? `<button onclick="shipOrder('${o.id}')" class="px-4 py-2 bg-purple-600 text-white rounded-xl">🚚 Expédier</button>` : ''}
+                <div class="flex flex-wrap gap-2">
+                    <a href="tel:${o.customer_phone}" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm">📞 Appeler</a>
+                    <a href="https://wa.me/212${o.customer_phone.replace(/^0/,'')}" target="_blank" class="px-3 py-2 bg-green-500 text-white rounded-lg text-sm">💬 WhatsApp</a>
+                    ${o.status === 'new' ? `<button onclick="confirmOrder('${o.id}')" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm">✅ Confirmer</button><button onclick="cancelOrder('${o.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg text-sm">❌ Annuler</button>` : ''}
+                    ${o.status === 'confirmed' ? `<button onclick="shipOrder('${o.id}')" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm">🚚 Expédier</button>` : ''}
+                    ${o.status === 'shipped' ? `<button onclick="deliverOrder('${o.id}')" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">🎉 Marquer Livré</button>` : ''}
                 </div>
             `;
             document.getElementById('order-modal').classList.add('active');
         }
+
         function closeOrderModal() { document.getElementById('order-modal').classList.remove('active'); }
 
         async function confirmOrder(id) {
-            const o = orders.find(x => x.id == id); if (!o) return;
-            o.status = 'confirmed';
-            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', id); } catch(e){}
-            saveToStorage(); closeOrderModal(); updateUI(); showToast('Confirmée!');
+            await updateOrderStatus(id, 'confirmed');
+            closeOrderModal();
+            showToast('✅ Commande confirmée!');
         }
+
         async function cancelOrder(id) {
-            const o = orders.find(x => x.id == id); if (!o) return;
-            o.status = 'cancelled';
-            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'cancelled' }).eq('id', id); } catch(e){}
-            saveToStorage(); closeOrderModal(); updateUI(); showToast('Annulée');
+            if (!confirm('Annuler cette commande?')) return;
+            await updateOrderStatus(id, 'cancelled');
+            closeOrderModal();
+            showToast('Commande annulée');
         }
+
         async function shipOrder(id) {
-            const o = orders.find(x => x.id == id); if (!o) return;
-            const t = 'DG' + Math.random().toString(36).substring(2, 10).toUpperCase();
-            o.status = 'shipped'; o.tracking_number = t;
-            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'shipped', tracking_number: t }).eq('id', id); } catch(e){}
-            saveToStorage(); closeOrderModal(); updateUI(); showToast('Expédiée: ' + t);
+            const tracking = prompt('Numéro tracking Digylog (optionnel):', 'DG' + Date.now().toString().slice(-8));
+            if (tracking === null) return;
+            await updateOrderStatus(id, 'shipped', tracking);
+            closeOrderModal();
+            showToast('🚚 Commande expédiée!');
         }
 
-        function renderConfirmation() {
-            const p = orders.filter(o => o.status === 'new');
-            document.getElementById('pending-count').textContent = p.length;
-            document.getElementById('confirmation-list').innerHTML = p.length ? p.map(o => `
-                <div class="bg-white rounded-2xl p-6 shadow-sm">
-                    <div class="flex justify-between mb-4"><h4 class="font-bold">${o.order_number}</h4><span class="text-green-600 font-bold">${o.total} DH</span></div>
-                    <p>👤 ${o.customer_name}</p><p>📞 ${o.customer_phone}</p><p>📍 ${o.shipping_city}</p>
-                    <div class="flex gap-2 mt-4">
-                        <a href="tel:${o.customer_phone}" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-center">📞</a>
-                        <a href="https://wa.me/212${o.customer_phone.slice(1)}" target="_blank" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-xl text-center">💬</a>
-                        <button onclick="confirmOrder('${o.id}')" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl">✅</button>
-                        <button onclick="cancelOrder('${o.id}')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl">❌</button>
-                    </div>
-                </div>
-            `).join('') : '<div class="col-span-2 text-center py-16"><div class="text-4xl mb-4">✅</div><p>Tout est confirmé!</p></div>';
+        async function deliverOrder(id) {
+            await updateOrderStatus(id, 'delivered');
+            closeOrderModal();
+            showToast('🎉 Commande livrée!');
         }
 
-        function renderShipping() {
-            const c = orders.filter(o => o.status === 'confirmed');
-            document.getElementById('shipping-table').innerHTML = `<div class="p-4 bg-blue-50 border-b"><strong>${c.length}</strong> à expédier</div><table class="w-full"><tbody>${c.map(o => `<tr class="border-b"><td class="p-4 font-medium">${o.order_number}</td><td class="p-4">${o.customer_name}</td><td class="p-4">${o.shipping_city}</td><td class="p-4"><button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm">🚚 Expédier</button></td></tr>`).join('')}</tbody></table>`;
+        async function updateOrderStatus(id, newStatus, tracking = null) {
+            const o = orders.find(x => x.id == id);
+            if (!o) return;
+            
+            // Update local
+            o.status = newStatus;
+            o.updated_at = new Date().toISOString();
+            if (tracking) o.tracking_number = tracking;
+            
+            // Save to localStorage (triggers sync to other tabs)
+            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+            
+            // Sync to Supabase
+            if (isConnected && supabaseClient) {
+                try {
+                    const updateData = { status: newStatus, updated_at: o.updated_at };
+                    if (tracking) updateData.tracking_number = tracking;
+                    await supabaseClient.from('orders').update(updateData).eq('id', id);
+                } catch (e) { console.error('Supabase update:', e); }
+            }
+            
+            // Update all UI
+            updateAllUI();
         }
 
+        // PRODUCTS
         function renderProducts() {
             document.getElementById('products-count').textContent = products.length;
-            document.getElementById('products-table').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">Actions</th></tr></thead><tbody>${products.map(p => `<tr class="border-b hover:bg-gray-50"><td class="p-4"><img src="${getImg(p)}" class="w-12 h-12 rounded-lg object-cover bg-gray-100"></td><td class="p-4"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category}</p></td><td class="p-4"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price} DH</p>` : ''}</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td><td class="p-4"><button onclick="editProduct('${p.id}')" class="text-blue-600 mr-2">✏️</button><button onclick="deleteProduct('${p.id}')" class="text-red-600">🗑️</button></td></tr>`).join('')}</tbody></table>`;
+            document.getElementById('products-table').innerHTML = `
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-gray-500 bg-gray-50 text-xs"><th class="p-2">Image</th><th class="p-2">Produit</th><th class="p-2">Prix</th><th class="p-2">Stock</th><th class="p-2">⭐</th><th class="p-2">Actions</th></tr></thead>
+                    <tbody>${products.map(p => `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2"><img src="${getImg(p)}" class="w-10 h-10 rounded object-cover bg-gray-100"></td>
+                            <td class="p-2"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category || ''}</p></td>
+                            <td class="p-2"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price}</p>` : ''}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td>
+                            <td class="p-2">${p.is_featured ? '⭐' : ''}</td>
+                            <td class="p-2"><button onclick="editProduct('${p.id}')" class="text-blue-600 mr-1">✏️</button><button onclick="deleteProduct('${p.id}')" class="text-red-600">🗑️</button></td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
         }
 
         function openProductModal(p = null) {
-            document.getElementById('product-modal-title').textContent = p ? 'Modifier' : 'Ajouter';
+            document.getElementById('product-modal-title').textContent = p ? 'Modifier Produit' : 'Ajouter Produit';
             document.getElementById('product-id').value = p?.id || '';
             document.getElementById('product-name').value = p?.name || '';
             document.getElementById('product-price').value = p?.price || '';
@@ -524,6 +666,7 @@
             document.getElementById('product-image-data').value = p?.image_data || '';
             document.getElementById('product-description').value = p?.description || '';
             document.getElementById('product-featured').checked = p?.is_featured || false;
+            
             if (p?.image_data) {
                 document.getElementById('product-preview-img').src = p.image_data;
                 document.getElementById('product-image-preview').classList.remove('hidden');
@@ -534,6 +677,7 @@
             }
             document.getElementById('product-modal').classList.add('active');
         }
+
         function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); }
         function editProduct(id) { const p = products.find(x => x.id == id); if (p) openProductModal(p); }
 
@@ -552,9 +696,11 @@
 
         async function saveProduct(e) {
             e.preventDefault();
+            
             const id = document.getElementById('product-id').value;
-            const data = {
+            const productData = {
                 name: document.getElementById('product-name').value,
+                sku: 'SKU-' + Date.now(),
                 price: parseFloat(document.getElementById('product-price').value),
                 compare_price: parseFloat(document.getElementById('product-compare-price').value) || null,
                 stock: parseInt(document.getElementById('product-stock').value),
@@ -564,25 +710,67 @@
                 is_featured: document.getElementById('product-featured').checked,
                 is_active: true
             };
+
             if (id) {
-                const i = products.findIndex(x => x.id == id);
-                if (i !== -1) products[i] = {...products[i], ...data};
-                if (isConnected) try { const { image_data, ...d } = data; await supabaseClient.from('products').update(d).eq('id', id); } catch(e){}
+                // Update
+                const idx = products.findIndex(p => p.id == id);
+                if (idx !== -1) {
+                    productData.sku = products[idx].sku; // Keep original SKU
+                    products[idx] = {...products[idx], ...productData};
+                }
+                
+                if (isConnected && supabaseClient) {
+                    try {
+                        const { image_data, ...dbData } = productData;
+                        await supabaseClient.from('products').update(dbData).eq('id', id);
+                    } catch (e) { console.error(e); }
+                }
+                showToast('Produit modifié!');
             } else {
-                const np = { id: Date.now().toString(), ...data, created_at: new Date().toISOString() };
-                products.unshift(np);
-                if (isConnected) try { const { image_data, id, ...d } = np; await supabaseClient.from('products').insert(d); } catch(e){}
+                // Create
+                const newProduct = {
+                    id: Date.now().toString(),
+                    ...productData,
+                    created_at: new Date().toISOString()
+                };
+                products.unshift(newProduct);
+                
+                if (isConnected && supabaseClient) {
+                    try {
+                        const { image_data, ...dbData } = newProduct;
+                        const { data } = await supabaseClient.from('products').insert(dbData).select().single();
+                        if (data) {
+                            const idx = products.findIndex(p => p.id === newProduct.id);
+                            if (idx !== -1) products[idx].id = data.id;
+                        }
+                    } catch (e) { console.error(e); }
+                }
+                showToast('Produit ajouté!');
             }
-            saveToStorage(); closeProductModal(); renderProducts(); showToast(id ? 'Modifié!' : 'Ajouté!');
+
+            // Save to localStorage (triggers sync to frontend)
+            localStorage.setItem('hichoux_products', JSON.stringify(products));
+            
+            closeProductModal();
+            renderProducts();
         }
 
         async function deleteProduct(id) {
-            if (!confirm('Supprimer?')) return;
+            if (!confirm('Supprimer ce produit?')) return;
+            
             products = products.filter(p => p.id != id);
-            if (isConnected) try { await supabaseClient.from('products').delete().eq('id', id); } catch(e){}
-            saveToStorage(); renderProducts(); showToast('Supprimé');
+            localStorage.setItem('hichoux_products', JSON.stringify(products));
+            
+            if (isConnected && supabaseClient) {
+                try { await supabaseClient.from('products').delete().eq('id', id); }
+                catch (e) { console.error(e); }
+            }
+            
+            renderProducts();
+            showToast('Supprimé');
         }
 
+        // SETTINGS
         function handleLogoUpload(input) {
             if (!input.files[0]) return;
             const r = new FileReader();
@@ -590,10 +778,29 @@
                 settings.logoData = e.target.result;
                 document.getElementById('sidebar-logo').src = e.target.result;
                 document.getElementById('preview-logo').src = e.target.result;
-                saveToStorage();
+                localStorage.setItem('hichoux_settings', JSON.stringify(settings));
                 showToast('Logo mis à jour!');
             };
             r.readAsDataURL(input.files[0]);
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('setting-supabase-url').value.trim();
+            const key = document.getElementById('setting-supabase-key').value.trim();
+            if (!url || !key) { showToast('URL et Key requis', 'error'); return; }
+            
+            try {
+                const c = supabase.createClient(url, key);
+                const { error } = await c.from('orders').select('id').limit(1);
+                if (error) throw error;
+                document.getElementById('db-status').className = 'px-3 py-2 bg-green-100 text-green-800 rounded-lg text-xs';
+                document.getElementById('db-status').textContent = '✓ Connexion OK!';
+                showToast('Connecté!');
+            } catch (e) {
+                document.getElementById('db-status').className = 'px-3 py-2 bg-red-100 text-red-800 rounded-lg text-xs';
+                document.getElementById('db-status').textContent = '✗ Erreur: ' + e.message;
+                showToast('Erreur', 'error');
+            }
         }
 
         function saveSettings() {
@@ -603,20 +810,37 @@
             settings.shipping = parseFloat(document.getElementById('setting-shipping').value);
             settings.supabaseUrl = document.getElementById('setting-supabase-url').value;
             settings.supabaseKey = document.getElementById('setting-supabase-key').value;
-            saveToStorage(); applySettings(); showToast('Sauvegardé!');
+            settings.gasUrl = document.getElementById('setting-gas-url').value;
+            settings.sheetId = document.getElementById('setting-sheet-id').value;
+            settings.digylogEmail = document.getElementById('setting-digylog-email').value;
+            settings.digylogPassword = document.getElementById('setting-digylog-password').value;
+            settings.driveFolder = document.getElementById('setting-drive-folder').value;
+            
+            localStorage.setItem('hichoux_settings', JSON.stringify(settings));
+            applySettingsToUI();
+            showToast('Paramètres sauvegardés!');
         }
 
-        function saveToStorage() {
-            localStorage.setItem('hichoux_settings', JSON.stringify(settings));
-            localStorage.setItem('hichoux_products', JSON.stringify(products));
-            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+        async function syncToSupabase() {
+            if (!isConnected) { showToast('Non connecté à Supabase', 'error'); return; }
+            showToast('Synchronisation...', 'info');
+            
+            // Sync products
+            for (const p of products) {
+                try {
+                    const { image_data, ...dbData } = p;
+                    await supabaseClient.from('products').upsert(dbData, { onConflict: 'id' });
+                } catch (e) {}
+            }
+            
+            showToast('Synchronisé!');
         }
 
         function exportData() {
-            const d = { settings, products, orders, date: new Date().toISOString() };
-            const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+            const data = { settings, products, orders, date: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(b);
+            a.href = URL.createObjectURL(blob);
             a.download = `hichoux-backup-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             showToast('Exporté!');
@@ -628,20 +852,25 @@
             r.onload = e => {
                 try {
                     const d = JSON.parse(e.target.result);
-                    if (d.settings) settings = {...settings, ...d.settings};
-                    if (d.products) products = d.products;
-                    if (d.orders) orders = d.orders;
-                    saveToStorage(); applySettings(); updateUI();
+                    if (d.settings) { settings = {...settings, ...d.settings}; localStorage.setItem('hichoux_settings', JSON.stringify(settings)); }
+                    if (d.products) { products = d.products; localStorage.setItem('hichoux_products', JSON.stringify(products)); }
+                    if (d.orders) { orders = d.orders; localStorage.setItem('hichoux_orders', JSON.stringify(orders)); }
+                    applySettingsToUI();
+                    updateAllUI();
                     showToast('Importé!');
                 } catch (e) { showToast('Erreur fichier', 'error'); }
             };
             r.readAsText(input.files[0]);
         }
 
-        function createShippingLabel() {
-            const c = orders.filter(o => o.status === 'confirmed');
-            if (!c.length) { showToast('Aucune commande', 'info'); return; }
-            c.forEach(o => shipOrder(o.id));
+        function clearLocalData() {
+            if (!confirm('Effacer toutes les données locales?')) return;
+            localStorage.removeItem('hichoux_orders');
+            localStorage.removeItem('hichoux_products');
+            orders = [];
+            products = [];
+            updateAllUI();
+            showToast('Données effacées');
         }
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeProductModal(); closeOrderModal(); } });
