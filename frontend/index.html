@@ -3,45 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hichoux Store - Parfums & Cosmétiques</title>
+    <title>Hichoux Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-display { font-family: 'Playfair Display', serif; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .gold { color: #D4AF37; }
-        .bg-gold { background: linear-gradient(135deg, #D4AF37, #F4D03F); }
-        .btn-gold { background: linear-gradient(135deg, #D4AF37, #F4D03F); color: #000; font-weight: 600; transition: all 0.3s; }
-        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212,175,55,0.3); }
-        .product-card { transition: all 0.3s; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .toast { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-        .whatsapp-float { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); z-index: 50; }
-        .whatsapp-float:hover { transform: scale(1.1); }
+        body{font-family:'Inter',sans-serif}.font-display{font-family:'Playfair Display',serif}.page{display:none}.page.active{display:block}.gold{color:#D4AF37}.bg-gold{background:linear-gradient(135deg,#D4AF37,#F4D03F)}.btn-gold{background:linear-gradient(135deg,#D4AF37,#F4D03F);color:#000;font-weight:600;transition:all .3s}.btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(212,175,55,0.3)}.product-card{transition:all .3s}.product-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,0.1)}.toast{animation:slideIn .3s ease-out}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.animate-fadeIn{animation:fadeIn .5s ease-out}.whatsapp-float{position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,211,102,0.4);z-index:50}.whatsapp-float:hover{transform:scale(1.1)}
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
 
-    <!-- Header -->
     <header class="bg-black text-white sticky top-0 z-40">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between py-4">
-                <a href="#" onclick="showPage('home'); return false;" class="flex items-center space-x-2">
+                <a href="#" onclick="showPage('home');return false;" class="flex items-center space-x-2">
                     <img id="header-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='%23000' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full">
                     <span id="header-store-name" class="font-display text-2xl font-bold">Hichoux Store</span>
                 </a>
                 <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#" onclick="showPage('home'); return false;" class="hover:text-yellow-400">Accueil</a>
-                    <a href="#" onclick="showPage('catalog'); return false;" class="hover:text-yellow-400">Catalogue</a>
-                    <a href="#" onclick="showPage('tracking'); return false;" class="hover:text-yellow-400">Suivi</a>
-                    <a href="#" onclick="showPage('contact'); return false;" class="hover:text-yellow-400">Contact</a>
+                    <a href="#" onclick="showPage('home');return false;" class="hover:text-yellow-400">Accueil</a>
+                    <a href="#" onclick="showPage('catalog');return false;" class="hover:text-yellow-400">Catalogue</a>
+                    <a href="#" onclick="showPage('tracking');return false;" class="hover:text-yellow-400">Suivi</a>
+                    <a href="#" onclick="showPage('contact');return false;" class="hover:text-yellow-400">Contact</a>
                 </nav>
                 <div class="flex items-center space-x-4">
                     <button onclick="showPage('cart')" class="relative p-2 hover:text-yellow-400">
@@ -54,19 +38,18 @@
         </div>
         <div id="mobile-menu" class="hidden md:hidden bg-gray-900 py-4">
             <nav class="container mx-auto px-4 space-y-4">
-                <a href="#" onclick="showPage('home'); toggleMobileMenu(); return false;" class="block">Accueil</a>
-                <a href="#" onclick="showPage('catalog'); toggleMobileMenu(); return false;" class="block">Catalogue</a>
-                <a href="#" onclick="showPage('tracking'); toggleMobileMenu(); return false;" class="block">Suivi</a>
-                <a href="#" onclick="showPage('contact'); toggleMobileMenu(); return false;" class="block">Contact</a>
+                <a href="#" onclick="showPage('home');toggleMobileMenu();return false;" class="block">Accueil</a>
+                <a href="#" onclick="showPage('catalog');toggleMobileMenu();return false;" class="block">Catalogue</a>
+                <a href="#" onclick="showPage('tracking');toggleMobileMenu();return false;" class="block">Suivi</a>
+                <a href="#" onclick="showPage('contact');toggleMobileMenu();return false;" class="block">Contact</a>
             </nav>
         </div>
     </header>
 
     <main>
-        <!-- HOME -->
         <div id="page-home" class="page active">
             <section class="relative bg-black text-white py-20 md:py-32 overflow-hidden">
-                <div class="absolute inset-0" style="background: radial-gradient(ellipse at top right, rgba(212,175,55,0.15), transparent 50%);"></div>
+                <div class="absolute inset-0" style="background:radial-gradient(ellipse at top right,rgba(212,175,55,0.15),transparent 50%);"></div>
                 <div class="container mx-auto px-4 relative z-10">
                     <div class="max-w-2xl animate-fadeIn">
                         <p class="gold uppercase tracking-widest mb-4">Nouvelle Collection</p>
@@ -93,12 +76,11 @@
                 <div class="container mx-auto px-4">
                     <div class="text-center mb-12"><h2 class="font-display text-3xl font-bold mb-4">Produits Vedettes</h2></div>
                     <div id="featured-products" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-                    <div class="text-center mt-12"><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir Tous les Produits</button></div>
+                    <div class="text-center mt-12"><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir Tous</button></div>
                 </div>
             </section>
         </div>
 
-        <!-- CATALOG -->
         <div id="page-catalog" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4">
@@ -112,13 +94,6 @@
                                     <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="femme" onchange="filterProducts()" class="mr-2">Femme</label>
                                     <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="unisexe" onchange="filterProducts()" class="mr-2">Unisexe</label>
                                     <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="cosmetique" onchange="filterProducts()" class="mr-2">Cosmétique</label>
-                                </div>
-                                <h3 class="font-semibold mt-6 mb-4">Prix</h3>
-                                <div class="space-y-2">
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="" checked onchange="filterProducts()" class="mr-2">Tous</label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="0-100" onchange="filterProducts()" class="mr-2">&lt; 100 DH</label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="100-200" onchange="filterProducts()" class="mr-2">100-200 DH</label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="200+" onchange="filterProducts()" class="mr-2">&gt; 200 DH</label>
                                 </div>
                             </div>
                         </aside>
@@ -134,7 +109,6 @@
             </section>
         </div>
 
-        <!-- PRODUCT -->
         <div id="page-product" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4">
@@ -144,12 +118,11 @@
             </section>
         </div>
 
-        <!-- CART -->
         <div id="page-cart" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4 max-w-4xl">
                     <h2 class="font-display text-3xl font-bold mb-8">Mon Panier</h2>
-                    <div id="cart-empty" class="hidden text-center py-16"><div class="text-4xl mb-4">🛒</div><h3 class="text-xl font-semibold mb-2">Votre panier est vide</h3><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full mt-4">Voir le Catalogue</button></div>
+                    <div id="cart-empty" class="hidden text-center py-16"><div class="text-4xl mb-4">🛒</div><h3 class="text-xl font-semibold mb-2">Panier vide</h3><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full mt-4">Catalogue</button></div>
                     <div id="cart-content" class="hidden">
                         <div id="cart-items" class="space-y-4 mb-8"></div>
                         <div class="bg-white rounded-2xl p-6 shadow-sm">
@@ -165,20 +138,19 @@
             </section>
         </div>
 
-        <!-- CHECKOUT -->
         <div id="page-checkout" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4">
-                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Finaliser la Commande</h2>
+                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Finaliser</h2>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
                         <div class="bg-white rounded-2xl p-6 shadow-sm">
-                            <h3 class="font-semibold text-lg mb-6">Informations de Livraison</h3>
+                            <h3 class="font-semibold text-lg mb-6">Livraison</h3>
                             <form id="checkout-form" class="space-y-4">
-                                <div><label class="block text-sm font-medium mb-1">Nom complet *</label><input type="text" id="checkout-name" required class="w-full px-4 py-3 border rounded-xl"></div>
-                                <div><label class="block text-sm font-medium mb-1">Téléphone *</label><input type="tel" id="checkout-phone" required placeholder="06XXXXXXXX" class="w-full px-4 py-3 border rounded-xl"></div>
+                                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="checkout-name" required class="w-full px-4 py-3 border rounded-xl"></div>
+                                <div><label class="block text-sm font-medium mb-1">Téléphone *</label><input type="tel" id="checkout-phone" required placeholder="06..." class="w-full px-4 py-3 border rounded-xl"></div>
                                 <div><label class="block text-sm font-medium mb-1">Ville *</label><select id="checkout-city" required class="w-full px-4 py-3 border rounded-xl"><option value="">Sélectionner</option><option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Fès</option><option>Tanger</option><option>Agadir</option><option>Meknès</option><option>Oujda</option><option>Kénitra</option><option>Tétouan</option><option>Autre</option></select></div>
                                 <div><label class="block text-sm font-medium mb-1">Adresse *</label><textarea id="checkout-address" required rows="2" class="w-full px-4 py-3 border rounded-xl"></textarea></div>
-                                <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3"><div class="text-2xl">💵</div><div><p class="font-semibold text-green-800">Paiement à la Livraison</p><p class="text-sm text-green-600">Cash on Delivery</p></div></div>
+                                <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3"><div class="text-2xl">💵</div><div><p class="font-semibold text-green-800">Paiement à la Livraison</p></div></div>
                                 <button type="submit" class="w-full btn-gold py-4 rounded-xl text-lg mt-6">✓ Confirmer</button>
                             </form>
                         </div>
@@ -198,24 +170,22 @@
             </section>
         </div>
 
-        <!-- SUCCESS -->
         <div id="page-success" class="page">
             <section class="py-16">
                 <div class="container mx-auto px-4 max-w-lg text-center">
                     <div class="text-6xl mb-6 animate-fadeIn">✓</div>
                     <h2 class="font-display text-3xl font-bold mb-4">Commande Confirmée!</h2>
-                    <p class="text-gray-600 mb-4">Vous recevrez un appel de confirmation.</p>
+                    <p class="text-gray-600 mb-4">Vous recevrez un appel.</p>
                     <div class="bg-white rounded-2xl p-6 shadow-sm mb-8"><p class="text-sm text-gray-500">Numéro</p><p id="success-order-number" class="text-2xl font-bold gold">HCX...</p></div>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center"><button onclick="showPage('home')" class="btn-gold px-8 py-3 rounded-full">Accueil</button><button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-600 px-8 py-3 rounded-full">Suivre</button></div>
                 </div>
             </section>
         </div>
 
-        <!-- TRACKING -->
         <div id="page-tracking" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4 max-w-lg">
-                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Suivi de Commande</h2>
+                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Suivi</h2>
                     <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <label class="block text-sm font-medium mb-2">Numéro ou téléphone</label>
                         <div class="flex gap-2"><input type="text" id="tracking-input" class="flex-1 px-4 py-3 border rounded-xl" placeholder="HCX... ou 06..."><button onclick="trackOrder()" class="btn-gold px-6 py-3 rounded-xl">🔍</button></div>
@@ -225,11 +195,10 @@
             </section>
         </div>
 
-        <!-- CONTACT -->
         <div id="page-contact" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4 max-w-2xl">
-                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Contactez-nous</h2>
+                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Contact</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <a href="#" id="contact-phone-link" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md"><div class="text-4xl mb-4">📞</div><h3 class="font-semibold mb-2">Téléphone</h3><p id="contact-phone" class="gold">0600000000</p></a>
                         <a href="#" id="contact-whatsapp-link" target="_blank" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md"><div class="text-4xl mb-4">💬</div><h3 class="font-semibold mb-2">WhatsApp</h3><p class="text-green-600">Discuter</p></a>
@@ -239,12 +208,11 @@
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-black text-white py-12 mt-12">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div><div class="flex items-center space-x-2 mb-4"><img id="footer-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='%23000' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full"><span id="footer-store-name" class="font-display text-xl font-bold">Hichoux Store</span></div><p class="text-gray-400 text-sm">Parfums authentiques.</p></div>
-                <div><h4 class="font-semibold mb-4">Liens</h4><ul class="space-y-2 text-gray-400 text-sm"><li><a href="#" onclick="showPage('home'); return false;">Accueil</a></li><li><a href="#" onclick="showPage('catalog'); return false;">Catalogue</a></li><li><a href="#" onclick="showPage('tracking'); return false;">Suivi</a></li></ul></div>
+                <div><div class="flex items-center space-x-2 mb-4"><img id="footer-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='%23000' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full"><span id="footer-store-name" class="font-display text-xl font-bold">Hichoux Store</span></div></div>
+                <div><h4 class="font-semibold mb-4">Liens</h4><ul class="space-y-2 text-gray-400 text-sm"><li><a href="#" onclick="showPage('home');return false;">Accueil</a></li><li><a href="#" onclick="showPage('catalog');return false;">Catalogue</a></li><li><a href="#" onclick="showPage('tracking');return false;">Suivi</a></li></ul></div>
                 <div><h4 class="font-semibold mb-4">Contact</h4><p class="text-gray-400 text-sm" id="footer-phone">📞 0600000000</p></div>
             </div>
             <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm"><p>© 2025 <span id="footer-store-name-2">Hichoux Store</span></p></div>
@@ -254,233 +222,208 @@
     <a href="#" id="whatsapp-float" target="_blank" class="whatsapp-float"><svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
 
     <script>
-        const SUPABASE_URL = 'https://mbvskiaqfpbbnxhgzpga.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
-        const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='200' y='200' text-anchor='middle' dominant-baseline='middle' fill='%239ca3af' font-size='20'%3EProduit%3C/text%3E%3C/svg%3E";
+        const SUPABASE_URL='https://mbvskiaqfpbbnxhgzpga.supabase.co';
+        const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
+        const DEFAULT_IMG="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='200' y='200' text-anchor='middle' dominant-baseline='middle' fill='%239ca3af' font-size='20'%3EProduit%3C/text%3E%3C/svg%3E";
 
-        let supabaseClient = null, isConnected = false;
-        let products = [], cart = [], orders = [];
-        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoData: '' };
+        let supabaseClient=null,isConnected=false;
+        let products=[],cart=[],orders=[];
+        let settings={name:'Hichoux Store',phone:'0600000000',whatsapp:'212600000000',shipping:30,logoData:''};
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded',function(){
+            console.log('Frontend init...');
             loadSettings();
             loadCart();
-            initSupabase();
-            document.getElementById('checkout-form').addEventListener('submit', submitOrder);
+            initData();
+            document.getElementById('checkout-form').addEventListener('submit',submitOrder);
         });
 
-        function loadSettings() {
-            const s = localStorage.getItem('hichoux_settings');
-            if (s) settings = {...settings, ...JSON.parse(s)};
-            applySettings();
+        function loadSettings(){const s=localStorage.getItem('hichoux_settings');if(s)settings={...settings,...JSON.parse(s)};applySettings();}
+
+        function applySettings(){
+            document.getElementById('header-store-name').textContent=settings.name;
+            document.getElementById('footer-store-name').textContent=settings.name;
+            document.getElementById('footer-store-name-2').textContent=settings.name;
+            document.getElementById('contact-phone').textContent=settings.phone;
+            document.getElementById('footer-phone').textContent='📞 '+settings.phone;
+            document.getElementById('contact-phone-link').href='tel:'+settings.phone;
+            document.getElementById('contact-whatsapp-link').href='https://wa.me/'+settings.whatsapp;
+            document.getElementById('whatsapp-float').href='https://wa.me/'+settings.whatsapp;
+            if(settings.logoData){document.getElementById('header-logo').src=settings.logoData;document.getElementById('footer-logo').src=settings.logoData;}
         }
 
-        function applySettings() {
-            document.getElementById('header-store-name').textContent = settings.name;
-            document.getElementById('footer-store-name').textContent = settings.name;
-            document.getElementById('footer-store-name-2').textContent = settings.name;
-            document.getElementById('contact-phone').textContent = settings.phone;
-            document.getElementById('footer-phone').textContent = '📞 ' + settings.phone;
-            document.getElementById('contact-phone-link').href = 'tel:' + settings.phone;
-            document.getElementById('contact-whatsapp-link').href = 'https://wa.me/' + settings.whatsapp;
-            document.getElementById('whatsapp-float').href = 'https://wa.me/' + settings.whatsapp;
-            if (settings.logoData) {
-                document.getElementById('header-logo').src = settings.logoData;
-                document.getElementById('footer-logo').src = settings.logoData;
-            }
-        }
-
-        async function initSupabase() {
+        async function initData(){
             // Load from localStorage first (synced from admin)
-            const localP = localStorage.getItem('hichoux_products');
-            const localO = localStorage.getItem('hichoux_orders');
-            if (localP) products = JSON.parse(localP);
-            if (localO) orders = JSON.parse(localO);
+            const localP=localStorage.getItem('hichoux_products');
+            const localO=localStorage.getItem('hichoux_orders');
+            if(localP)products=JSON.parse(localP);
+            if(localO)orders=JSON.parse(localO);
+            
+            console.log('Local products:',products.length);
 
-            // Then try Supabase
-            try {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data: p } = await supabaseClient.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
-                const { data: o } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+            // Try Supabase for latest
+            try{
+                supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+                const{data:p}=await supabaseClient.from('products').select('*').eq('is_active',true).order('created_at',{ascending:false});
+                const{data:o}=await supabaseClient.from('orders').select('*').order('created_at',{ascending:false});
                 
-                if (p && p.length) {
-                    const localProducts = JSON.parse(localStorage.getItem('hichoux_products') || '[]');
-                    products = p.map(prod => {
-                        const lp = localProducts.find(x => x.id == prod.id || x.sku === prod.sku);
-                        return {...prod, image_data: lp?.image_data || ''};
-                    });
+                if(p&&p.length){
+                    const localProducts=JSON.parse(localStorage.getItem('hichoux_products')||'[]');
+                    products=p.map(pr=>{const lp=localProducts.find(x=>x.id==pr.id||x.sku===pr.sku);return{...pr,image_data:lp?.image_data||''};});
                 }
-                if (o) orders = o;
-                isConnected = true;
-            } catch (e) { console.log('Local mode'); }
+                if(o)orders=o;
+                isConnected=true;
+                console.log('Supabase products:',products.length);
+            }catch(e){console.log('Local mode');}
 
-            if (!products.length) {
-                products = [
-                    { id: '1', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_data: '', description: 'Parfum oriental riche.' },
-                    { id: '2', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_data: '', description: 'Parfum floral.' },
-                    { id: '3', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_data: '', description: 'Parfum chaud.' },
+            if(!products.length){
+                products=[
+                    {id:'1',name:'Parfum Royal Oud',price:150,compare_price:199,stock:45,category:'homme',is_featured:true,image_data:'',description:'Parfum oriental riche.'},
+                    {id:'2',name:'Essence de Rose',price:200,compare_price:250,stock:32,category:'femme',is_featured:true,image_data:'',description:'Parfum floral.'},
+                    {id:'3',name:'Amber Nights',price:120,compare_price:150,stock:28,category:'unisexe',is_featured:true,image_data:'',description:'Parfum chaud.'}
                 ];
             }
+            
             renderFeatured();
             renderCatalog();
         }
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            window.scrollTo(0, 0);
-            if (pageId === 'cart') renderCart();
-            if (pageId === 'checkout') renderCheckout();
-            if (pageId === 'catalog') renderCatalog();
+        function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');window.scrollTo(0,0);if(id==='cart')renderCart();if(id==='checkout')renderCheckout();if(id==='catalog')renderCatalog();}
+        function toggleMobileMenu(){document.getElementById('mobile-menu').classList.toggle('hidden');}
+        function showToast(msg,type='success'){const c=document.getElementById('toast-container');const colors={success:'bg-green-500',error:'bg-red-500',info:'bg-blue-500'};const t=document.createElement('div');t.className='toast '+colors[type]+' text-white px-6 py-3 rounded-xl shadow-lg';t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
+        function getImg(p){return p.image_data||p.image_url||DEFAULT_IMG;}
+
+        function productCard(p){
+            const d=p.compare_price?Math.round((1-p.price/p.compare_price)*100):0;
+            return '<div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="viewProduct(\''+p.id+'\')"><div class="relative"><img src="'+getImg(p)+'" alt="'+p.name+'" class="w-full aspect-square object-cover bg-gray-100">'+(d>0?'<span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-'+d+'%</span>':'')+'</div><div class="p-4"><p class="text-xs text-gray-500 mb-1">'+(p.category||'')+'</p><h3 class="font-semibold mb-2 truncate">'+p.name+'</h3><div class="flex items-center justify-between"><div><span class="text-lg font-bold gold">'+p.price+' DH</span>'+(p.compare_price?'<span class="text-sm text-gray-400 line-through ml-2">'+p.compare_price+'</span>':'')+'</div><button onclick="event.stopPropagation();addToCart(\''+p.id+'\')" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">+</button></div></div></div>';
         }
 
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-        function showToast(msg, type = 'success') { const c = document.getElementById('toast-container'); const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' }; const t = document.createElement('div'); t.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3000); }
-        function getImg(p) { return p.image_data || p.image_url || DEFAULT_IMG; }
+        function renderFeatured(){const f=products.filter(p=>p.is_featured);document.getElementById('featured-products').innerHTML=f.length?f.map(productCard).join(''):'<p class="col-span-4 text-center text-gray-500">Aucun produit</p>';}
+        function renderCatalog(){filterProducts();}
 
-        function productCard(p) {
-            const d = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
-            return `<div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="viewProduct('${p.id}')"><div class="relative"><img src="${getImg(p)}" alt="${p.name}" class="w-full aspect-square object-cover bg-gray-100">${d > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-${d}%</span>` : ''}</div><div class="p-4"><p class="text-xs text-gray-500 mb-1">${p.category || ''}</p><h3 class="font-semibold mb-2 truncate">${p.name}</h3><div class="flex items-center justify-between"><div><span class="text-lg font-bold gold">${p.price} DH</span>${p.compare_price ? `<span class="text-sm text-gray-400 line-through ml-2">${p.compare_price}</span>` : ''}</div><button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">+</button></div></div></div>`;
+        function filterProducts(){
+            const cat=document.querySelector('input[name="cat"]:checked')?.value||'';
+            let f=products.filter(p=>!cat||p.category===cat);
+            document.getElementById('product-count').textContent=f.length;
+            document.getElementById('products-grid').innerHTML=f.length?f.map(productCard).join(''):'<p class="col-span-full text-center text-gray-500 py-8">Aucun produit</p>';
         }
 
-        function renderFeatured() { const f = products.filter(p => p.is_featured); document.getElementById('featured-products').innerHTML = f.length ? f.map(productCard).join('') : '<p class="col-span-4 text-center text-gray-500">Aucun produit</p>'; }
-        function renderCatalog() { filterProducts(); }
+        function sortProducts(by){if(by==='price-asc')products.sort((a,b)=>a.price-b.price);else if(by==='price-desc')products.sort((a,b)=>b.price-a.price);else if(by==='name')products.sort((a,b)=>a.name.localeCompare(b.name));filterProducts();}
 
-        function filterProducts() {
-            const cat = document.querySelector('input[name="cat"]:checked')?.value || '';
-            const price = document.querySelector('input[name="price"]:checked')?.value || '';
-            let f = products.filter(p => {
-                if (cat && p.category !== cat) return false;
-                if (price === '0-100' && p.price >= 100) return false;
-                if (price === '100-200' && (p.price < 100 || p.price > 200)) return false;
-                if (price === '200+' && p.price <= 200) return false;
-                return true;
-            });
-            document.getElementById('product-count').textContent = f.length;
-            document.getElementById('products-grid').innerHTML = f.length ? f.map(productCard).join('') : '<p class="col-span-full text-center text-gray-500 py-8">Aucun produit</p>';
-        }
-
-        function sortProducts(by) { if (by === 'price-asc') products.sort((a, b) => a.price - b.price); else if (by === 'price-desc') products.sort((a, b) => b.price - a.price); else if (by === 'name') products.sort((a, b) => a.name.localeCompare(b.name)); filterProducts(); }
-
-        function viewProduct(id) {
-            const p = products.find(x => x.id == id); if (!p) return;
-            const d = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
-            document.getElementById('product-detail').innerHTML = `<div class="relative"><img src="${getImg(p)}" class="w-full rounded-2xl bg-gray-100">${d > 0 ? `<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-${d}%</span>` : ''}</div><div><p class="text-sm text-gray-500 mb-2">${p.category || ''}</p><h1 class="font-display text-3xl font-bold mb-4">${p.name}</h1><div class="flex items-center space-x-4 mb-6"><span class="text-3xl font-bold gold">${p.price} DH</span>${p.compare_price ? `<span class="text-xl text-gray-400 line-through">${p.compare_price}</span>` : ''}</div><p class="text-gray-600 mb-6">${p.description || ''}</p><div class="flex items-center space-x-4 mb-6"><div class="flex items-center border rounded-xl"><button onclick="changeQty(-1)" class="w-12 h-12 text-xl hover:bg-gray-100">-</button><span id="product-qty" class="w-12 text-center font-semibold">1</span><button onclick="changeQty(1)" class="w-12 h-12 text-xl hover:bg-gray-100">+</button></div><button onclick="addToCart('${p.id}', getQty())" class="flex-1 btn-gold py-4 rounded-xl text-lg">Ajouter</button></div><div class="bg-gray-50 rounded-xl p-4 space-y-2"><p class="text-sm">🚚 Livraison 24-48h</p><p class="text-sm">💰 Paiement COD</p></div></div>`;
+        function viewProduct(id){
+            const p=products.find(x=>x.id==id);if(!p)return;
+            const d=p.compare_price?Math.round((1-p.price/p.compare_price)*100):0;
+            document.getElementById('product-detail').innerHTML='<div class="relative"><img src="'+getImg(p)+'" class="w-full rounded-2xl bg-gray-100">'+(d>0?'<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-'+d+'%</span>':'')+'</div><div><p class="text-sm text-gray-500 mb-2">'+(p.category||'')+'</p><h1 class="font-display text-3xl font-bold mb-4">'+p.name+'</h1><div class="flex items-center space-x-4 mb-6"><span class="text-3xl font-bold gold">'+p.price+' DH</span>'+(p.compare_price?'<span class="text-xl text-gray-400 line-through">'+p.compare_price+'</span>':'')+'</div><p class="text-gray-600 mb-6">'+(p.description||'')+'</p><div class="flex items-center space-x-4 mb-6"><div class="flex items-center border rounded-xl"><button onclick="changeQty(-1)" class="w-12 h-12 text-xl hover:bg-gray-100">-</button><span id="product-qty" class="w-12 text-center font-semibold">1</span><button onclick="changeQty(1)" class="w-12 h-12 text-xl hover:bg-gray-100">+</button></div><button onclick="addToCart(\''+p.id+'\',getQty())" class="flex-1 btn-gold py-4 rounded-xl text-lg">Ajouter</button></div><div class="bg-gray-50 rounded-xl p-4 space-y-2"><p class="text-sm">🚚 Livraison 24-48h</p><p class="text-sm">💰 Paiement COD</p></div></div>';
             showPage('product');
         }
 
-        function changeQty(d) { const el = document.getElementById('product-qty'); let q = parseInt(el.textContent) + d; if (q < 1) q = 1; if (q > 10) q = 10; el.textContent = q; }
-        function getQty() { return parseInt(document.getElementById('product-qty')?.textContent || '1'); }
-        function loadCart() { const c = localStorage.getItem('hichoux_cart'); if (c) cart = JSON.parse(c); updateCartBadge(); }
-        function saveCart() { localStorage.setItem('hichoux_cart', JSON.stringify(cart)); updateCartBadge(); }
-        function updateCartBadge() { const count = cart.reduce((s, i) => s + i.qty, 0); const badge = document.getElementById('cart-badge'); badge.textContent = count; badge.classList.toggle('hidden', count === 0); }
+        function changeQty(d){const el=document.getElementById('product-qty');let q=parseInt(el.textContent)+d;if(q<1)q=1;if(q>10)q=10;el.textContent=q;}
+        function getQty(){return parseInt(document.getElementById('product-qty')?.textContent||'1');}
+        function loadCart(){const c=localStorage.getItem('hichoux_cart');if(c)cart=JSON.parse(c);updateCartBadge();}
+        function saveCart(){localStorage.setItem('hichoux_cart',JSON.stringify(cart));updateCartBadge();}
+        function updateCartBadge(){const count=cart.reduce((s,i)=>s+i.qty,0);const badge=document.getElementById('cart-badge');badge.textContent=count;badge.classList.toggle('hidden',count===0);}
 
-        function addToCart(id, qty = 1) {
-            const p = products.find(x => x.id == id); if (!p) return;
-            const existing = cart.find(i => i.id == id);
-            if (existing) existing.qty += qty;
-            else cart.push({ id: p.id, name: p.name, price: p.price, image: getImg(p), qty });
+        function addToCart(id,qty=1){
+            const p=products.find(x=>x.id==id);if(!p)return;
+            const existing=cart.find(i=>i.id==id);
+            if(existing)existing.qty+=qty;
+            else cart.push({id:p.id,name:p.name,price:p.price,image:getImg(p),qty:qty});
             saveCart();
-            showToast(`${p.name} ajouté!`);
+            showToast(p.name+' ajouté!');
         }
 
-        function removeFromCart(id) { cart = cart.filter(i => i.id != id); saveCart(); renderCart(); }
-        function updateCartQty(id, d) { const item = cart.find(i => i.id == id); if (!item) return; item.qty += d; if (item.qty < 1) { removeFromCart(id); return; } saveCart(); renderCart(); }
-        function getCartTotals() { const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0); const shipping = subtotal >= 500 ? 0 : settings.shipping; return { subtotal, shipping, total: subtotal + shipping }; }
+        function removeFromCart(id){cart=cart.filter(i=>i.id!=id);saveCart();renderCart();}
+        function updateCartQty(id,d){const item=cart.find(i=>i.id==id);if(!item)return;item.qty+=d;if(item.qty<1){removeFromCart(id);return;}saveCart();renderCart();}
+        function getCartTotals(){const subtotal=cart.reduce((s,i)=>s+i.price*i.qty,0);const shipping=subtotal>=500?0:settings.shipping;return{subtotal,shipping,total:subtotal+shipping};}
 
-        function renderCart() {
-            const empty = document.getElementById('cart-empty');
-            const content = document.getElementById('cart-content');
-            if (cart.length === 0) { empty.classList.remove('hidden'); content.classList.add('hidden'); return; }
-            empty.classList.add('hidden'); content.classList.remove('hidden');
-            document.getElementById('cart-items').innerHTML = cart.map(i => `<div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4"><img src="${i.image}" class="w-20 h-20 rounded-lg object-cover bg-gray-100"><div class="flex-1"><h4 class="font-semibold">${i.name}</h4><p class="gold font-bold">${i.price} DH</p></div><div class="flex items-center border rounded-lg"><button onclick="updateCartQty('${i.id}', -1)" class="w-10 h-10 hover:bg-gray-100">-</button><span class="w-10 text-center">${i.qty}</span><button onclick="updateCartQty('${i.id}', 1)" class="w-10 h-10 hover:bg-gray-100">+</button></div><button onclick="removeFromCart('${i.id}')" class="text-red-500 p-2">🗑️</button></div>`).join('');
-            const t = getCartTotals();
-            document.getElementById('cart-subtotal').textContent = t.subtotal + ' DH';
-            document.getElementById('cart-shipping').textContent = t.shipping === 0 ? 'Gratuit' : t.shipping + ' DH';
-            document.getElementById('cart-total').textContent = t.total + ' DH';
+        function renderCart(){
+            const empty=document.getElementById('cart-empty');
+            const content=document.getElementById('cart-content');
+            if(cart.length===0){empty.classList.remove('hidden');content.classList.add('hidden');return;}
+            empty.classList.add('hidden');content.classList.remove('hidden');
+            document.getElementById('cart-items').innerHTML=cart.map(i=>'<div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4"><img src="'+i.image+'" class="w-20 h-20 rounded-lg object-cover bg-gray-100"><div class="flex-1"><h4 class="font-semibold">'+i.name+'</h4><p class="gold font-bold">'+i.price+' DH</p></div><div class="flex items-center border rounded-lg"><button onclick="updateCartQty(\''+i.id+'\',-1)" class="w-10 h-10 hover:bg-gray-100">-</button><span class="w-10 text-center">'+i.qty+'</span><button onclick="updateCartQty(\''+i.id+'\',1)" class="w-10 h-10 hover:bg-gray-100">+</button></div><button onclick="removeFromCart(\''+i.id+'\')" class="text-red-500 p-2">🗑️</button></div>').join('');
+            const t=getCartTotals();
+            document.getElementById('cart-subtotal').textContent=t.subtotal+' DH';
+            document.getElementById('cart-shipping').textContent=t.shipping===0?'Gratuit':t.shipping+' DH';
+            document.getElementById('cart-total').textContent=t.total+' DH';
         }
 
-        function renderCheckout() {
-            if (cart.length === 0) { showPage('cart'); return; }
-            document.getElementById('checkout-items').innerHTML = cart.map(i => `<div class="flex items-center gap-3"><img src="${i.image}" class="w-14 h-14 rounded-lg object-cover bg-gray-100"><div class="flex-1"><p class="font-medium text-sm">${i.name}</p><p class="text-gray-500 text-sm">x${i.qty}</p></div><p class="font-semibold">${i.price * i.qty} DH</p></div>`).join('');
-            const t = getCartTotals();
-            document.getElementById('checkout-subtotal').textContent = t.subtotal + ' DH';
-            document.getElementById('checkout-shipping').textContent = t.shipping === 0 ? 'Gratuit' : t.shipping + ' DH';
-            document.getElementById('checkout-total').textContent = t.total + ' DH';
+        function renderCheckout(){
+            if(cart.length===0){showPage('cart');return;}
+            document.getElementById('checkout-items').innerHTML=cart.map(i=>'<div class="flex items-center gap-3"><img src="'+i.image+'" class="w-14 h-14 rounded-lg object-cover bg-gray-100"><div class="flex-1"><p class="font-medium text-sm">'+i.name+'</p><p class="text-gray-500 text-sm">x'+i.qty+'</p></div><p class="font-semibold">'+(i.price*i.qty)+' DH</p></div>').join('');
+            const t=getCartTotals();
+            document.getElementById('checkout-subtotal').textContent=t.subtotal+' DH';
+            document.getElementById('checkout-shipping').textContent=t.shipping===0?'Gratuit':t.shipping+' DH';
+            document.getElementById('checkout-total').textContent=t.total+' DH';
         }
 
-        async function submitOrder(e) {
+        async function submitOrder(e){
             e.preventDefault();
-            const name = document.getElementById('checkout-name').value.trim();
-            const phone = document.getElementById('checkout-phone').value.trim();
-            const city = document.getElementById('checkout-city').value;
-            const address = document.getElementById('checkout-address').value.trim();
-            if (!name || !phone || !city || !address) { showToast('Remplissez tout', 'error'); return; }
+            const name=document.getElementById('checkout-name').value.trim();
+            const phone=document.getElementById('checkout-phone').value.trim();
+            const city=document.getElementById('checkout-city').value;
+            const address=document.getElementById('checkout-address').value.trim();
+            if(!name||!phone||!city||!address){showToast('Remplissez tout','error');return;}
 
-            const orderNumber = 'HCX' + Date.now().toString().slice(-8);
-            const t = getCartTotals();
+            const orderNumber='HCX'+Date.now().toString().slice(-8);
+            const t=getCartTotals();
             
-            const newOrder = {
-                id: Date.now().toString(),
-                order_number: orderNumber,
-                customer_name: name,
-                customer_phone: phone,
-                shipping_address: address,
-                shipping_city: city,
-                subtotal: t.subtotal,
-                shipping_cost: t.shipping,
-                total: t.total,
-                status: 'new',
-                payment_method: 'cod',
-                items: [...cart],
-                created_at: new Date().toISOString()
+            const newOrder={
+                id:Date.now().toString(),
+                order_number:orderNumber,
+                customer_name:name,
+                customer_phone:phone,
+                shipping_address:address,
+                shipping_city:city,
+                subtotal:t.subtotal,
+                shipping_cost:t.shipping,
+                total:t.total,
+                status:'new',
+                payment_method:'cod',
+                items:[...cart],
+                created_at:new Date().toISOString()
             };
 
-            // Save to localStorage
             orders.push(newOrder);
-            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+            localStorage.setItem('hichoux_orders',JSON.stringify(orders));
 
-            // Sync to Supabase
-            if (isConnected && supabaseClient) {
-                try {
-                    const { items, id, ...dbOrder } = newOrder;
+            if(isConnected&&supabaseClient){
+                try{
+                    const{items,id,...dbOrder}=newOrder;
                     await supabaseClient.from('orders').insert(dbOrder);
-                } catch (e) { console.error(e); }
+                }catch(e){console.error(e);}
             }
 
-            cart = [];
+            cart=[];
             saveCart();
-            document.getElementById('success-order-number').textContent = orderNumber;
+            document.getElementById('success-order-number').textContent=orderNumber;
             showPage('success');
             showToast('Commande confirmée!');
         }
 
-        async function trackOrder() {
-            const input = document.getElementById('tracking-input').value.trim();
-            if (!input) { showToast('Entrez un numéro', 'info'); return; }
+        async function trackOrder(){
+            const input=document.getElementById('tracking-input').value.trim();
+            if(!input){showToast('Entrez un numéro','info');return;}
             
-            const resultEl = document.getElementById('tracking-result');
-            resultEl.innerHTML = '<div class="text-center py-8">Recherche...</div>';
+            const resultEl=document.getElementById('tracking-result');
+            resultEl.innerHTML='<div class="text-center py-8">Recherche...</div>';
 
-            let order = orders.find(o => o.order_number?.toLowerCase().includes(input.toLowerCase()) || o.customer_phone?.includes(input));
+            let order=orders.find(o=>o.order_number?.toLowerCase().includes(input.toLowerCase())||o.customer_phone?.includes(input));
             
-            if (!order && isConnected && supabaseClient) {
-                try {
-                    const { data } = await supabaseClient.from('orders').select('*').or(`order_number.ilike.%${input}%,customer_phone.ilike.%${input}%`).limit(1).single();
-                    if (data) order = data;
-                } catch (e) {}
+            if(!order&&isConnected&&supabaseClient){
+                try{const{data}=await supabaseClient.from('orders').select('*').or('order_number.ilike.%'+input+'%,customer_phone.ilike.%'+input+'%').limit(1).single();if(data)order=data;}catch(e){}
             }
 
-            if (order) {
-                const steps = [
-                    { label: 'Nouvelle', done: true },
-                    { label: 'Confirmée', done: ['confirmed', 'shipped', 'delivered'].includes(order.status) },
-                    { label: 'Expédiée', done: ['shipped', 'delivered'].includes(order.status) },
-                    { label: 'Livrée', done: order.status === 'delivered' }
+            if(order){
+                const steps=[
+                    {label:'Nouvelle',done:true},
+                    {label:'Confirmée',done:['confirmed','shipped','delivered'].includes(order.status)},
+                    {label:'Expédiée',done:['shipped','delivered'].includes(order.status)},
+                    {label:'Livrée',done:order.status==='delivered'}
                 ];
-                resultEl.innerHTML = `<div class="bg-white rounded-2xl p-6 shadow-sm animate-fadeIn"><div class="flex justify-between items-start mb-6"><div><p class="text-sm text-gray-500">Commande</p><p class="text-xl font-bold">${order.order_number}</p></div><div class="text-right"><p class="text-sm text-gray-500">Total</p><p class="text-xl font-bold gold">${order.total} DH</p></div></div><div class="mb-6"><p class="text-sm text-gray-500">Destination</p><p class="font-medium">${order.shipping_city}</p></div>${order.tracking_number ? `<div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4"><p class="text-sm text-blue-600">Tracking</p><p class="font-mono font-bold text-blue-800">${order.tracking_number}</p><a href="https://www.digylog.com/suivi-de-colis/?tracking=${order.tracking_number}" target="_blank" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Suivre Digylog →</a></div>` : ''}<div class="relative"><div class="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200"></div>${steps.map((s, i) => `<div class="relative flex items-center mb-6 last:mb-0"><div class="w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.done ? 'bg-green-500 text-white' : 'bg-gray-200'}">${s.done ? '✓' : i + 1}</div><span class="ml-4 ${s.done ? 'font-semibold' : 'text-gray-400'}">${s.label}</span></div>`).join('')}</div></div>`;
-            } else {
-                resultEl.innerHTML = `<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><h3 class="font-semibold mb-2">Non trouvée</h3><p class="text-gray-500">Vérifiez le numéro</p></div>`;
+                resultEl.innerHTML='<div class="bg-white rounded-2xl p-6 shadow-sm animate-fadeIn"><div class="flex justify-between items-start mb-6"><div><p class="text-sm text-gray-500">Commande</p><p class="text-xl font-bold">'+order.order_number+'</p></div><div class="text-right"><p class="text-sm text-gray-500">Total</p><p class="text-xl font-bold gold">'+order.total+' DH</p></div></div><div class="mb-6"><p class="text-sm text-gray-500">Destination</p><p class="font-medium">'+order.shipping_city+'</p></div>'+(order.tracking_number?'<div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4"><p class="text-sm text-blue-600">Tracking</p><p class="font-mono font-bold text-blue-800">'+order.tracking_number+'</p><a href="https://www.digylog.com/suivi-de-colis/?tracking='+order.tracking_number+'" target="_blank" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Suivre Digylog →</a></div>':'')+'<div class="relative"><div class="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200"></div>'+steps.map((s,i)=>'<div class="relative flex items-center mb-6 last:mb-0"><div class="w-8 h-8 rounded-full flex items-center justify-center z-10 '+(s.done?'bg-green-500 text-white':'bg-gray-200')+'">'+(s.done?'✓':(i+1))+'</div><span class="ml-4 '+(s.done?'font-semibold':'text-gray-400')+'">'+s.label+'</span></div>').join('')+'</div></div>';
+            }else{
+                resultEl.innerHTML='<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><h3 class="font-semibold mb-2">Non trouvée</h3><p class="text-gray-500">Vérifiez le numéro</p></div>';
             }
         }
     </script>
