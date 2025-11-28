@@ -16,21 +16,35 @@
         .sidebar-item:hover:not(.active) { background: #f3f4f6; }
         .toast { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
         .modal { display: none; }
         .modal.active { display: flex; }
+        .upload-zone { border: 2px dashed #d1d5db; transition: all 0.3s; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #2563eb; background: #eff6ff; }
     </style>
 </head>
 <body class="bg-gray-100">
-    <!-- Toast -->
     <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
 
-    <!-- Loading -->
-    <div id="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[90] hidden">
-        <div class="bg-white rounded-2xl p-8 flex flex-col items-center">
-            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p>Chargement...</p>
+    <!-- Config Modal -->
+    <div id="config-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md">
+            <div class="p-6 border-b">
+                <h3 class="text-xl font-bold">🔧 Configuration</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Supabase URL</label>
+                    <input type="text" id="config-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://xxx.supabase.co">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Anon Key <span class="text-xs text-gray-400">(commence par eyJ...)</span></label>
+                    <input type="text" id="config-key" class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="eyJhbGciOiJIUzI1NiIs...">
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="useDemoMode()" class="flex-1 px-4 py-3 border rounded-xl hover:bg-gray-50">Mode Local</button>
+                    <button onclick="connectSupabase()" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Connecter</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -43,13 +57,10 @@
             </div>
             <form id="product-form" class="p-6 space-y-4">
                 <input type="hidden" id="product-id">
+                <input type="hidden" id="product-image-data">
                 <div>
                     <label class="block text-sm font-medium mb-1">Nom *</label>
                     <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-xl">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">SKU</label>
-                    <input type="text" id="product-sku" class="w-full px-4 py-2 border rounded-xl" placeholder="AUTO">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -63,8 +74,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Stock *</label>
-                        <input type="number" id="product-stock" required value="100" class="w-full px-4 py-2 border rounded-xl">
+                        <label class="block text-sm font-medium mb-1">Stock</label>
+                        <input type="number" id="product-stock" value="100" class="w-full px-4 py-2 border rounded-xl">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Catégorie</label>
@@ -77,20 +88,27 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Image URL</label>
-                    <input type="url" id="product-image" class="w-full px-4 py-2 border rounded-xl" placeholder="https://...">
+                    <label class="block text-sm font-medium mb-2">Image</label>
+                    <div id="product-upload-zone" class="upload-zone rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('product-image-input').click()">
+                        <input type="file" id="product-image-input" accept="image/*" class="hidden" onchange="handleProductImage(this)">
+                        <div id="product-image-preview" class="hidden">
+                            <img id="product-preview-img" class="w-24 h-24 object-cover rounded-xl mx-auto mb-2">
+                            <p class="text-sm text-green-600">✓ Image sélectionnée</p>
+                        </div>
+                        <div id="product-image-placeholder">
+                            <div class="text-2xl mb-1">📷</div>
+                            <p class="text-gray-500 text-sm">Cliquez pour ajouter une image</p>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Description</label>
-                    <textarea id="product-description" rows="3" class="w-full px-4 py-2 border rounded-xl"></textarea>
+                    <textarea id="product-description" rows="2" class="w-full px-4 py-2 border rounded-xl"></textarea>
                 </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="product-featured" class="mr-2">
-                    <label for="product-featured">Produit vedette</label>
-                </div>
+                <label class="flex items-center"><input type="checkbox" id="product-featured" class="mr-2">Produit vedette</label>
                 <div class="flex space-x-3 pt-4">
-                    <button type="button" onclick="closeProductModal()" class="flex-1 px-4 py-3 border rounded-xl hover:bg-gray-50">Annuler</button>
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Enregistrer</button>
+                    <button type="button" onclick="closeProductModal()" class="flex-1 px-4 py-3 border rounded-xl">Annuler</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl">Enregistrer</button>
                 </div>
             </form>
         </div>
@@ -100,7 +118,7 @@
     <div id="order-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[80] p-4">
         <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold">Détails Commande <span id="order-modal-number"></span></h3>
+                <h3 class="text-xl font-bold">Commande <span id="order-modal-number"></span></h3>
                 <button onclick="closeOrderModal()" class="text-2xl hover:text-red-500">×</button>
             </div>
             <div id="order-modal-content" class="p-6"></div>
@@ -109,827 +127,524 @@
 
     <!-- Main Layout -->
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <aside class="w-64 bg-white border-r flex flex-col shrink-0">
             <div class="p-6 border-b">
                 <div class="flex items-center space-x-3">
-                    <img id="sidebar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%232563eb'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-xl">
+                    <img id="sidebar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' rx='8' fill='%232563eb'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='18' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-xl">
                     <div>
                         <h1 id="sidebar-store-name" class="font-bold">Hichoux Store</h1>
-                        <p id="connection-status" class="text-xs text-green-500">● Connecté</p>
+                        <p id="connection-status" class="text-xs text-gray-400">● Déconnecté</p>
                     </div>
                 </div>
             </div>
             <nav class="flex-1 p-4 space-y-1">
-                <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('dashboard')">
-                    <span>📊</span><span>Dashboard</span>
-                </div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('orders')">
-                    <span>📦</span><span>Commandes</span>
-                    <span id="badge-orders" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('confirmation')">
-                    <span>📞</span><span>Confirmation</span>
-                    <span id="badge-confirm" class="ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                </div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('shipping')">
-                    <span>🚚</span><span>Expédition</span>
-                </div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('products')">
-                    <span>🏷️</span><span>Produits</span>
-                </div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('settings')">
-                    <span>⚙️</span><span>Paramètres</span>
-                </div>
+                <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('dashboard')">📊 <span>Dashboard</span></div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('orders')">📦 <span>Commandes</span><span id="badge-orders" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span></div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('confirmation')">📞 <span>Confirmation</span></div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('shipping')">🚚 <span>Expédition</span></div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('products')">🏷️ <span>Produits</span></div>
+                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" onclick="showPage('settings')">⚙️ <span>Paramètres</span></div>
             </nav>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 overflow-auto">
             <!-- Dashboard -->
             <div id="page-dashboard" class="page active p-8">
                 <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 class="text-2xl font-bold">Dashboard</h2>
-                        <p id="current-date" class="text-gray-500"></p>
-                    </div>
-                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">🔄 Actualiser</button>
+                    <h2 class="text-2xl font-bold">Dashboard</h2>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄 Actualiser</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">Nouvelles</p>
-                                <p id="stat-new" class="text-3xl font-bold text-yellow-600">0</p>
-                            </div>
-                            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-xl">🆕</div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">Confirmées</p>
-                                <p id="stat-confirmed" class="text-3xl font-bold text-blue-600">0</p>
-                            </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-xl">✅</div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">Expédiées</p>
-                                <p id="stat-shipped" class="text-3xl font-bold text-purple-600">0</p>
-                            </div>
-                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-xl">🚚</div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm">Livrées</p>
-                                <p id="stat-delivered" class="text-3xl font-bold text-green-600">0</p>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-xl">🎉</div>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Nouvelles</p><p id="stat-new" class="text-3xl font-bold text-yellow-600">0</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Confirmées</p><p id="stat-confirmed" class="text-3xl font-bold text-blue-600">0</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Expédiées</p><p id="stat-shipped" class="text-3xl font-bold text-purple-600">0</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">Livrées</p><p id="stat-delivered" class="text-3xl font-bold text-green-600">0</p></div>
                 </div>
                 <div class="bg-white rounded-2xl p-6 shadow-sm">
                     <h3 class="font-bold mb-4">Commandes Récentes</h3>
-                    <div id="recent-orders" class="overflow-x-auto"></div>
+                    <div id="recent-orders"></div>
                 </div>
             </div>
 
             <!-- Orders -->
             <div id="page-orders" class="page p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Toutes les Commandes</h2>
+                    <h2 class="text-2xl font-bold">Commandes</h2>
                     <div class="flex space-x-3">
                         <input type="text" id="search-orders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl" oninput="filterOrders()">
                         <select id="filter-status" class="px-4 py-2 border rounded-xl" onchange="filterOrders()">
-                            <option value="">Tous les statuts</option>
+                            <option value="">Tous</option>
                             <option value="new">Nouvelles</option>
                             <option value="confirmed">Confirmées</option>
                             <option value="shipped">Expédiées</option>
                             <option value="delivered">Livrées</option>
-                            <option value="cancelled">Annulées</option>
                         </select>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <div id="orders-table" class="overflow-x-auto"></div>
-                </div>
+                <div class="bg-white rounded-2xl shadow-sm"><div id="orders-table" class="overflow-x-auto"></div></div>
             </div>
 
             <!-- Confirmation -->
             <div id="page-confirmation" class="page p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold">Confirmation Téléphonique</h2>
-                        <p class="text-gray-500"><span id="pending-count">0</span> commandes en attente</p>
-                    </div>
-                </div>
+                <h2 class="text-2xl font-bold mb-6">Confirmation - <span id="pending-count">0</span> en attente</h2>
                 <div id="confirmation-list" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
             </div>
 
             <!-- Shipping -->
             <div id="page-shipping" class="page p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Bordereaux d'Expédition</h2>
-                    <button onclick="createShippingLabel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">+ Créer Bordereau</button>
+                    <h2 class="text-2xl font-bold">Expédition</h2>
+                    <button onclick="createShippingLabel()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Créer Bordereau</button>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <div id="shipping-table" class="overflow-x-auto"></div>
-                </div>
+                <div class="bg-white rounded-2xl shadow-sm"><div id="shipping-table"></div></div>
             </div>
 
             <!-- Products -->
             <div id="page-products" class="page p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold">Produits</h2>
-                        <p class="text-gray-500"><span id="products-count">0</span> produits</p>
-                    </div>
-                    <button onclick="openProductModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">+ Ajouter Produit</button>
+                    <h2 class="text-2xl font-bold">Produits (<span id="products-count">0</span>)</h2>
+                    <button onclick="openProductModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <div id="products-table" class="overflow-x-auto"></div>
-                </div>
+                <div class="bg-white rounded-2xl shadow-sm"><div id="products-table"></div></div>
             </div>
 
             <!-- Settings -->
             <div id="page-settings" class="page p-8">
                 <h2 class="text-2xl font-bold mb-6">Paramètres</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Store Info -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🏪 Informations Boutique</h3>
+                        <h3 class="font-bold mb-4">🏪 Boutique</h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Nom de la boutique</label>
-                                <input type="text" id="setting-store-name" class="w-full px-4 py-2 border rounded-xl" value="Hichoux Store">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Téléphone</label>
-                                <input type="tel" id="setting-phone" class="w-full px-4 py-2 border rounded-xl" value="0600000000">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">WhatsApp</label>
-                                <input type="tel" id="setting-whatsapp" class="w-full px-4 py-2 border rounded-xl" value="212600000000">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Frais de livraison (DH)</label>
-                                <input type="number" id="setting-shipping" class="w-full px-4 py-2 border rounded-xl" value="30">
-                            </div>
+                            <div><label class="block text-sm font-medium mb-1">Nom</label><input type="text" id="setting-store-name" class="w-full px-4 py-2 border rounded-xl" value="Hichoux Store"></div>
+                            <div><label class="block text-sm font-medium mb-1">Téléphone</label><input type="tel" id="setting-phone" class="w-full px-4 py-2 border rounded-xl" value="0600000000"></div>
+                            <div><label class="block text-sm font-medium mb-1">WhatsApp</label><input type="tel" id="setting-whatsapp" class="w-full px-4 py-2 border rounded-xl" value="212600000000"></div>
+                            <div><label class="block text-sm font-medium mb-1">Frais livraison (DH)</label><input type="number" id="setting-shipping" class="w-full px-4 py-2 border rounded-xl" value="30"></div>
                         </div>
                     </div>
-
-                    <!-- Logo -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">🎨 Logo</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-4">
-                                <img id="preview-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%232563eb'/%3E%3Ctext x='40' y='52' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-20 h-20 rounded-xl object-cover border">
-                                <div>
-                                    <p class="font-medium">Logo actuel</p>
-                                    <p class="text-sm text-gray-500">Format: JPG, PNG, SVG</p>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">URL du logo</label>
-                                <input type="url" id="setting-logo-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://..." oninput="previewLogo(this.value)">
-                            </div>
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500 mb-2">Ou uploadez sur <a href="https://imgur.com" target="_blank" class="text-blue-600">Imgur</a> et collez l'URL</p>
-                            </div>
+                        <div class="flex items-center space-x-4 mb-4">
+                            <img id="preview-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' rx='16' fill='%232563eb'/%3E%3Ctext x='40' y='52' text-anchor='middle' fill='white' font-size='36' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-20 h-20 rounded-xl object-cover border">
+                            <div><p class="font-medium">Logo actuel</p><p class="text-sm text-gray-500">Cliquez ci-dessous</p></div>
+                        </div>
+                        <div class="upload-zone rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('logo-input').click()">
+                            <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="handleLogoUpload(this)">
+                            <p class="text-gray-600">📤 Cliquez pour uploader</p>
                         </div>
                     </div>
-
-                    <!-- Database -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">🗄️ Base de Données</h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Supabase URL</label>
-                                <input type="text" id="setting-supabase-url" class="w-full px-4 py-2 border rounded-xl bg-gray-50" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Statut</label>
-                                <div id="db-status" class="px-4 py-2 bg-green-100 text-green-800 rounded-xl">✓ Connecté</div>
-                            </div>
+                            <div><label class="block text-sm font-medium mb-1">Supabase URL</label><input type="text" id="setting-supabase-url" class="w-full px-4 py-2 border rounded-xl"></div>
+                            <div><label class="block text-sm font-medium mb-1">Anon Key</label><input type="password" id="setting-supabase-key" class="w-full px-4 py-2 border rounded-xl"></div>
+                            <div id="db-status" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl">⚪ Non configuré</div>
+                            <button onclick="testConnection()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl">🔌 Tester</button>
                         </div>
                     </div>
-
-                    <!-- Google Sheets -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">📊 Google Sheets</h3>
+                        <h3 class="font-bold mb-4">💾 Données</h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Apps Script URL</label>
-                                <input type="url" id="setting-gas-url" class="w-full px-4 py-2 border rounded-xl" placeholder="https://script.google.com/...">
-                            </div>
-                            <a href="https://docs.google.com/spreadsheets/d/1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw/edit" target="_blank" class="block px-4 py-2 bg-green-100 text-green-800 rounded-xl text-center hover:bg-green-200">📊 Ouvrir Google Sheet</a>
+                            <button onclick="exportData()" class="w-full px-4 py-2 bg-green-600 text-white rounded-xl">📥 Exporter JSON</button>
+                            <div><label class="block text-sm font-medium mb-1">Importer</label><input type="file" id="import-input" accept=".json" class="w-full" onchange="importData(this)"></div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-6">
-                    <button onclick="saveSettings()" class="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium">💾 Sauvegarder les Paramètres</button>
-                </div>
+                <button onclick="saveSettings()" class="mt-6 px-8 py-3 bg-blue-600 text-white rounded-xl font-medium">💾 Sauvegarder</button>
             </div>
         </main>
     </div>
 
     <script>
-        // =============================================
-        // CONFIG
-        // =============================================
-        const CONFIG = {
-            SUPABASE_URL: 'https://mbvskiaqfpbbnxhgzpga.supabase.co',
-            SUPABASE_ANON_KEY: 'sb_secret_inwuQRRulHoEd6ihMrojsA_p_fxEDqR',
-            GOOGLE_SHEET_ID: '1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw'
-        };
+        const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='100' y='105' text-anchor='middle' fill='%239ca3af' font-size='14'%3EProduit%3C/text%3E%3C/svg%3E";
+        
+        let supabaseClient = null, isConnected = false;
+        let orders = [], products = [];
+        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoData: '', supabaseUrl: '', supabaseKey: '' };
 
-        // =============================================
-        // STATE
-        // =============================================
-        let supabaseClient = null;
-        let orders = [];
-        let products = [];
-        let shippingLabels = [];
-        let storeSettings = {
-            name: 'Hichoux Store',
-            phone: '0600000000',
-            whatsapp: '212600000000',
-            shipping: 30,
-            logoUrl: ''
-        };
-
-        // Demo Data
         const demoOrders = [
-            { id: '1', order_number: 'HCX001234', customer_name: 'Ahmed Benali', customer_phone: '0661234567', shipping_address: 'Rue Hassan II, N°45', shipping_city: 'Casablanca', total: 300, status: 'new', created_at: new Date().toISOString(), items: [{name: 'Parfum Royal Oud', qty: 2, price: 150}] },
-            { id: '2', order_number: 'HCX001235', customer_name: 'Fatima Zahra', customer_phone: '0677889900', shipping_address: 'Avenue Mohammed V', shipping_city: 'Rabat', total: 200, status: 'new', created_at: new Date().toISOString(), items: [{name: 'Essence de Rose', qty: 1, price: 200}] },
-            { id: '3', order_number: 'HCX001236', customer_name: 'Youssef Amrani', customer_phone: '0655443322', shipping_address: 'Boulevard Zerktouni', shipping_city: 'Marrakech', total: 450, status: 'confirmed', created_at: new Date().toISOString(), items: [{name: 'Amber Nights', qty: 3, price: 150}] },
-            { id: '4', order_number: 'HCX001237', customer_name: 'Sara Idrissi', customer_phone: '0699887766', shipping_address: 'Rue de Fès', shipping_city: 'Tanger', total: 180, status: 'shipped', tracking_number: 'DG123456', created_at: new Date().toISOString(), items: [{name: 'Musk Premium', qty: 1, price: 180}] },
-            { id: '5', order_number: 'HCX001238', customer_name: 'Karim Tazi', customer_phone: '0611223344', shipping_address: 'Avenue des FAR', shipping_city: 'Agadir', total: 320, status: 'delivered', tracking_number: 'DG789012', created_at: new Date().toISOString(), items: [{name: 'Jasmin Oriental', qty: 2, price: 160}] },
+            { id: '1', order_number: 'HCX001234', customer_name: 'Ahmed Benali', customer_phone: '0661234567', shipping_address: 'Rue Hassan II', shipping_city: 'Casablanca', total: 300, status: 'new', created_at: new Date().toISOString() },
+            { id: '2', order_number: 'HCX001235', customer_name: 'Fatima Zahra', customer_phone: '0677889900', shipping_address: 'Avenue Mohammed V', shipping_city: 'Rabat', total: 200, status: 'new', created_at: new Date().toISOString() },
+            { id: '3', order_number: 'HCX001236', customer_name: 'Youssef Amrani', customer_phone: '0655443322', shipping_address: 'Boulevard Zerktouni', shipping_city: 'Marrakech', total: 450, status: 'confirmed', created_at: new Date().toISOString() },
         ];
-
         const demoProducts = [
-            { id: '1', sku: 'PARFUM-001', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Royal+Oud', description: 'Parfum oriental riche' },
-            { id: '2', sku: 'PARFUM-002', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Rose', description: 'Parfum floral délicat' },
-            { id: '3', sku: 'PARFUM-003', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Amber', description: 'Parfum chaud et sensuel' },
-            { id: '4', sku: 'PARFUM-004', name: 'Musk Premium', price: 180, compare_price: 220, stock: 15, category: 'homme', is_featured: false, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Musk', description: 'Parfum musqué élégant' },
-            { id: '5', sku: 'PARFUM-005', name: 'Jasmin Oriental', price: 160, compare_price: 200, stock: 20, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/200x200/1a1a1a/D4AF37?text=Jasmin', description: 'Jasmin et notes épicées' },
+            { id: '1', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_data: '', description: 'Parfum oriental' },
+            { id: '2', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_data: '', description: 'Parfum floral' },
+            { id: '3', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_data: '', description: 'Parfum chaud' },
         ];
 
-        // =============================================
-        // INIT
-        // =============================================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             loadSettings();
-            initSupabase();
-            updateDate();
             document.getElementById('product-form').addEventListener('submit', saveProduct);
+            if (settings.supabaseUrl && settings.supabaseKey) tryConnect();
+            else document.getElementById('config-modal').classList.add('active');
         });
 
         function loadSettings() {
-            const saved = localStorage.getItem('hichoux_settings');
-            if (saved) {
-                storeSettings = {...storeSettings, ...JSON.parse(saved)};
-            }
+            const s = localStorage.getItem('hichoux_settings');
+            if (s) settings = {...settings, ...JSON.parse(s)};
+            const p = localStorage.getItem('hichoux_products');
+            if (p) products = JSON.parse(p);
+            const o = localStorage.getItem('hichoux_orders');
+            if (o) orders = JSON.parse(o);
             applySettings();
         }
 
         function applySettings() {
-            document.getElementById('setting-store-name').value = storeSettings.name;
-            document.getElementById('setting-phone').value = storeSettings.phone;
-            document.getElementById('setting-whatsapp').value = storeSettings.whatsapp;
-            document.getElementById('setting-shipping').value = storeSettings.shipping;
-            document.getElementById('setting-logo-url').value = storeSettings.logoUrl || '';
-            document.getElementById('setting-supabase-url').value = CONFIG.SUPABASE_URL;
-            
-            document.getElementById('sidebar-store-name').textContent = storeSettings.name;
-            
-            if (storeSettings.logoUrl) {
-                document.getElementById('sidebar-logo').src = storeSettings.logoUrl;
-                document.getElementById('preview-logo').src = storeSettings.logoUrl;
+            document.getElementById('setting-store-name').value = settings.name;
+            document.getElementById('setting-phone').value = settings.phone;
+            document.getElementById('setting-whatsapp').value = settings.whatsapp;
+            document.getElementById('setting-shipping').value = settings.shipping;
+            document.getElementById('setting-supabase-url').value = settings.supabaseUrl;
+            document.getElementById('setting-supabase-key').value = settings.supabaseKey;
+            document.getElementById('config-url').value = settings.supabaseUrl;
+            document.getElementById('config-key').value = settings.supabaseKey;
+            document.getElementById('sidebar-store-name').textContent = settings.name;
+            if (settings.logoData) {
+                document.getElementById('sidebar-logo').src = settings.logoData;
+                document.getElementById('preview-logo').src = settings.logoData;
             }
         }
 
-        async function initSupabase() {
+        async function tryConnect() {
             try {
-                supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-                document.getElementById('connection-status').innerHTML = '<span class="text-green-500">● Connecté</span>';
-                document.getElementById('db-status').innerHTML = '✓ Connecté à Supabase';
+                supabaseClient = supabase.createClient(settings.supabaseUrl, settings.supabaseKey);
+                const { error } = await supabaseClient.from('products').select('id').limit(1);
+                if (error) throw error;
+                isConnected = true;
+                setStatus('green', 'Connecté');
+                await loadFromSupabase();
+            } catch (e) { console.log('Using local mode'); useDemoMode(); }
+        }
+
+        async function connectSupabase() {
+            const url = document.getElementById('config-url').value.trim();
+            const key = document.getElementById('config-key').value.trim();
+            if (!url || !key) { showToast('Entrez URL et Key', 'error'); return; }
+            try {
+                supabaseClient = supabase.createClient(url, key);
+                const { error } = await supabaseClient.from('products').select('id').limit(1);
+                if (error) throw error;
+                settings.supabaseUrl = url;
+                settings.supabaseKey = key;
+                saveToStorage();
+                isConnected = true;
+                document.getElementById('config-modal').classList.remove('active');
+                setStatus('green', 'Connecté');
+                showToast('Connecté!');
+                await loadFromSupabase();
+            } catch (e) { showToast('Erreur: ' + e.message, 'error'); }
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('setting-supabase-url').value.trim();
+            const key = document.getElementById('setting-supabase-key').value.trim();
+            if (!url || !key) { showToast('Entrez URL et Key', 'error'); return; }
+            try {
+                const c = supabase.createClient(url, key);
+                await c.from('products').select('id').limit(1);
                 document.getElementById('db-status').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl';
-                await loadData();
+                document.getElementById('db-status').textContent = '✓ Connexion OK!';
+                showToast('Connexion réussie!');
             } catch (e) {
-                console.error('Supabase error:', e);
-                useDemoData();
+                document.getElementById('db-status').className = 'px-4 py-2 bg-red-100 text-red-800 rounded-xl';
+                document.getElementById('db-status').textContent = '✗ Erreur';
+                showToast('Échec', 'error');
             }
         }
 
-        async function loadData() {
+        async function loadFromSupabase() {
             try {
-                // Load orders
-                const { data: ordersData } = await supabaseClient
-                    .from('orders')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                // Load products
-                const { data: productsData } = await supabaseClient
-                    .from('products')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                orders = ordersData?.length ? ordersData : demoOrders;
-                products = productsData?.length ? productsData : demoProducts;
-                
+                const { data: o } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+                const { data: p } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+                if (o?.length) orders = o;
+                if (p?.length) products = p;
+                saveToStorage();
                 updateUI();
-            } catch (e) {
-                console.error('Load error:', e);
-                useDemoData();
-            }
+            } catch (e) { useDemoMode(); }
         }
 
-        function useDemoData() {
-            orders = [...demoOrders];
-            products = [...demoProducts];
-            document.getElementById('connection-status').innerHTML = '<span class="text-yellow-500">● Mode Demo</span>';
+        function useDemoMode() {
+            document.getElementById('config-modal').classList.remove('active');
+            if (!orders.length) orders = [...demoOrders];
+            if (!products.length) products = [...demoProducts];
+            setStatus('yellow', 'Mode Local');
+            document.getElementById('db-status').className = 'px-4 py-2 bg-yellow-100 text-yellow-800 rounded-xl';
+            document.getElementById('db-status').textContent = '⚪ Mode Local';
             updateUI();
         }
 
-        function refreshData() {
-            showToast('Actualisation...', 'info');
-            loadData();
+        function setStatus(color, text) {
+            document.getElementById('connection-status').innerHTML = `<span class="text-${color}-500">● ${text}</span>`;
         }
 
-        // =============================================
-        // NAVIGATION
-        // =============================================
+        function refreshData() {
+            if (isConnected) loadFromSupabase();
+            else updateUI();
+            showToast('Actualisé!', 'info');
+        }
+
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            
             document.getElementById('page-' + pageId).classList.add('active');
             event.currentTarget.classList.add('active');
-            
-            if (pageId === 'orders') renderOrdersTable();
+            if (pageId === 'orders') filterOrders();
             if (pageId === 'confirmation') renderConfirmation();
             if (pageId === 'shipping') renderShipping();
             if (pageId === 'products') renderProducts();
         }
 
-        // =============================================
-        // UI FUNCTIONS
-        // =============================================
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
-            const toast = document.createElement('div');
-            toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        function updateDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', options);
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toast-container');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+            const t = document.createElement('div');
+            t.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
         function updateUI() {
-            updateStats();
-            updateBadges();
-            renderRecentOrders();
-        }
-
-        function updateStats() {
             const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0 };
-            orders.forEach(o => { if (stats[o.status] !== undefined) stats[o.status]++; });
-            
+            orders.forEach(o => stats[o.status] !== undefined && stats[o.status]++);
             document.getElementById('stat-new').textContent = stats.new;
             document.getElementById('stat-confirmed').textContent = stats.confirmed;
             document.getElementById('stat-shipped').textContent = stats.shipped;
             document.getElementById('stat-delivered').textContent = stats.delivered;
-        }
-
-        function updateBadges() {
-            const newCount = orders.filter(o => o.status === 'new').length;
-            const badgeOrders = document.getElementById('badge-orders');
-            const badgeConfirm = document.getElementById('badge-confirm');
             
-            if (newCount > 0) {
-                badgeOrders.textContent = newCount;
-                badgeOrders.classList.remove('hidden');
-                badgeConfirm.textContent = newCount;
-                badgeConfirm.classList.remove('hidden');
-            } else {
-                badgeOrders.classList.add('hidden');
-                badgeConfirm.classList.add('hidden');
-            }
+            const badge = document.getElementById('badge-orders');
+            if (stats.new > 0) { badge.textContent = stats.new; badge.classList.remove('hidden'); }
+            else badge.classList.add('hidden');
+            
+            renderRecentOrders();
         }
 
-        function getStatusBadge(status) {
-            const config = {
-                new: { label: 'Nouvelle', color: 'bg-yellow-100 text-yellow-800' },
-                confirmed: { label: 'Confirmée', color: 'bg-blue-100 text-blue-800' },
-                shipped: { label: 'Expédiée', color: 'bg-purple-100 text-purple-800' },
-                delivered: { label: 'Livrée', color: 'bg-green-100 text-green-800' },
-                cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800' }
-            };
-            const c = config[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
-            return `<span class="px-3 py-1 rounded-full text-xs font-semibold ${c.color}">${c.label}</span>`;
+        function getImg(p) { return p.image_data || p.image_url || DEFAULT_IMG; }
+        function getBadge(s) {
+            const c = { new: 'bg-yellow-100 text-yellow-800', confirmed: 'bg-blue-100 text-blue-800', shipped: 'bg-purple-100 text-purple-800', delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800' };
+            const l = { new: 'Nouvelle', confirmed: 'Confirmée', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée' };
+            return `<span class="px-2 py-1 rounded-full text-xs ${c[s]}">${l[s]}</span>`;
         }
 
-        function formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        }
-
-        // =============================================
-        // ORDERS
-        // =============================================
         function renderRecentOrders() {
-            const recent = orders.slice(0, 5);
-            document.getElementById('recent-orders').innerHTML = recent.length ? `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm border-b">
-                        <th class="pb-3">Commande</th><th class="pb-3">Client</th><th class="pb-3">Ville</th><th class="pb-3">Total</th><th class="pb-3">Statut</th>
-                    </tr></thead>
-                    <tbody>
-                        ${recent.map(o => `
-                            <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openOrderModal('${o.id}')">
-                                <td class="py-3 font-medium">${o.order_number}</td>
-                                <td class="py-3">${o.customer_name}</td>
-                                <td class="py-3">${o.shipping_city}</td>
-                                <td class="py-3 font-semibold">${o.total} DH</td>
-                                <td class="py-3">${getStatusBadge(o.status)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            ` : '<p class="text-gray-500 text-center py-8">Aucune commande</p>';
-        }
-
-        function renderOrdersTable() {
-            filterOrders();
+            const r = orders.slice(0, 5);
+            document.getElementById('recent-orders').innerHTML = r.length ? r.map(o => `
+                <div class="flex justify-between items-center py-3 border-b cursor-pointer hover:bg-gray-50" onclick="openOrderModal('${o.id}')">
+                    <div><p class="font-medium">${o.order_number}</p><p class="text-sm text-gray-500">${o.customer_name}</p></div>
+                    <div class="text-right"><p class="font-semibold">${o.total} DH</p>${getBadge(o.status)}</div>
+                </div>
+            `).join('') : '<p class="text-gray-500 text-center py-8">Aucune commande</p>';
         }
 
         function filterOrders() {
             const search = document.getElementById('search-orders').value.toLowerCase();
             const status = document.getElementById('filter-status').value;
-            
-            let filtered = orders.filter(o => {
-                const matchSearch = !search || o.order_number.toLowerCase().includes(search) || o.customer_name.toLowerCase().includes(search) || o.customer_phone.includes(search);
-                const matchStatus = !status || o.status === status;
-                return matchSearch && matchStatus;
-            });
-
-            document.getElementById('orders-table').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Téléphone</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th><th class="p-4">Actions</th>
-                    </tr></thead>
-                    <tbody>
-                        ${filtered.map(o => `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4 font-medium">${o.order_number}</td>
-                                <td class="p-4">${o.customer_name}</td>
-                                <td class="p-4">${o.customer_phone}</td>
-                                <td class="p-4">${o.shipping_city}</td>
-                                <td class="p-4 font-semibold">${o.total} DH</td>
-                                <td class="p-4">${getStatusBadge(o.status)}</td>
-                                <td class="p-4">
-                                    <button onclick="openOrderModal('${o.id}')" class="text-blue-600 hover:underline">Voir</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            const f = orders.filter(o => (!search || o.order_number.toLowerCase().includes(search) || o.customer_name.toLowerCase().includes(search)) && (!status || o.status === status));
+            document.getElementById('orders-table').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th></tr></thead><tbody>${f.map(o => `<tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openOrderModal('${o.id}')"><td class="p-4 font-medium">${o.order_number}</td><td class="p-4">${o.customer_name}</td><td class="p-4">${o.shipping_city}</td><td class="p-4 font-semibold">${o.total} DH</td><td class="p-4">${getBadge(o.status)}</td></tr>`).join('')}</tbody></table>`;
         }
 
         function openOrderModal(id) {
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            
-            document.getElementById('order-modal-number').textContent = order.order_number;
+            const o = orders.find(x => x.id == id);
+            if (!o) return;
+            document.getElementById('order-modal-number').textContent = o.order_number;
             document.getElementById('order-modal-content').innerHTML = `
                 <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div><p class="text-gray-500 text-sm">Client</p><p class="font-semibold">${order.customer_name}</p></div>
-                    <div><p class="text-gray-500 text-sm">Téléphone</p><p class="font-semibold">${order.customer_phone}</p></div>
-                    <div><p class="text-gray-500 text-sm">Ville</p><p class="font-semibold">${order.shipping_city}</p></div>
-                    <div><p class="text-gray-500 text-sm">Total</p><p class="font-semibold text-green-600">${order.total} DH</p></div>
-                    <div class="col-span-2"><p class="text-gray-500 text-sm">Adresse</p><p class="font-semibold">${order.shipping_address}</p></div>
-                    <div><p class="text-gray-500 text-sm">Statut</p><p>${getStatusBadge(order.status)}</p></div>
-                    ${order.tracking_number ? `<div><p class="text-gray-500 text-sm">Tracking</p><p class="font-mono font-semibold">${order.tracking_number}</p></div>` : ''}
+                    <div><p class="text-gray-500 text-sm">Client</p><p class="font-semibold">${o.customer_name}</p></div>
+                    <div><p class="text-gray-500 text-sm">Téléphone</p><p class="font-semibold">${o.customer_phone}</p></div>
+                    <div><p class="text-gray-500 text-sm">Ville</p><p class="font-semibold">${o.shipping_city}</p></div>
+                    <div><p class="text-gray-500 text-sm">Total</p><p class="font-semibold text-green-600">${o.total} DH</p></div>
+                    <div class="col-span-2"><p class="text-gray-500 text-sm">Adresse</p><p>${o.shipping_address}</p></div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <a href="tel:${order.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">📞 Appeler</a>
-                    <a href="https://wa.me/212${order.customer_phone.slice(1)}?text=${encodeURIComponent(`Bonjour ${order.customer_name}, concernant votre commande ${order.order_number}...`)}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600">💬 WhatsApp</a>
-                    ${order.status === 'new' ? `<button onclick="confirmOrder('${order.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">✅ Confirmer</button>` : ''}
-                    ${order.status === 'new' ? `<button onclick="cancelOrder('${order.id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">❌ Annuler</button>` : ''}
+                    <a href="tel:${o.customer_phone}" class="px-4 py-2 bg-blue-600 text-white rounded-xl">📞 Appeler</a>
+                    <a href="https://wa.me/212${o.customer_phone.slice(1)}" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-xl">💬 WhatsApp</a>
+                    ${o.status === 'new' ? `<button onclick="confirmOrder('${o.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl">✅ Confirmer</button><button onclick="cancelOrder('${o.id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl">❌ Annuler</button>` : ''}
+                    ${o.status === 'confirmed' ? `<button onclick="shipOrder('${o.id}')" class="px-4 py-2 bg-purple-600 text-white rounded-xl">🚚 Expédier</button>` : ''}
                 </div>
             `;
             document.getElementById('order-modal').classList.add('active');
         }
-
-        function closeOrderModal() {
-            document.getElementById('order-modal').classList.remove('active');
-        }
+        function closeOrderModal() { document.getElementById('order-modal').classList.remove('active'); }
 
         async function confirmOrder(id) {
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            
-            order.status = 'confirmed';
-            
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-            
-            closeOrderModal();
-            updateUI();
-            showToast('Commande confirmée!');
+            const o = orders.find(x => x.id == id); if (!o) return;
+            o.status = 'confirmed';
+            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', id); } catch(e){}
+            saveToStorage(); closeOrderModal(); updateUI(); showToast('Confirmée!');
         }
-
         async function cancelOrder(id) {
-            const reason = prompt('Raison de l\'annulation:');
-            if (!reason) return;
-            
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            
-            order.status = 'cancelled';
-            
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('orders').update({ status: 'cancelled', notes: reason }).eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-            
-            closeOrderModal();
-            updateUI();
-            showToast('Commande annulée');
+            const o = orders.find(x => x.id == id); if (!o) return;
+            o.status = 'cancelled';
+            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'cancelled' }).eq('id', id); } catch(e){}
+            saveToStorage(); closeOrderModal(); updateUI(); showToast('Annulée');
         }
-
-        // =============================================
-        // CONFIRMATION
-        // =============================================
-        function renderConfirmation() {
-            const pending = orders.filter(o => o.status === 'new');
-            document.getElementById('pending-count').textContent = pending.length;
-            
-            if (pending.length === 0) {
-                document.getElementById('confirmation-list').innerHTML = `
-                    <div class="col-span-2 text-center py-16">
-                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">✅</div>
-                        <h3 class="text-xl font-semibold">Tout est confirmé!</h3>
-                        <p class="text-gray-500">Aucune commande en attente</p>
-                    </div>
-                `;
-                return;
-            }
-
-            document.getElementById('confirmation-list').innerHTML = pending.map(o => `
-                <div class="bg-white rounded-2xl p-6 shadow-sm">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h4 class="font-bold text-lg">${o.order_number}</h4>
-                            <p class="text-gray-500 text-sm">${formatDate(o.created_at)}</p>
-                        </div>
-                        <span class="text-xl font-bold text-green-600">${o.total} DH</span>
-                    </div>
-                    <div class="space-y-2 mb-4">
-                        <p><span class="text-gray-500">👤</span> ${o.customer_name}</p>
-                        <p><span class="text-gray-500">📞</span> ${o.customer_phone}</p>
-                        <p><span class="text-gray-500">📍</span> ${o.shipping_city}</p>
-                        <p class="text-sm text-gray-600">${o.shipping_address}</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="tel:${o.customer_phone}" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700">📞 Appeler</a>
-                        <a href="https://wa.me/212${o.customer_phone.slice(1)}?text=${encodeURIComponent(`Bonjour ${o.customer_name}! Je vous contacte pour confirmer votre commande ${o.order_number} de ${o.total} DH. Est-ce que tout est correct?`)}" target="_blank" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-xl text-center hover:bg-green-600">💬 WhatsApp</a>
-                    </div>
-                    <div class="flex gap-2 mt-3">
-                        <button onclick="confirmOrder('${o.id}')" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">✅ Confirmer</button>
-                        <button onclick="cancelOrder('${o.id}')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">❌ Annuler</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // =============================================
-        // SHIPPING
-        // =============================================
-        function renderShipping() {
-            const confirmed = orders.filter(o => o.status === 'confirmed');
-            document.getElementById('shipping-table').innerHTML = `
-                <div class="p-4 bg-blue-50 border-b">
-                    <p><strong>${confirmed.length}</strong> commandes prêtes à expédier</p>
-                </div>
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Actions</th>
-                    </tr></thead>
-                    <tbody>
-                        ${confirmed.map(o => `
-                            <tr class="border-b">
-                                <td class="p-4 font-medium">${o.order_number}</td>
-                                <td class="p-4">${o.customer_name}</td>
-                                <td class="p-4">${o.shipping_city}</td>
-                                <td class="p-4 font-semibold">${o.total} DH</td>
-                                <td class="p-4">
-                                    <button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">🚚 Expédier</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
         async function shipOrder(id) {
-            const tracking = 'DG' + Math.random().toString(36).substring(2, 10).toUpperCase();
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            
-            order.status = 'shipped';
-            order.tracking_number = tracking;
-            
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('orders').update({ status: 'shipped', tracking_number: tracking }).eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-            
-            renderShipping();
-            updateUI();
-            showToast(`Expédiée! Tracking: ${tracking}`);
+            const o = orders.find(x => x.id == id); if (!o) return;
+            const t = 'DG' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            o.status = 'shipped'; o.tracking_number = t;
+            if (isConnected) try { await supabaseClient.from('orders').update({ status: 'shipped', tracking_number: t }).eq('id', id); } catch(e){}
+            saveToStorage(); closeOrderModal(); updateUI(); showToast('Expédiée: ' + t);
         }
 
-        function createShippingLabel() {
-            const confirmed = orders.filter(o => o.status === 'confirmed');
-            if (confirmed.length === 0) {
-                showToast('Aucune commande à expédier', 'warning');
-                return;
-            }
-            
-            confirmed.forEach(o => shipOrder(o.id));
-            showToast(`${confirmed.length} commandes expédiées!`);
+        function renderConfirmation() {
+            const p = orders.filter(o => o.status === 'new');
+            document.getElementById('pending-count').textContent = p.length;
+            document.getElementById('confirmation-list').innerHTML = p.length ? p.map(o => `
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <div class="flex justify-between mb-4"><h4 class="font-bold">${o.order_number}</h4><span class="text-green-600 font-bold">${o.total} DH</span></div>
+                    <p>👤 ${o.customer_name}</p><p>📞 ${o.customer_phone}</p><p>📍 ${o.shipping_city}</p>
+                    <div class="flex gap-2 mt-4">
+                        <a href="tel:${o.customer_phone}" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-center">📞</a>
+                        <a href="https://wa.me/212${o.customer_phone.slice(1)}" target="_blank" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-xl text-center">💬</a>
+                        <button onclick="confirmOrder('${o.id}')" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl">✅</button>
+                        <button onclick="cancelOrder('${o.id}')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl">❌</button>
+                    </div>
+                </div>
+            `).join('') : '<div class="col-span-2 text-center py-16"><div class="text-4xl mb-4">✅</div><p>Tout est confirmé!</p></div>';
         }
 
-        // =============================================
-        // PRODUCTS
-        // =============================================
+        function renderShipping() {
+            const c = orders.filter(o => o.status === 'confirmed');
+            document.getElementById('shipping-table').innerHTML = `<div class="p-4 bg-blue-50 border-b"><strong>${c.length}</strong> à expédier</div><table class="w-full"><tbody>${c.map(o => `<tr class="border-b"><td class="p-4 font-medium">${o.order_number}</td><td class="p-4">${o.customer_name}</td><td class="p-4">${o.shipping_city}</td><td class="p-4"><button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm">🚚 Expédier</button></td></tr>`).join('')}</tbody></table>`;
+        }
+
         function renderProducts() {
             document.getElementById('products-count').textContent = products.length;
-            document.getElementById('products-table').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">SKU</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">Actions</th>
-                    </tr></thead>
-                    <tbody>
-                        ${products.map(p => `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4"><img src="${p.image_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"></td>
-                                <td class="p-4">
-                                    <p class="font-medium">${p.name}</p>
-                                    <p class="text-xs text-gray-500">${p.category}</p>
-                                </td>
-                                <td class="p-4 font-mono text-sm">${p.sku}</td>
-                                <td class="p-4">
-                                    <p class="font-semibold">${p.price} DH</p>
-                                    ${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price} DH</p>` : ''}
-                                </td>
-                                <td class="p-4">
-                                    <span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span>
-                                </td>
-                                <td class="p-4 space-x-2">
-                                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:underline">✏️</button>
-                                    <button onclick="deleteProduct('${p.id}')" class="text-red-600 hover:underline">🗑️</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            document.getElementById('products-table').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">Actions</th></tr></thead><tbody>${products.map(p => `<tr class="border-b hover:bg-gray-50"><td class="p-4"><img src="${getImg(p)}" class="w-12 h-12 rounded-lg object-cover bg-gray-100"></td><td class="p-4"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category}</p></td><td class="p-4"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price} DH</p>` : ''}</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td><td class="p-4"><button onclick="editProduct('${p.id}')" class="text-blue-600 mr-2">✏️</button><button onclick="deleteProduct('${p.id}')" class="text-red-600">🗑️</button></td></tr>`).join('')}</tbody></table>`;
         }
 
-        function openProductModal(product = null) {
-            document.getElementById('product-modal-title').textContent = product ? 'Modifier Produit' : 'Ajouter Produit';
-            document.getElementById('product-id').value = product?.id || '';
-            document.getElementById('product-name').value = product?.name || '';
-            document.getElementById('product-sku').value = product?.sku || '';
-            document.getElementById('product-price').value = product?.price || '';
-            document.getElementById('product-compare-price').value = product?.compare_price || '';
-            document.getElementById('product-stock').value = product?.stock || 100;
-            document.getElementById('product-category').value = product?.category || 'homme';
-            document.getElementById('product-image').value = product?.image_url || '';
-            document.getElementById('product-description').value = product?.description || '';
-            document.getElementById('product-featured').checked = product?.is_featured || false;
+        function openProductModal(p = null) {
+            document.getElementById('product-modal-title').textContent = p ? 'Modifier' : 'Ajouter';
+            document.getElementById('product-id').value = p?.id || '';
+            document.getElementById('product-name').value = p?.name || '';
+            document.getElementById('product-price').value = p?.price || '';
+            document.getElementById('product-compare-price').value = p?.compare_price || '';
+            document.getElementById('product-stock').value = p?.stock || 100;
+            document.getElementById('product-category').value = p?.category || 'homme';
+            document.getElementById('product-image-data').value = p?.image_data || '';
+            document.getElementById('product-description').value = p?.description || '';
+            document.getElementById('product-featured').checked = p?.is_featured || false;
+            if (p?.image_data) {
+                document.getElementById('product-preview-img').src = p.image_data;
+                document.getElementById('product-image-preview').classList.remove('hidden');
+                document.getElementById('product-image-placeholder').classList.add('hidden');
+            } else {
+                document.getElementById('product-image-preview').classList.add('hidden');
+                document.getElementById('product-image-placeholder').classList.remove('hidden');
+            }
             document.getElementById('product-modal').classList.add('active');
         }
+        function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); }
+        function editProduct(id) { const p = products.find(x => x.id == id); if (p) openProductModal(p); }
 
-        function closeProductModal() {
-            document.getElementById('product-modal').classList.remove('active');
-        }
-
-        function editProduct(id) {
-            const product = products.find(p => p.id === id);
-            if (product) openProductModal(product);
+        function handleProductImage(input) {
+            if (!input.files[0]) return;
+            if (input.files[0].size > 2 * 1024 * 1024) { showToast('Max 2MB', 'error'); return; }
+            const r = new FileReader();
+            r.onload = e => {
+                document.getElementById('product-image-data').value = e.target.result;
+                document.getElementById('product-preview-img').src = e.target.result;
+                document.getElementById('product-image-preview').classList.remove('hidden');
+                document.getElementById('product-image-placeholder').classList.add('hidden');
+            };
+            r.readAsDataURL(input.files[0]);
         }
 
         async function saveProduct(e) {
             e.preventDefault();
-            
             const id = document.getElementById('product-id').value;
-            const productData = {
+            const data = {
                 name: document.getElementById('product-name').value,
-                sku: document.getElementById('product-sku').value || 'SKU-' + Date.now(),
                 price: parseFloat(document.getElementById('product-price').value),
                 compare_price: parseFloat(document.getElementById('product-compare-price').value) || null,
                 stock: parseInt(document.getElementById('product-stock').value),
                 category: document.getElementById('product-category').value,
-                image_url: document.getElementById('product-image').value,
+                image_data: document.getElementById('product-image-data').value,
                 description: document.getElementById('product-description').value,
-                is_featured: document.getElementById('product-featured').checked
+                is_featured: document.getElementById('product-featured').checked,
+                is_active: true
             };
-
             if (id) {
-                // Update
-                const idx = products.findIndex(p => p.id === id);
-                if (idx !== -1) products[idx] = {...products[idx], ...productData};
-                
-                if (supabaseClient) {
-                    try {
-                        await supabaseClient.from('products').update(productData).eq('id', id);
-                    } catch (e) { console.error(e); }
-                }
-                showToast('Produit modifié!');
+                const i = products.findIndex(x => x.id == id);
+                if (i !== -1) products[i] = {...products[i], ...data};
+                if (isConnected) try { const { image_data, ...d } = data; await supabaseClient.from('products').update(d).eq('id', id); } catch(e){}
             } else {
-                // Create
-                const newProduct = { id: Date.now().toString(), ...productData };
-                products.unshift(newProduct);
-                
-                if (supabaseClient) {
-                    try {
-                        await supabaseClient.from('products').insert(productData);
-                    } catch (e) { console.error(e); }
-                }
-                showToast('Produit ajouté!');
+                const np = { id: Date.now().toString(), ...data, created_at: new Date().toISOString() };
+                products.unshift(np);
+                if (isConnected) try { const { image_data, id, ...d } = np; await supabaseClient.from('products').insert(d); } catch(e){}
             }
-
-            closeProductModal();
-            renderProducts();
+            saveToStorage(); closeProductModal(); renderProducts(); showToast(id ? 'Modifié!' : 'Ajouté!');
         }
 
         async function deleteProduct(id) {
-            if (!confirm('Supprimer ce produit?')) return;
-            
-            products = products.filter(p => p.id !== id);
-            
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('products').delete().eq('id', id);
-                } catch (e) { console.error(e); }
-            }
-            
-            renderProducts();
-            showToast('Produit supprimé');
+            if (!confirm('Supprimer?')) return;
+            products = products.filter(p => p.id != id);
+            if (isConnected) try { await supabaseClient.from('products').delete().eq('id', id); } catch(e){}
+            saveToStorage(); renderProducts(); showToast('Supprimé');
         }
 
-        // =============================================
-        // SETTINGS
-        // =============================================
-        function previewLogo(url) {
-            if (url) {
-                document.getElementById('preview-logo').src = url;
-            }
+        function handleLogoUpload(input) {
+            if (!input.files[0]) return;
+            const r = new FileReader();
+            r.onload = e => {
+                settings.logoData = e.target.result;
+                document.getElementById('sidebar-logo').src = e.target.result;
+                document.getElementById('preview-logo').src = e.target.result;
+                saveToStorage();
+                showToast('Logo mis à jour!');
+            };
+            r.readAsDataURL(input.files[0]);
         }
 
         function saveSettings() {
-            storeSettings = {
-                name: document.getElementById('setting-store-name').value,
-                phone: document.getElementById('setting-phone').value,
-                whatsapp: document.getElementById('setting-whatsapp').value,
-                shipping: parseFloat(document.getElementById('setting-shipping').value),
-                logoUrl: document.getElementById('setting-logo-url').value,
-                gasUrl: document.getElementById('setting-gas-url').value
-            };
-            
-            localStorage.setItem('hichoux_settings', JSON.stringify(storeSettings));
-            applySettings();
-            showToast('Paramètres sauvegardés!');
+            settings.name = document.getElementById('setting-store-name').value;
+            settings.phone = document.getElementById('setting-phone').value;
+            settings.whatsapp = document.getElementById('setting-whatsapp').value;
+            settings.shipping = parseFloat(document.getElementById('setting-shipping').value);
+            settings.supabaseUrl = document.getElementById('setting-supabase-url').value;
+            settings.supabaseKey = document.getElementById('setting-supabase-key').value;
+            saveToStorage(); applySettings(); showToast('Sauvegardé!');
         }
 
-        // Close modals on escape
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                closeProductModal();
-                closeOrderModal();
-            }
-        });
+        function saveToStorage() {
+            localStorage.setItem('hichoux_settings', JSON.stringify(settings));
+            localStorage.setItem('hichoux_products', JSON.stringify(products));
+            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+        }
+
+        function exportData() {
+            const d = { settings, products, orders, date: new Date().toISOString() };
+            const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = `hichoux-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('Exporté!');
+        }
+
+        function importData(input) {
+            if (!input.files[0]) return;
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    const d = JSON.parse(e.target.result);
+                    if (d.settings) settings = {...settings, ...d.settings};
+                    if (d.products) products = d.products;
+                    if (d.orders) orders = d.orders;
+                    saveToStorage(); applySettings(); updateUI();
+                    showToast('Importé!');
+                } catch (e) { showToast('Erreur fichier', 'error'); }
+            };
+            r.readAsText(input.files[0]);
+        }
+
+        function createShippingLabel() {
+            const c = orders.filter(o => o.status === 'confirmed');
+            if (!c.length) { showToast('Aucune commande', 'info'); return; }
+            c.forEach(o => shipOrder(o.id));
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeProductModal(); closeOrderModal(); } });
     </script>
 </body>
 </html>
