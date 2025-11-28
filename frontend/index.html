@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hichoux Store - Parfums & Cosmétiques</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -19,40 +19,32 @@
         .product-card { transition: all 0.3s; }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .toast { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-        .whatsapp-float { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); z-index: 50; transition: transform 0.3s; }
+        .whatsapp-float { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); z-index: 50; }
         .whatsapp-float:hover { transform: scale(1.1); }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Toast -->
     <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
 
     <!-- Header -->
     <header class="bg-black text-white sticky top-0 z-40">
         <div class="container mx-auto px-4">
-            <div class="hidden md:flex justify-between items-center py-2 text-xs border-b border-gray-800">
-                <div class="flex items-center space-x-4">
-                    <span>📞 <span id="header-phone">0600000000</span></span>
-                    <span>✉️ contact@hichouxstore.ma</span>
-                </div>
-                <div>🚚 Livraison rapide partout au Maroc</div>
-            </div>
             <div class="flex items-center justify-between py-4">
                 <a href="#" onclick="showPage('home'); return false;" class="flex items-center space-x-2">
                     <img id="header-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='%23000' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full">
                     <span id="header-store-name" class="font-display text-2xl font-bold">Hichoux Store</span>
                 </a>
                 <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#" onclick="showPage('home'); return false;" class="hover:text-yellow-400 transition">Accueil</a>
-                    <a href="#" onclick="showPage('catalog'); return false;" class="hover:text-yellow-400 transition">Catalogue</a>
-                    <a href="#" onclick="showPage('tracking'); return false;" class="hover:text-yellow-400 transition">Suivi</a>
-                    <a href="#" onclick="showPage('contact'); return false;" class="hover:text-yellow-400 transition">Contact</a>
+                    <a href="#" onclick="showPage('home'); return false;" class="hover:text-yellow-400">Accueil</a>
+                    <a href="#" onclick="showPage('catalog'); return false;" class="hover:text-yellow-400">Catalogue</a>
+                    <a href="#" onclick="showPage('tracking'); return false;" class="hover:text-yellow-400">Suivi</a>
+                    <a href="#" onclick="showPage('contact'); return false;" class="hover:text-yellow-400">Contact</a>
                 </nav>
                 <div class="flex items-center space-x-4">
-                    <button onclick="showPage('cart')" class="relative p-2 hover:text-yellow-400 transition">
+                    <button onclick="showPage('cart')" class="relative p-2 hover:text-yellow-400">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <span id="cart-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
                     </button>
@@ -64,10 +56,10 @@
         </div>
         <div id="mobile-menu" class="hidden md:hidden bg-gray-900 py-4">
             <nav class="container mx-auto px-4 space-y-4">
-                <a href="#" onclick="showPage('home'); toggleMobileMenu(); return false;" class="block hover:text-yellow-400">Accueil</a>
-                <a href="#" onclick="showPage('catalog'); toggleMobileMenu(); return false;" class="block hover:text-yellow-400">Catalogue</a>
-                <a href="#" onclick="showPage('tracking'); toggleMobileMenu(); return false;" class="block hover:text-yellow-400">Suivi</a>
-                <a href="#" onclick="showPage('contact'); toggleMobileMenu(); return false;" class="block hover:text-yellow-400">Contact</a>
+                <a href="#" onclick="showPage('home'); toggleMobileMenu(); return false;" class="block">Accueil</a>
+                <a href="#" onclick="showPage('catalog'); toggleMobileMenu(); return false;" class="block">Catalogue</a>
+                <a href="#" onclick="showPage('tracking'); toggleMobileMenu(); return false;" class="block">Suivi</a>
+                <a href="#" onclick="showPage('contact'); toggleMobileMenu(); return false;" class="block">Contact</a>
             </nav>
         </div>
     </header>
@@ -80,8 +72,8 @@
                 <div class="container mx-auto px-4 relative z-10">
                     <div class="max-w-2xl animate-fadeIn">
                         <p class="gold uppercase tracking-widest mb-4">Nouvelle Collection</p>
-                        <h1 class="font-display text-4xl md:text-6xl font-bold mb-6 leading-tight">Découvrez l'Excellence des Parfums</h1>
-                        <p class="text-gray-300 text-lg mb-8">Des fragrances uniques qui révèlent votre personnalité. Livraison rapide partout au Maroc.</p>
+                        <h1 class="font-display text-4xl md:text-6xl font-bold mb-6">Découvrez l'Excellence des Parfums</h1>
+                        <p class="text-gray-300 text-lg mb-8">Des fragrances uniques qui révèlent votre personnalité.</p>
                         <div class="flex flex-wrap gap-4">
                             <button onclick="showPage('catalog')" class="btn-gold px-8 py-4 rounded-full">Voir le Catalogue</button>
                             <button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-400 px-8 py-4 rounded-full hover:bg-yellow-400 hover:text-black transition">Suivre ma Commande</button>
@@ -91,40 +83,19 @@
             </section>
             <section class="py-12 bg-white">
                 <div class="container mx-auto px-4">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🚚</div>
-                            <h3 class="font-semibold mb-2">Livraison Rapide</h3>
-                            <p class="text-gray-600 text-sm">24-48h partout au Maroc</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">💰</div>
-                            <h3 class="font-semibold mb-2">Paiement à la Livraison</h3>
-                            <p class="text-gray-600 text-sm">Cash on Delivery</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✨</div>
-                            <h3 class="font-semibold mb-2">Produits Authentiques</h3>
-                            <p class="text-gray-600 text-sm">100% originaux</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">📞</div>
-                            <h3 class="font-semibold mb-2">Support 24/7</h3>
-                            <p class="text-gray-600 text-sm">WhatsApp disponible</p>
-                        </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        <div><div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🚚</div><h3 class="font-semibold">Livraison Rapide</h3><p class="text-gray-600 text-sm">24-48h</p></div>
+                        <div><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">💰</div><h3 class="font-semibold">Paiement à la Livraison</h3><p class="text-gray-600 text-sm">Cash on Delivery</p></div>
+                        <div><div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✨</div><h3 class="font-semibold">Produits Authentiques</h3><p class="text-gray-600 text-sm">100% originaux</p></div>
+                        <div><div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">📞</div><h3 class="font-semibold">Support 24/7</h3><p class="text-gray-600 text-sm">WhatsApp</p></div>
                     </div>
                 </div>
             </section>
             <section class="py-16">
                 <div class="container mx-auto px-4">
-                    <div class="text-center mb-12">
-                        <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Produits Vedettes</h2>
-                        <p class="text-gray-600">Découvrez nos meilleures ventes</p>
-                    </div>
+                    <div class="text-center mb-12"><h2 class="font-display text-3xl font-bold mb-4">Produits Vedettes</h2></div>
                     <div id="featured-products" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-                    <div class="text-center mt-12">
-                        <button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir Tous les Produits</button>
-                    </div>
+                    <div class="text-center mt-12"><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir Tous les Produits</button></div>
                 </div>
             </section>
         </div>
@@ -138,18 +109,18 @@
                             <div class="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
                                 <h3 class="font-semibold mb-4">Catégories</h3>
                                 <div class="space-y-2">
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="" checked onchange="filterProducts()" class="mr-2"><span>Tous</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="homme" onchange="filterProducts()" class="mr-2"><span>Homme</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="femme" onchange="filterProducts()" class="mr-2"><span>Femme</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="unisexe" onchange="filterProducts()" class="mr-2"><span>Unisexe</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="cosmetique" onchange="filterProducts()" class="mr-2"><span>Cosmétique</span></label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="" checked onchange="filterProducts()" class="mr-2">Tous</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="homme" onchange="filterProducts()" class="mr-2">Homme</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="femme" onchange="filterProducts()" class="mr-2">Femme</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="unisexe" onchange="filterProducts()" class="mr-2">Unisexe</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="cosmetique" onchange="filterProducts()" class="mr-2">Cosmétique</label>
                                 </div>
                                 <h3 class="font-semibold mt-6 mb-4">Prix</h3>
                                 <div class="space-y-2">
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="" checked onchange="filterProducts()" class="mr-2"><span>Tous</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="0-100" onchange="filterProducts()" class="mr-2"><span>Moins de 100 DH</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="100-200" onchange="filterProducts()" class="mr-2"><span>100 - 200 DH</span></label>
-                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="200+" onchange="filterProducts()" class="mr-2"><span>Plus de 200 DH</span></label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="" checked onchange="filterProducts()" class="mr-2">Tous</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="0-100" onchange="filterProducts()" class="mr-2">&lt; 100 DH</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="100-200" onchange="filterProducts()" class="mr-2">100-200 DH</label>
+                                    <label class="flex items-center cursor-pointer"><input type="radio" name="price" value="200+" onchange="filterProducts()" class="mr-2">&gt; 200 DH</label>
                                 </div>
                             </div>
                         </aside>
@@ -158,8 +129,8 @@
                                 <h2 class="text-2xl font-bold">Catalogue</h2>
                                 <select onchange="sortProducts(this.value)" class="px-4 py-2 border rounded-xl bg-white">
                                     <option value="">Trier par</option>
-                                    <option value="price-asc">Prix croissant</option>
-                                    <option value="price-desc">Prix décroissant</option>
+                                    <option value="price-asc">Prix ↑</option>
+                                    <option value="price-desc">Prix ↓</option>
                                     <option value="name">Nom A-Z</option>
                                 </select>
                             </div>
@@ -170,14 +141,11 @@
             </section>
         </div>
 
-        <!-- PRODUCT DETAIL -->
+        <!-- PRODUCT -->
         <div id="page-product" class="page">
             <section class="py-12">
                 <div class="container mx-auto px-4">
-                    <button onclick="showPage('catalog')" class="mb-6 text-gray-600 hover:text-black flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                        Retour au catalogue
-                    </button>
+                    <button onclick="showPage('catalog')" class="mb-6 text-gray-600 hover:text-black flex items-center">← Retour</button>
                     <div id="product-detail" class="grid grid-cols-1 md:grid-cols-2 gap-12"></div>
                 </div>
             </section>
@@ -189,20 +157,19 @@
                 <div class="container mx-auto px-4 max-w-4xl">
                     <h2 class="font-display text-3xl font-bold mb-8">Mon Panier</h2>
                     <div id="cart-empty" class="hidden text-center py-16">
-                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🛒</div>
+                        <div class="text-4xl mb-4">🛒</div>
                         <h3 class="text-xl font-semibold mb-2">Votre panier est vide</h3>
-                        <p class="text-gray-500 mb-6">Découvrez nos produits</p>
-                        <button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir le Catalogue</button>
+                        <button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full mt-4">Voir le Catalogue</button>
                     </div>
                     <div id="cart-content" class="hidden">
                         <div id="cart-items" class="space-y-4 mb-8"></div>
                         <div class="bg-white rounded-2xl p-6 shadow-sm">
                             <div class="space-y-3 mb-6">
-                                <div class="flex justify-between"><span class="text-gray-600">Sous-total</span><span id="cart-subtotal" class="font-semibold">0 DH</span></div>
-                                <div class="flex justify-between"><span class="text-gray-600">Livraison</span><span id="cart-shipping" class="font-semibold">30 DH</span></div>
-                                <div class="border-t pt-3 flex justify-between"><span class="text-lg font-bold">Total</span><span id="cart-total" class="text-lg font-bold gold">0 DH</span></div>
+                                <div class="flex justify-between"><span>Sous-total</span><span id="cart-subtotal" class="font-semibold">0 DH</span></div>
+                                <div class="flex justify-between"><span>Livraison</span><span id="cart-shipping" class="font-semibold">30 DH</span></div>
+                                <div class="border-t pt-3 flex justify-between text-lg font-bold"><span>Total</span><span id="cart-total" class="gold">0 DH</span></div>
                             </div>
-                            <button onclick="showPage('checkout')" class="w-full btn-gold py-4 rounded-xl text-lg">Commander Maintenant</button>
+                            <button onclick="showPage('checkout')" class="w-full btn-gold py-4 rounded-xl text-lg">Commander</button>
                         </div>
                     </div>
                 </div>
@@ -218,30 +185,20 @@
                         <div class="bg-white rounded-2xl p-6 shadow-sm">
                             <h3 class="font-semibold text-lg mb-6">Informations de Livraison</h3>
                             <form id="checkout-form" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Nom complet *</label>
-                                    <input type="text" id="checkout-name" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-yellow-400">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Téléphone *</label>
-                                    <input type="tel" id="checkout-phone" required placeholder="06XXXXXXXX" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-yellow-400">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Ville *</label>
-                                    <select id="checkout-city" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-yellow-400">
+                                <div><label class="block text-sm font-medium mb-1">Nom complet *</label><input type="text" id="checkout-name" required class="w-full px-4 py-3 border rounded-xl"></div>
+                                <div><label class="block text-sm font-medium mb-1">Téléphone *</label><input type="tel" id="checkout-phone" required placeholder="06XXXXXXXX" class="w-full px-4 py-3 border rounded-xl"></div>
+                                <div><label class="block text-sm font-medium mb-1">Ville *</label>
+                                    <select id="checkout-city" required class="w-full px-4 py-3 border rounded-xl">
                                         <option value="">Sélectionner</option>
-                                        <option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Fès</option><option>Tanger</option><option>Agadir</option><option>Meknès</option><option>Oujda</option><option>Kénitra</option><option>Tétouan</option><option>Safi</option><option>El Jadida</option><option>Mohammedia</option><option>Béni Mellal</option><option>Nador</option><option>Autre</option>
+                                        <option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Fès</option><option>Tanger</option><option>Agadir</option><option>Meknès</option><option>Oujda</option><option>Kénitra</option><option>Tétouan</option><option>Autre</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Adresse complète *</label>
-                                    <textarea id="checkout-address" required rows="3" placeholder="Numéro, rue, quartier..." class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-yellow-400"></textarea>
-                                </div>
+                                <div><label class="block text-sm font-medium mb-1">Adresse *</label><textarea id="checkout-address" required rows="2" class="w-full px-4 py-3 border rounded-xl"></textarea></div>
                                 <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl">💵</div>
-                                    <div><p class="font-semibold text-green-800">Paiement à la Livraison</p><p class="text-sm text-green-600">Payez en cash à la réception</p></div>
+                                    <div class="text-2xl">💵</div>
+                                    <div><p class="font-semibold text-green-800">Paiement à la Livraison</p><p class="text-sm text-green-600">Cash on Delivery</p></div>
                                 </div>
-                                <button type="submit" class="w-full btn-gold py-4 rounded-xl text-lg mt-6">✓ Confirmer la Commande</button>
+                                <button type="submit" class="w-full btn-gold py-4 rounded-xl text-lg mt-6">✓ Confirmer</button>
                             </form>
                         </div>
                         <div>
@@ -249,8 +206,8 @@
                                 <h3 class="font-semibold text-lg mb-6">Résumé</h3>
                                 <div id="checkout-items" class="space-y-4 mb-6"></div>
                                 <div class="border-t pt-4 space-y-2">
-                                    <div class="flex justify-between text-gray-600"><span>Sous-total</span><span id="checkout-subtotal">0 DH</span></div>
-                                    <div class="flex justify-between text-gray-600"><span>Livraison</span><span id="checkout-shipping">30 DH</span></div>
+                                    <div class="flex justify-between"><span>Sous-total</span><span id="checkout-subtotal">0 DH</span></div>
+                                    <div class="flex justify-between"><span>Livraison</span><span id="checkout-shipping">30 DH</span></div>
                                     <div class="flex justify-between text-xl font-bold pt-2 border-t"><span>Total</span><span id="checkout-total" class="gold">0 DH</span></div>
                                 </div>
                             </div>
@@ -264,16 +221,16 @@
         <div id="page-success" class="page">
             <section class="py-16">
                 <div class="container mx-auto px-4 max-w-lg text-center">
-                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl animate-fadeIn">✓</div>
+                    <div class="text-6xl mb-6 animate-fadeIn">✓</div>
                     <h2 class="font-display text-3xl font-bold mb-4">Commande Confirmée!</h2>
-                    <p class="text-gray-600 mb-4">Merci! Vous recevrez un appel de confirmation sous peu.</p>
+                    <p class="text-gray-600 mb-4">Vous recevrez un appel de confirmation sous peu.</p>
                     <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <p class="text-sm text-gray-500">Numéro de commande</p>
                         <p id="success-order-number" class="text-2xl font-bold gold">HCX...</p>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <button onclick="showPage('home')" class="btn-gold px-8 py-3 rounded-full">Retour à l'Accueil</button>
-                        <button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-600 px-8 py-3 rounded-full hover:bg-yellow-400 hover:text-black transition">Suivre ma Commande</button>
+                        <button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-600 px-8 py-3 rounded-full">Suivre ma Commande</button>
                     </div>
                 </div>
             </section>
@@ -302,25 +259,16 @@
                 <div class="container mx-auto px-4 max-w-2xl">
                     <h2 class="font-display text-3xl font-bold mb-8 text-center">Contactez-nous</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                        <a href="#" id="contact-phone-link" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md transition">
-                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">📞</div>
+                        <a href="#" id="contact-phone-link" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md">
+                            <div class="text-4xl mb-4">📞</div>
                             <h3 class="font-semibold mb-2">Téléphone</h3>
                             <p id="contact-phone" class="gold">0600000000</p>
                         </a>
-                        <a href="#" id="contact-whatsapp-link" target="_blank" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md transition">
-                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">💬</div>
+                        <a href="#" id="contact-whatsapp-link" target="_blank" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md">
+                            <div class="text-4xl mb-4">💬</div>
                             <h3 class="font-semibold mb-2">WhatsApp</h3>
                             <p class="text-green-600">Discuter maintenant</p>
                         </a>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-semibold text-lg mb-4">Envoyez-nous un message</h3>
-                        <form onsubmit="sendContact(event)" class="space-y-4">
-                            <input type="text" placeholder="Votre nom" class="w-full px-4 py-3 border rounded-xl" required>
-                            <input type="tel" placeholder="Votre téléphone" class="w-full px-4 py-3 border rounded-xl" required>
-                            <textarea rows="4" placeholder="Votre message" class="w-full px-4 py-3 border rounded-xl" required></textarea>
-                            <button type="submit" class="w-full btn-gold py-3 rounded-xl">Envoyer</button>
-                        </form>
                     </div>
                 </div>
             </section>
@@ -330,13 +278,13 @@
     <!-- Footer -->
     <footer class="bg-black text-white py-12 mt-12">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
                     <div class="flex items-center space-x-2 mb-4">
                         <img id="footer-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='%23000' font-size='20' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full">
                         <span id="footer-store-name" class="font-display text-xl font-bold">Hichoux Store</span>
                     </div>
-                    <p class="text-gray-400 text-sm">Parfums et cosmétiques authentiques au Maroc.</p>
+                    <p class="text-gray-400 text-sm">Parfums et cosmétiques authentiques.</p>
                 </div>
                 <div>
                     <h4 class="font-semibold mb-4">Liens</h4>
@@ -344,112 +292,84 @@
                         <li><a href="#" onclick="showPage('home'); return false;" class="hover:text-yellow-400">Accueil</a></li>
                         <li><a href="#" onclick="showPage('catalog'); return false;" class="hover:text-yellow-400">Catalogue</a></li>
                         <li><a href="#" onclick="showPage('tracking'); return false;" class="hover:text-yellow-400">Suivi</a></li>
-                        <li><a href="#" onclick="showPage('contact'); return false;" class="hover:text-yellow-400">Contact</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="font-semibold mb-4">Contact</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li>📞 <span id="footer-phone">0600000000</span></li>
-                        <li>✉️ contact@hichouxstore.ma</li>
-                        <li>📍 Casablanca, Maroc</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Newsletter</h4>
-                    <p class="text-gray-400 text-sm mb-4">Recevez nos offres</p>
-                    <div class="flex">
-                        <input type="email" placeholder="Email" class="flex-1 px-4 py-2 rounded-l-lg text-black">
-                        <button onclick="showToast('Inscrit!')" class="bg-gold text-black px-4 py-2 rounded-r-lg font-semibold">OK</button>
-                    </div>
+                    <p class="text-gray-400 text-sm" id="footer-phone">📞 0600000000</p>
                 </div>
             </div>
             <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-                <p>© 2025 <span id="footer-store-name-2">Hichoux Store</span>. Tous droits réservés.</p>
+                <p>© 2025 <span id="footer-store-name-2">Hichoux Store</span></p>
             </div>
         </div>
     </footer>
 
-    <!-- WhatsApp Float -->
     <a href="#" id="whatsapp-float" target="_blank" class="whatsapp-float">
         <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
 
     <script>
-        // =============================================
-        // CONFIG
-        // =============================================
-        const CONFIG = {
-            SUPABASE_URL: 'https://mbvskiaqfpbbnxhgzpga.supabase.co',
-            SUPABASE_ANON_KEY: 'sb_secret_inwuQRRulHoEd6ihMrojsA_p_fxEDqR'
-        };
+        const DEFAULT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='200' y='200' text-anchor='middle' dominant-baseline='middle' fill='%239ca3af' font-size='20'%3EProduit%3C/text%3E%3C/svg%3E";
 
-        // =============================================
-        // STATE
-        // =============================================
-        let supabaseClient = null;
-        let products = [];
-        let cart = [];
-        let storeSettings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoUrl: '' };
+        let supabaseClient = null, isConnected = false;
+        let products = [], cart = [], orders = [];
+        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, logoData: '', supabaseUrl: '', supabaseKey: '' };
 
         const demoProducts = [
-            { id: '1', sku: 'PARFUM-001', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Royal+Oud', description: 'Parfum oriental riche avec notes de oud et rose.' },
-            { id: '2', sku: 'PARFUM-002', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Rose', description: 'Parfum floral délicat avec notes de rose fraîche.' },
-            { id: '3', sku: 'PARFUM-003', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Amber', description: 'Parfum chaud et sensuel avec ambre et vanille.' },
-            { id: '4', sku: 'PARFUM-004', name: 'Musk Premium', price: 180, compare_price: 220, stock: 15, category: 'homme', is_featured: false, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Musk', description: 'Parfum musqué élégant et raffiné.' },
-            { id: '5', sku: 'PARFUM-005', name: 'Jasmin Oriental', price: 160, compare_price: 200, stock: 20, category: 'femme', is_featured: true, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Jasmin', description: 'Jasmin et notes épicées orientales.' },
-            { id: '6', sku: 'COSM-001', name: 'Crème Hydratante Argan', price: 89, compare_price: 120, stock: 60, category: 'cosmetique', is_featured: false, image_url: 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Creme', description: 'Crème hydratante à l\'huile d\'argan.' },
+            { id: '1', name: 'Parfum Royal Oud', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_data: '', description: 'Parfum oriental riche avec notes de oud et rose.' },
+            { id: '2', name: 'Essence de Rose', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_data: '', description: 'Parfum floral délicat avec notes de rose fraîche.' },
+            { id: '3', name: 'Amber Nights', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_data: '', description: 'Parfum chaud et sensuel avec ambre et vanille.' },
+            { id: '4', name: 'Musk Premium', price: 180, compare_price: 220, stock: 15, category: 'homme', is_featured: false, image_data: '', description: 'Parfum musqué élégant.' },
+            { id: '5', name: 'Jasmin Oriental', price: 160, compare_price: 200, stock: 20, category: 'femme', is_featured: true, image_data: '', description: 'Jasmin et notes épicées.' },
         ];
 
-        // =============================================
-        // INIT
-        // =============================================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             loadSettings();
             loadCart();
-            initSupabase();
+            tryConnect();
             document.getElementById('checkout-form').addEventListener('submit', submitOrder);
         });
 
         function loadSettings() {
-            const saved = localStorage.getItem('hichoux_settings');
-            if (saved) storeSettings = {...storeSettings, ...JSON.parse(saved)};
+            const s = localStorage.getItem('hichoux_settings');
+            if (s) settings = {...settings, ...JSON.parse(s)};
+            const p = localStorage.getItem('hichoux_products');
+            if (p) products = JSON.parse(p);
+            const o = localStorage.getItem('hichoux_orders');
+            if (o) orders = JSON.parse(o);
             applySettings();
         }
 
         function applySettings() {
-            document.getElementById('header-store-name').textContent = storeSettings.name;
-            document.getElementById('footer-store-name').textContent = storeSettings.name;
-            document.getElementById('footer-store-name-2').textContent = storeSettings.name;
-            document.getElementById('header-phone').textContent = storeSettings.phone;
-            document.getElementById('footer-phone').textContent = storeSettings.phone;
-            document.getElementById('contact-phone').textContent = storeSettings.phone;
-            document.getElementById('contact-phone-link').href = 'tel:' + storeSettings.phone;
-            document.getElementById('contact-whatsapp-link').href = 'https://wa.me/' + storeSettings.whatsapp;
-            document.getElementById('whatsapp-float').href = 'https://wa.me/' + storeSettings.whatsapp;
-            
-            if (storeSettings.logoUrl) {
-                document.getElementById('header-logo').src = storeSettings.logoUrl;
-                document.getElementById('footer-logo').src = storeSettings.logoUrl;
+            document.getElementById('header-store-name').textContent = settings.name;
+            document.getElementById('footer-store-name').textContent = settings.name;
+            document.getElementById('footer-store-name-2').textContent = settings.name;
+            document.getElementById('contact-phone').textContent = settings.phone;
+            document.getElementById('footer-phone').textContent = '📞 ' + settings.phone;
+            document.getElementById('contact-phone-link').href = 'tel:' + settings.phone;
+            document.getElementById('contact-whatsapp-link').href = 'https://wa.me/' + settings.whatsapp;
+            document.getElementById('whatsapp-float').href = 'https://wa.me/' + settings.whatsapp;
+            if (settings.logoData) {
+                document.getElementById('header-logo').src = settings.logoData;
+                document.getElementById('footer-logo').src = settings.logoData;
             }
         }
 
-        async function initSupabase() {
-            try {
-                supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-                const { data } = await supabaseClient.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
-                products = data?.length ? data : demoProducts;
-            } catch (e) {
-                console.error(e);
-                products = demoProducts;
+        async function tryConnect() {
+            if (settings.supabaseUrl && settings.supabaseKey) {
+                try {
+                    supabaseClient = supabase.createClient(settings.supabaseUrl, settings.supabaseKey);
+                    const { data } = await supabaseClient.from('products').select('*').eq('is_active', true);
+                    if (data?.length) products = data;
+                    isConnected = true;
+                } catch (e) { console.log('Local mode'); }
             }
+            if (!products.length) products = [...demoProducts];
             renderFeatured();
             renderCatalog();
         }
 
-        // =============================================
-        // NAVIGATION
-        // =============================================
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
@@ -459,32 +379,26 @@
             if (pageId === 'catalog') renderCatalog();
         }
 
-        function toggleMobileMenu() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
-        // =============================================
-        // UI
-        // =============================================
         function showToast(msg, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
-            const toast = document.createElement('div');
-            toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
-            toast.textContent = msg;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            const c = document.getElementById('toast-container');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+            const t = document.createElement('div');
+            t.className = `toast ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
-        // =============================================
-        // PRODUCTS
-        // =============================================
+        function getImg(p) { return p.image_data || p.image_url || DEFAULT_IMG; }
+
         function productCard(p) {
             const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
             return `
                 <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="viewProduct('${p.id}')">
                     <div class="relative">
-                        <img src="${p.image_url || 'https://via.placeholder.com/400x400/1a1a1a/D4AF37?text=Produit'}" alt="${p.name}" class="w-full aspect-square object-cover">
+                        <img src="${getImg(p)}" alt="${p.name}" class="w-full aspect-square object-cover bg-gray-100">
                         ${discount > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-${discount}%</span>` : ''}
                     </div>
                     <div class="p-4">
@@ -495,9 +409,7 @@
                                 <span class="text-lg font-bold gold">${p.price} DH</span>
                                 ${p.compare_price ? `<span class="text-sm text-gray-400 line-through ml-2">${p.compare_price}</span>` : ''}
                             </div>
-                            <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                            </button>
+                            <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">+</button>
                         </div>
                     </div>
                 </div>
@@ -505,29 +417,23 @@
         }
 
         function renderFeatured() {
-            const featured = products.filter(p => p.is_featured);
-            document.getElementById('featured-products').innerHTML = featured.map(productCard).join('');
+            const f = products.filter(p => p.is_featured);
+            document.getElementById('featured-products').innerHTML = f.map(productCard).join('');
         }
 
-        function renderCatalog() {
-            filterProducts();
-        }
+        function renderCatalog() { filterProducts(); }
 
         function filterProducts() {
             const cat = document.querySelector('input[name="cat"]:checked')?.value || '';
             const price = document.querySelector('input[name="price"]:checked')?.value || '';
-            
-            let filtered = products.filter(p => {
+            let f = products.filter(p => {
                 if (cat && p.category !== cat) return false;
                 if (price === '0-100' && p.price >= 100) return false;
                 if (price === '100-200' && (p.price < 100 || p.price > 200)) return false;
                 if (price === '200+' && p.price <= 200) return false;
                 return true;
             });
-            
-            document.getElementById('products-grid').innerHTML = filtered.length 
-                ? filtered.map(productCard).join('')
-                : '<p class="col-span-full text-center text-gray-500 py-8">Aucun produit trouvé</p>';
+            document.getElementById('products-grid').innerHTML = f.length ? f.map(productCard).join('') : '<p class="col-span-full text-center text-gray-500 py-8">Aucun produit</p>';
         }
 
         function sortProducts(by) {
@@ -538,23 +444,16 @@
         }
 
         function viewProduct(id) {
-            const p = products.find(x => x.id === id);
+            const p = products.find(x => x.id == id);
             if (!p) return;
             const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
             document.getElementById('product-detail').innerHTML = `
-                <div class="relative">
-                    <img src="${p.image_url || 'https://via.placeholder.com/600x600/1a1a1a/D4AF37?text=Produit'}" alt="${p.name}" class="w-full rounded-2xl">
-                    ${discount > 0 ? `<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-${discount}%</span>` : ''}
-                </div>
+                <div class="relative"><img src="${getImg(p)}" alt="${p.name}" class="w-full rounded-2xl bg-gray-100">${discount > 0 ? `<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-${discount}%</span>` : ''}</div>
                 <div>
                     <p class="text-sm text-gray-500 mb-2">${p.category || ''}</p>
                     <h1 class="font-display text-3xl font-bold mb-4">${p.name}</h1>
-                    <div class="flex items-center space-x-4 mb-6">
-                        <span class="text-3xl font-bold gold">${p.price} DH</span>
-                        ${p.compare_price ? `<span class="text-xl text-gray-400 line-through">${p.compare_price} DH</span>` : ''}
-                    </div>
+                    <div class="flex items-center space-x-4 mb-6"><span class="text-3xl font-bold gold">${p.price} DH</span>${p.compare_price ? `<span class="text-xl text-gray-400 line-through">${p.compare_price} DH</span>` : ''}</div>
                     <p class="text-gray-600 mb-6">${p.description || ''}</p>
-                    <p class="text-sm ${p.stock > 20 ? 'text-green-600' : 'text-yellow-600'} mb-6">${p.stock > 20 ? '✓ En stock' : `⚠ Plus que ${p.stock} en stock`}</p>
                     <div class="flex items-center space-x-4 mb-6">
                         <div class="flex items-center border rounded-xl">
                             <button onclick="changeQty(-1)" class="w-12 h-12 text-xl hover:bg-gray-100">-</button>
@@ -564,9 +463,8 @@
                         <button onclick="addToCart('${p.id}', getQty())" class="flex-1 btn-gold py-4 rounded-xl text-lg">Ajouter au Panier</button>
                     </div>
                     <div class="bg-gray-50 rounded-xl p-4 space-y-2">
-                        <p class="flex items-center text-sm"><span class="mr-2">🚚</span> Livraison rapide 24-48h</p>
-                        <p class="flex items-center text-sm"><span class="mr-2">💰</span> Paiement à la livraison</p>
-                        <p class="flex items-center text-sm"><span class="mr-2">✨</span> Produit 100% authentique</p>
+                        <p class="text-sm">🚚 Livraison rapide 24-48h</p>
+                        <p class="text-sm">💰 Paiement à la livraison</p>
                     </div>
                 </div>
             `;
@@ -576,21 +474,14 @@
         function changeQty(d) {
             const el = document.getElementById('product-qty');
             let q = parseInt(el.textContent) + d;
-            if (q < 1) q = 1;
-            if (q > 10) q = 10;
+            if (q < 1) q = 1; if (q > 10) q = 10;
             el.textContent = q;
         }
+        function getQty() { return parseInt(document.getElementById('product-qty')?.textContent || '1'); }
 
-        function getQty() {
-            return parseInt(document.getElementById('product-qty')?.textContent || '1');
-        }
-
-        // =============================================
-        // CART
-        // =============================================
         function loadCart() {
-            const saved = localStorage.getItem('hichoux_cart');
-            if (saved) cart = JSON.parse(saved);
+            const c = localStorage.getItem('hichoux_cart');
+            if (c) cart = JSON.parse(c);
             updateCartBadge();
         }
 
@@ -607,33 +498,28 @@
         }
 
         function addToCart(id, qty = 1) {
-            const p = products.find(x => x.id === id);
+            const p = products.find(x => x.id == id);
             if (!p) return;
-            const existing = cart.find(i => i.id === id);
+            const existing = cart.find(i => i.id == id);
             if (existing) existing.qty += qty;
-            else cart.push({ id: p.id, name: p.name, price: p.price, image: p.image_url, qty });
+            else cart.push({ id: p.id, name: p.name, price: p.price, image: getImg(p), qty });
             saveCart();
             showToast(`${p.name} ajouté!`);
         }
 
-        function removeFromCart(id) {
-            cart = cart.filter(i => i.id !== id);
-            saveCart();
-            renderCart();
-        }
+        function removeFromCart(id) { cart = cart.filter(i => i.id != id); saveCart(); renderCart(); }
 
         function updateCartQty(id, d) {
-            const item = cart.find(i => i.id === id);
+            const item = cart.find(i => i.id == id);
             if (!item) return;
             item.qty += d;
             if (item.qty < 1) { removeFromCart(id); return; }
-            saveCart();
-            renderCart();
+            saveCart(); renderCart();
         }
 
         function getCartTotals() {
             const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            const shipping = subtotal >= 500 ? 0 : storeSettings.shipping;
+            const shipping = subtotal >= 500 ? 0 : settings.shipping;
             return { subtotal, shipping, total: subtotal + shipping };
         }
 
@@ -641,21 +527,17 @@
             const empty = document.getElementById('cart-empty');
             const content = document.getElementById('cart-content');
             if (cart.length === 0) { empty.classList.remove('hidden'); content.classList.add('hidden'); return; }
-            empty.classList.add('hidden');
-            content.classList.remove('hidden');
+            empty.classList.add('hidden'); content.classList.remove('hidden');
             document.getElementById('cart-items').innerHTML = cart.map(i => `
                 <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4">
-                    <img src="${i.image || 'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-lg object-cover">
-                    <div class="flex-1">
-                        <h4 class="font-semibold">${i.name}</h4>
-                        <p class="gold font-bold">${i.price} DH</p>
-                    </div>
+                    <img src="${i.image}" class="w-20 h-20 rounded-lg object-cover bg-gray-100">
+                    <div class="flex-1"><h4 class="font-semibold">${i.name}</h4><p class="gold font-bold">${i.price} DH</p></div>
                     <div class="flex items-center border rounded-lg">
                         <button onclick="updateCartQty('${i.id}', -1)" class="w-10 h-10 hover:bg-gray-100">-</button>
                         <span class="w-10 text-center">${i.qty}</span>
                         <button onclick="updateCartQty('${i.id}', 1)" class="w-10 h-10 hover:bg-gray-100">+</button>
                     </div>
-                    <button onclick="removeFromCart('${i.id}')" class="text-red-500 p-2 hover:text-red-700">🗑️</button>
+                    <button onclick="removeFromCart('${i.id}')" class="text-red-500 p-2">🗑️</button>
                 </div>
             `).join('');
             const t = getCartTotals();
@@ -664,14 +546,11 @@
             document.getElementById('cart-total').textContent = t.total + ' DH';
         }
 
-        // =============================================
-        // CHECKOUT
-        // =============================================
         function renderCheckout() {
             if (cart.length === 0) { showPage('cart'); return; }
             document.getElementById('checkout-items').innerHTML = cart.map(i => `
                 <div class="flex items-center gap-3">
-                    <img src="${i.image || 'https://via.placeholder.com/60'}" class="w-14 h-14 rounded-lg object-cover">
+                    <img src="${i.image}" class="w-14 h-14 rounded-lg object-cover bg-gray-100">
                     <div class="flex-1"><p class="font-medium text-sm">${i.name}</p><p class="text-gray-500 text-sm">x${i.qty}</p></div>
                     <p class="font-semibold">${i.price * i.qty} DH</p>
                 </div>
@@ -689,32 +568,38 @@
             const city = document.getElementById('checkout-city').value;
             const address = document.getElementById('checkout-address').value.trim();
             if (!name || !phone || !city || !address) { showToast('Remplissez tous les champs', 'error'); return; }
-            
+
             const orderNumber = 'HCX' + Date.now().toString().slice(-8);
             const t = getCartTotals();
             
-            if (supabaseClient) {
+            const newOrder = {
+                id: Date.now().toString(),
+                order_number: orderNumber,
+                customer_name: name,
+                customer_phone: phone,
+                shipping_address: address,
+                shipping_city: city,
+                subtotal: t.subtotal,
+                shipping_cost: t.shipping,
+                total: t.total,
+                status: 'new',
+                payment_method: 'cod',
+                items: [...cart],
+                created_at: new Date().toISOString()
+            };
+
+            // Save to localStorage
+            orders.push(newOrder);
+            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
+
+            // Try Supabase
+            if (isConnected && supabaseClient) {
                 try {
-                    const { data: order } = await supabaseClient.from('orders').insert({
-                        order_number: orderNumber,
-                        customer_name: name,
-                        customer_phone: phone,
-                        shipping_address: address,
-                        shipping_city: city,
-                        subtotal: t.subtotal,
-                        shipping_cost: t.shipping,
-                        total: t.total,
-                        status: 'new',
-                        payment_method: 'cod'
-                    }).select().single();
-                    
-                    if (order) {
-                        const items = cart.map(i => ({ order_id: order.id, product_id: i.id, product_name: i.name, quantity: i.qty, unit_price: i.price, total_price: i.price * i.qty }));
-                        await supabaseClient.from('order_items').insert(items);
-                    }
-                } catch (err) { console.error(err); }
+                    const { items, id, ...dbOrder } = newOrder;
+                    await supabaseClient.from('orders').insert(dbOrder);
+                } catch (e) { console.error(e); }
             }
-            
+
             cart = [];
             saveCart();
             document.getElementById('success-order-number').textContent = orderNumber;
@@ -722,24 +607,24 @@
             showToast('Commande confirmée!');
         }
 
-        // =============================================
-        // TRACKING
-        // =============================================
         async function trackOrder() {
             const input = document.getElementById('tracking-input').value.trim();
-            if (!input) { showToast('Entrez un numéro', 'warning'); return; }
+            if (!input) { showToast('Entrez un numéro', 'info'); return; }
             
             const resultEl = document.getElementById('tracking-result');
-            resultEl.innerHTML = '<div class="text-center py-8"><div class="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto"></div></div>';
+            resultEl.innerHTML = '<div class="text-center py-8">Recherche...</div>';
+
+            // Search locally first
+            let order = orders.find(o => o.order_number.toLowerCase().includes(input.toLowerCase()) || o.customer_phone.includes(input));
             
-            let order = null;
-            if (supabaseClient) {
+            // Try Supabase
+            if (!order && isConnected && supabaseClient) {
                 try {
                     const { data } = await supabaseClient.from('orders').select('*').or(`order_number.ilike.%${input}%,customer_phone.ilike.%${input}%`).limit(1).single();
                     if (data) order = data;
                 } catch (e) {}
             }
-            
+
             if (order) {
                 const steps = [
                     { label: 'Nouvelle', done: true },
@@ -757,22 +642,13 @@
                         ${order.tracking_number ? `<div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4"><p class="text-sm text-blue-600">Numéro de suivi</p><p class="font-mono font-bold text-blue-800">${order.tracking_number}</p><a href="https://www.digylog.com/suivi-de-colis/?tracking=${order.tracking_number}" target="_blank" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Suivre sur Digylog →</a></div>` : ''}
                         <div class="relative">
                             <div class="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200"></div>
-                            ${steps.map((s, i) => `<div class="relative flex items-center mb-6 last:mb-0"><div class="w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.done ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}">${s.done ? '✓' : i + 1}</div><span class="ml-4 ${s.done ? 'font-semibold' : 'text-gray-400'}">${s.label}</span></div>`).join('')}
+                            ${steps.map((s, i) => `<div class="relative flex items-center mb-6 last:mb-0"><div class="w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.done ? 'bg-green-500 text-white' : 'bg-gray-200'}">${s.done ? '✓' : i + 1}</div><span class="ml-4 ${s.done ? 'font-semibold' : 'text-gray-400'}">${s.label}</span></div>`).join('')}
                         </div>
                     </div>
                 `;
             } else {
-                resultEl.innerHTML = `<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">❌</div><h3 class="font-semibold mb-2">Non trouvée</h3><p class="text-gray-500">Vérifiez le numéro</p></div>`;
+                resultEl.innerHTML = `<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><h3 class="font-semibold mb-2">Non trouvée</h3><p class="text-gray-500">Vérifiez le numéro</p></div>`;
             }
-        }
-
-        // =============================================
-        // CONTACT
-        // =============================================
-        function sendContact(e) {
-            e.preventDefault();
-            showToast('Message envoyé!');
-            e.target.reset();
         }
     </script>
 </body>
