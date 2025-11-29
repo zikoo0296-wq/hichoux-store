@@ -3,857 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hichoux Store - Admin</title>
+    <title>Hichoux Store - Admin Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .page { display: none; }
-        .page.active { display: block; }
-        .sidebar-item { cursor: pointer; transition: all 0.2s; }
-        .sidebar-item:hover { background: #f3f4f6; }
-        .sidebar-item.active { background: #dbeafe; color: #2563eb; }
-        .modal { display: none; }
-        .modal.active { display: flex; }
-        .upload-zone { border: 2px dashed #d1d5db; transition: all 0.3s; }
-        .upload-zone:hover { border-color: #3b82f6; background: #eff6ff; }
-        .image-thumb { position: relative; }
-        .image-thumb .delete-btn { position: absolute; top: -8px; right: -8px; }
+        *{font-family:system-ui,sans-serif}
+        .page{display:none}.page.active{display:block}
+        .sidebar-item{cursor:pointer;transition:all 0.2s}
+        .sidebar-item:hover{background:rgba(59,130,246,0.1)}
+        .sidebar-item.active{background:rgba(59,130,246,0.15);color:#3b82f6;border-right:3px solid #3b82f6}
+        .modal{display:none}.modal.active{display:flex}
+        .status-new{background:#fef3c7;color:#92400e}
+        .status-pending{background:#e0e7ff;color:#3730a3}
+        .status-confirmed{background:#dbeafe;color:#1e40af}
+        .status-unreachable{background:#fee2e2;color:#991b1b}
+        .status-cancelled{background:#fecaca;color:#dc2626}
+        .status-shipped{background:#ede9fe;color:#6d28d9}
+        .status-delivered{background:#d1fae5;color:#065f46}
+        .status-returned{background:#f3f4f6;color:#374151}
+        .card{background:white;border-radius:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+        .btn{padding:0.5rem 1rem;border-radius:0.5rem;font-weight:500;transition:all 0.2s;cursor:pointer;border:none}
+        .btn-primary{background:#3b82f6;color:white}.btn-primary:hover{background:#2563eb}
+        .btn-success{background:#10b981;color:white}.btn-success:hover{background:#059669}
+        .btn-warning{background:#f59e0b;color:white}.btn-warning:hover{background:#d97706}
+        .btn-danger{background:#ef4444;color:white}.btn-danger:hover{background:#dc2626}
+        .btn-secondary{background:#6b7280;color:white}.btn-secondary:hover{background:#4b5563}
+        .input{width:100%;padding:0.625rem 1rem;border:1px solid #e5e7eb;border-radius:0.5rem}
+        .input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+        .table{width:100%;border-collapse:collapse}
+        .table th{text-align:left;padding:0.75rem 1rem;background:#f9fafb;font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#6b7280}
+        .table td{padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6}
+        .table tr:hover{background:#f9fafb}
+        @media print{.no-print{display:none!important}}
+        .image-thumb{position:relative;display:inline-block;margin:4px}
+        .image-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #e5e7eb}
+        .image-thumb .del{position:absolute;top:-8px;right:-8px;width:22px;height:22px;background:#ef4444;color:white;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px solid white}
+        .drop-zone{border:2px dashed #d1d5db;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s}
+        .drop-zone:hover,.drop-zone.dragover{border-color:#3b82f6;background:#eff6ff}
     </style>
 </head>
 <body class="bg-gray-100">
     <div id="toast" class="fixed top-4 right-4 z-50 hidden"><div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg"></div></div>
 
-    <!-- Product Modal -->
-    <div id="productModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-40 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 id="modalTitle" class="text-xl font-bold">Ajouter Produit</h3>
-                <button onclick="closeModal()" class="text-2xl hover:text-red-500">&times;</button>
-            </div>
-            <form id="productForm" class="p-6 space-y-4">
-                <input type="hidden" id="editId">
-                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="pName" class="w-full px-4 py-2 border rounded-xl" required></div>
-                <div><label class="block text-sm font-medium mb-1">SKU</label><input type="text" id="pSku" class="w-full px-4 py-2 border rounded-xl" placeholder="Auto"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium mb-1">Prix (DH) *</label><input type="number" id="pPrice" class="w-full px-4 py-2 border rounded-xl" required min="0"></div>
-                    <div><label class="block text-sm font-medium mb-1">Ancien prix</label><input type="number" id="pOldPrice" class="w-full px-4 py-2 border rounded-xl" min="0"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium mb-1">Stock</label><input type="number" id="pStock" class="w-full px-4 py-2 border rounded-xl" value="100"></div>
-                    <div><label class="block text-sm font-medium mb-1">Catégorie</label><select id="pCategory" class="w-full px-4 py-2 border rounded-xl"><option value="homme">Homme</option><option value="femme">Femme</option><option value="unisexe">Unisexe</option><option value="cosmetique">Cosmétique</option></select></div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">📷 Images (Max 5)</label>
-                    <div id="uploadZone" class="upload-zone rounded-xl p-4 text-center cursor-pointer">
-                        <div class="text-3xl mb-1">📷</div>
-                        <p class="text-gray-500 text-sm">Cliquez pour ajouter des images</p>
-                        <p class="text-xs text-gray-400">Max 2MB par image</p>
-                    </div>
-                    <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
-                    <div id="imagesPreview" class="flex flex-wrap gap-2 mt-3"></div>
-                </div>
-                <div><label class="block text-sm font-medium mb-1">Description</label><textarea id="pDesc" rows="2" class="w-full px-4 py-2 border rounded-xl"></textarea></div>
-                <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="pFeatured" class="w-5 h-5"><span>⭐ Vedette</span></label>
-                <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 border rounded-xl">Annuler</button><button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl">💾 Enregistrer</button></div>
-            </form>
-        </div>
-    </div>
-
     <div class="flex h-screen">
-        <aside class="w-64 bg-white border-r flex flex-col">
-            <div class="p-6 border-b"><h1 class="font-bold text-xl">🏪 Hichoux Store</h1><p id="status" class="text-xs text-gray-400">● Connexion...</p></div>
-            <nav class="flex-1 p-4 space-y-1">
-                <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="dashboard">📊 Dashboard</div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="orders">📦 Commandes <span id="badgeOrders" class="ml-auto bg-red-500 text-white text-xs px-2 rounded-full hidden">0</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="confirmation">📞 Confirmation <span id="badgeConfirm" class="ml-auto bg-yellow-500 text-white text-xs px-2 rounded-full hidden">0</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="shipping">🚚 Expédition <span id="badgeShip" class="ml-auto bg-blue-500 text-white text-xs px-2 rounded-full hidden">0</span></div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="products">🏷️ Produits</div>
-                <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="settings">⚙️ Paramètres</div>
+        <aside class="w-64 bg-white border-r flex flex-col no-print">
+            <div class="p-5 border-b">
+                <h1 class="font-bold text-xl">🏪 Hichoux Pro</h1>
+                <p id="connectionStatus" class="text-xs text-gray-400 mt-1">● Connexion...</p>
+            </div>
+            <nav class="flex-1 py-4">
+                <div class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase">Principal</div>
+                <div class="sidebar-item active flex items-center px-5 py-3" data-page="dashboard"><span class="mr-3">📊</span> Dashboard</div>
+                <div class="sidebar-item flex items-center px-5 py-3" data-page="orders"><span class="mr-3">📦</span> Commandes<span id="newOrdersBadge" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span></div>
+                <div class="px-3 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase">Catalogue</div>
+                <div class="sidebar-item flex items-center px-5 py-3" data-page="products"><span class="mr-3">🏷️</span> Produits</div>
+                <div class="sidebar-item flex items-center px-5 py-3" data-page="categories"><span class="mr-3">📁</span> Catégories</div>
+                <div class="px-3 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase">Système</div>
+                <div class="sidebar-item flex items-center px-5 py-3" data-page="settings"><span class="mr-3">⚙️</span> Paramètres</div>
             </nav>
-            <div class="p-4 border-t"><button onclick="refresh()" class="w-full px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200">🔄 Actualiser</button></div>
+            <div class="p-4 border-t"><button onclick="refreshData()" class="w-full btn btn-secondary text-sm">🔄 Actualiser</button></div>
         </aside>
 
-        <main class="flex-1 overflow-auto p-8">
-            <!-- Dashboard -->
-            <div id="page-dashboard" class="page active">
-                <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm cursor-pointer" onclick="showPage('confirmation')"><p class="text-gray-500 text-sm">🆕 Nouvelles</p><p id="statNew" class="text-3xl font-bold text-yellow-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm cursor-pointer" onclick="showPage('shipping')"><p class="text-gray-500 text-sm">✅ Confirmées</p><p id="statConfirmed" class="text-3xl font-bold text-blue-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">🚚 Expédiées</p><p id="statShipped" class="text-3xl font-bold text-purple-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">🎉 Livrées</p><p id="statDelivered" class="text-3xl font-bold text-green-600">0</p></div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold mb-4">Commandes Récentes</h3><div id="recentOrders"></div></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold mb-4">Stats</h3><div class="space-y-3"><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Total Commandes</span><span id="totalOrders" class="font-bold">0</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>CA</span><span id="totalRevenue" class="font-bold text-green-600">0 DH</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Produits</span><span id="totalProducts" class="font-bold">0</span></div></div></div>
-                </div>
-            </div>
+        <main class="flex-1 overflow-auto">
+            <header class="bg-white border-b px-8 py-4 flex items-center justify-between no-print">
+                <div><h2 id="pageTitle" class="text-xl font-bold">Dashboard</h2><p id="pageSubtitle" class="text-sm text-gray-500">Vue d'ensemble</p></div>
+                <select id="periodFilter" onchange="updateDashboard()" class="input w-40">
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week" selected>Cette semaine</option>
+                    <option value="month">Ce mois</option>
+                    <option value="all">Tout</option>
+                </select>
+            </header>
 
-            <!-- Orders -->
-            <div id="page-orders" class="page">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Commandes</h2><div class="flex gap-3"><input type="text" id="searchOrders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl"><select id="filterStatus" class="px-4 py-2 border rounded-xl"><option value="">Tous</option><option value="new">Nouvelles</option><option value="confirmed">Confirmées</option><option value="shipped">Expédiées</option><option value="delivered">Livrées</option><option value="cancelled">Annulées</option></select></div></div>
-                <div id="ordersTable" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
-            </div>
-
-            <!-- Confirmation -->
-            <div id="page-confirmation" class="page">
-                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">📞 Confirmation</h2><p class="text-gray-500"><span id="pendingCount">0</span> en attente</p></div><button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button></div>
-                <div id="confirmationList" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
-            </div>
-
-            <!-- Shipping -->
-            <div id="page-shipping" class="page">
-                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">🚚 Expédition</h2><p class="text-gray-500"><span id="toShipCount">0</span> à expédier</p></div><button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button></div>
-                <div id="shippingList" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
-            </div>
-
-            <!-- Products -->
-            <div id="page-products" class="page">
-                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">🏷️ Produits</h2><p class="text-gray-500"><span id="productsCount">0</span> produits</p></div><button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button></div>
-                <div id="productsTable" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
-            </div>
-
-            <!-- Settings -->
-            <div id="page-settings" class="page">
-                <h2 class="text-2xl font-bold mb-6">⚙️ Paramètres</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🏪 Boutique</h3>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium mb-1">Nom</label><input type="text" id="sName" class="w-full px-4 py-2 border rounded-xl" value="Hichoux Store"></div>
-                            <div><label class="block text-sm font-medium mb-1">Téléphone</label><input type="tel" id="sPhone" class="w-full px-4 py-2 border rounded-xl" value="0600000000"></div>
-                            <div><label class="block text-sm font-medium mb-1">WhatsApp (212...)</label><input type="tel" id="sWhatsapp" class="w-full px-4 py-2 border rounded-xl" value="212600000000"></div>
-                            <div><label class="block text-sm font-medium mb-1">Frais livraison (DH)</label><input type="number" id="sShipping" class="w-full px-4 py-2 border rounded-xl" value="30"></div>
-                        </div>
+            <div class="p-8">
+                <!-- Dashboard -->
+                <div id="page-dashboard" class="page active">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="card p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Commandes</p><p id="statTotalOrders" class="text-3xl font-bold">0</p></div><div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">📦</div></div><p class="text-xs text-gray-400 mt-2"><span id="statNewOrders" class="text-yellow-600 font-semibold">0</span> nouvelles</p></div>
+                        <div class="card p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Chiffre d'affaires</p><p id="statRevenue" class="text-3xl font-bold text-green-600">0 DH</p></div><div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">💰</div></div></div>
+                        <div class="card p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Coûts</p><p id="statCosts" class="text-3xl font-bold text-red-500">0 DH</p></div><div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">📉</div></div></div>
+                        <div class="card p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Bénéfice Net</p><p id="statProfit" class="text-3xl font-bold text-purple-600">0 DH</p></div><div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">📈</div></div><p id="statProfitMargin" class="text-xs text-gray-400 mt-2">Marge: 0%</p></div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">🗄️ Supabase</h3>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium mb-1">URL</label><input type="text" id="sSupaUrl" class="w-full px-4 py-2 border rounded-xl text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">Anon Key</label><input type="password" id="sSupaKey" class="w-full px-4 py-2 border rounded-xl text-sm"></div>
-                            <div id="dbStatus" class="px-4 py-2 bg-gray-100 rounded-xl text-sm">⚪ Non testé</div>
-                            <button type="button" onclick="testSupabase()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl">🔌 Tester Connexion</button>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm lg:col-span-2">
-                        <h3 class="font-bold mb-4">🗃️ Base de données</h3>
-                        <div class="flex flex-wrap gap-4">
-                            <button onclick="createTables()" class="px-6 py-3 bg-green-600 text-white rounded-xl">🔧 Créer Tables</button>
-                            <button onclick="exportData()" class="px-6 py-3 bg-purple-600 text-white rounded-xl">📥 Exporter</button>
-                            <label class="px-6 py-3 bg-blue-600 text-white rounded-xl cursor-pointer">📤 Importer<input type="file" accept=".json" onchange="importData(this)" class="hidden"></label>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-3">⚠️ Cliquez "Créer Tables" si c'est la première utilisation</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card p-6"><h3 class="font-semibold mb-4">📊 Statuts</h3><div id="statusChart" class="space-y-3"></div></div>
+                        <div class="card p-6"><h3 class="font-semibold mb-4">📋 Récentes</h3><div id="recentOrdersTable"></div></div>
                     </div>
                 </div>
-                <button onclick="saveSettings()" class="mt-6 px-8 py-3 bg-blue-600 text-white rounded-xl font-medium">💾 Sauvegarder</button>
+
+                <!-- Orders -->
+                <div id="page-orders" class="page">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <select id="orderStatusFilter" onchange="renderOrders()" class="input w-40">
+                                <option value="">Tous</option>
+                                <option value="new">🆕 Nouvelles</option>
+                                <option value="pending">⏳ En attente</option>
+                                <option value="confirmed">✅ Confirmées</option>
+                                <option value="unreachable">📵 Injoignables</option>
+                                <option value="shipped">🚚 Expédiées</option>
+                                <option value="delivered">✔️ Livrées</option>
+                                <option value="cancelled">❌ Annulées</option>
+                            </select>
+                            <input type="text" id="orderSearch" placeholder="Rechercher..." class="input w-64" oninput="renderOrders()">
+                        </div>
+                        <button onclick="exportOrders()" class="btn btn-secondary">📥 Export</button>
+                    </div>
+                    <div class="card overflow-hidden">
+                        <table class="table"><thead><tr><th>N°</th><th>Client</th><th>Tél</th><th>Ville</th><th>Total</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody id="ordersTableBody"></tbody></table>
+                    </div>
+                </div>
+
+                <!-- Products -->
+                <div id="page-products" class="page">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <select id="productCategoryFilter" onchange="renderProducts()" class="input w-40"><option value="">Toutes</option></select>
+                            <input type="text" id="productSearch" placeholder="Rechercher..." class="input w-64" oninput="renderProducts()">
+                        </div>
+                        <button onclick="openProductModal()" class="btn btn-primary">+ Nouveau Produit</button>
+                    </div>
+                    <div class="card overflow-hidden">
+                        <table class="table"><thead><tr><th>Image</th><th>Produit</th><th>SKU</th><th>Prix</th><th>Coût</th><th>Marge</th><th>Stock</th><th>Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div id="page-categories" class="page">
+                    <div class="flex items-center justify-between mb-6">
+                        <p class="text-gray-500"><span id="categoriesCount">0</span> catégories</p>
+                        <button onclick="openCategoryModal()" class="btn btn-primary">+ Nouvelle</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="categoriesGrid"></div>
+                </div>
+
+                <!-- Settings -->
+                <div id="page-settings" class="page">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card p-6"><h3 class="font-semibold mb-4">🏪 Boutique</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1">Nom</label><input type="text" id="settingStoreName" class="input" value="Hichoux Store"></div><div><label class="block text-sm font-medium mb-1">Téléphone</label><input type="tel" id="settingStorePhone" class="input"></div><div><label class="block text-sm font-medium mb-1">WhatsApp</label><input type="text" id="settingStoreWhatsapp" class="input" placeholder="212600000000"></div><button onclick="saveStoreSettings()" class="btn btn-primary w-full">💾 Enregistrer</button></div></div>
+                        <div class="card p-6"><h3 class="font-semibold mb-4">🚚 Livraison</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1">Frais par défaut (DH)</label><input type="number" id="settingShippingDefault" class="input" value="30"></div><div><label class="block text-sm font-medium mb-1">Gratuit à partir de (DH)</label><input type="number" id="settingFreeShipping" class="input" value="500"></div><button onclick="saveShippingSettings()" class="btn btn-primary w-full">💾 Enregistrer</button></div></div>
+                        <div class="card p-6"><h3 class="font-semibold mb-4">🚚 API Transporteur</h3><div class="space-y-4"><label class="flex items-center space-x-2"><input type="checkbox" id="settingCarrierEnabled" class="w-5 h-5"><span>Activer</span></label><div><label class="block text-sm font-medium mb-1">Transporteur</label><select id="settingCarrierProvider" class="input"><option value="digylog">Digylog</option><option value="amana">Amana</option></select></div><div><label class="block text-sm font-medium mb-1">API URL</label><input type="url" id="settingCarrierUrl" class="input"></div><div><label class="block text-sm font-medium mb-1">API Key</label><input type="password" id="settingCarrierKey" class="input"></div><button onclick="saveCarrierSettings()" class="btn btn-primary w-full">💾 Enregistrer</button></div></div>
+                        <div class="card p-6"><h3 class="font-semibold mb-4">🗄️ Base de données</h3><div class="space-y-3"><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Statut</span><span id="dbStatusText" class="font-medium">...</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Produits</span><span id="dbProductsCount" class="font-medium">0</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Commandes</span><span id="dbOrdersCount" class="font-medium">0</span></div></div></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- Order Modal -->
+    <div id="orderModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-40 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white"><h3 class="text-xl font-bold">Détails Commande</h3><button onclick="closeModal('orderModal')" class="text-2xl hover:text-red-500">&times;</button></div>
+            <div id="orderModalContent" class="p-6"></div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md">
+            <div class="p-6 border-b text-center"><h3 class="text-xl font-bold">✅ Confirmer la commande</h3></div>
+            <div class="p-6">
+                <div id="confirmModalContent"></div>
+                <div class="mt-6 space-y-3">
+                    <button onclick="confirmOrderFinal()" class="w-full btn btn-success py-3 text-lg">✅ Confirmer</button>
+                    <button onclick="closeModal('confirmModal')" class="w-full btn btn-secondary py-3">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-40 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center"><h3 id="productModalTitle" class="text-xl font-bold">Nouveau Produit</h3><button onclick="closeModal('productModal')" class="text-2xl hover:text-red-500">&times;</button></div>
+            <form id="productForm" class="p-6 space-y-4">
+                <input type="hidden" id="productId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2"><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="productName" class="input" required></div>
+                    <div><label class="block text-sm font-medium mb-1">SKU</label><input type="text" id="productSku" class="input"></div>
+                    <div><label class="block text-sm font-medium mb-1">Catégorie</label><select id="productCategory" class="input"></select></div>
+                    <div><label class="block text-sm font-medium mb-1">Prix vente *</label><input type="number" id="productPrice" class="input" required min="0" step="0.01"></div>
+                    <div><label class="block text-sm font-medium mb-1">Prix coûtant</label><input type="number" id="productCostPrice" class="input" min="0" step="0.01"></div>
+                    <div><label class="block text-sm font-medium mb-1">Ancien prix</label><input type="number" id="productComparePrice" class="input" min="0" step="0.01"></div>
+                    <div><label class="block text-sm font-medium mb-1">Stock</label><input type="number" id="productStock" class="input" value="100" min="0"></div>
+                    <div class="col-span-2"><label class="block text-sm font-medium mb-1">Description</label><textarea id="productDescription" class="input" rows="2"></textarea></div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium mb-2">📷 Images (max 5)</label>
+                        <div id="imagesPreview" class="flex flex-wrap mb-3"></div>
+                        <div id="dropZone" class="drop-zone">
+                            <input type="file" id="imageInput" accept="image/*" multiple class="hidden" onchange="handleFiles(this.files)">
+                            <div class="text-4xl mb-2">📁</div>
+                            <p class="font-medium">Cliquez ou glissez vos images</p>
+                            <p class="text-sm text-gray-500">PNG, JPG (max 2MB)</p>
+                        </div>
+                    </div>
+                    <div class="col-span-2"><label class="flex items-center space-x-2"><input type="checkbox" id="productFeatured" class="w-5 h-5"><span>⭐ Produit Vedette</span></label></div>
+                </div>
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="closeModal('productModal')" class="flex-1 btn btn-secondary">Annuler</button>
+                    <button type="submit" class="flex-1 btn btn-primary">💾 Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-40 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md">
+            <div class="p-6 border-b flex justify-between items-center"><h3 id="categoryModalTitle" class="text-xl font-bold">Nouvelle Catégorie</h3><button onclick="closeModal('categoryModal')" class="text-2xl hover:text-red-500">&times;</button></div>
+            <form id="categoryForm" class="p-6 space-y-4">
+                <input type="hidden" id="categoryId">
+                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="categoryName" class="input" required></div>
+                <div><label class="block text-sm font-medium mb-1">Slug</label><input type="text" id="categorySlug" class="input"></div>
+                <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('categoryModal')" class="flex-1 btn btn-secondary">Annuler</button><button type="submit" class="flex-1 btn btn-primary">💾 Enregistrer</button></div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // ===== CONFIGURATION =====
-        const SUPA_URL = 'https://mbvskiaqfpbbnxhgzpga.supabase.co';
-        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
-        const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%239ca3af'%3E📷%3C/text%3E%3C/svg%3E";
+        const SUPA_URL='https://mbvskiaqfpbbnxhgzpga.supabase.co';
+        const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
 
-        let db = null, connected = false;
-        let products = [], orders = [];
-        let currentImages = []; // Pour multi-images
-        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, supaUrl: SUPA_URL, supaKey: SUPA_KEY };
+        let db=null,connected=false,products=[],categories=[],orders=[],settings={};
+        let productImages=[];
+        let orderToConfirm=null;
 
-        // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Admin starting...');
-            loadSettings();
-            
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.addEventListener('click', function() { showPage(this.dataset.page); });
-            });
-            
-            document.getElementById('productForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                saveProduct();
-            });
-            
-            document.getElementById('uploadZone').addEventListener('click', function() {
-                document.getElementById('imageInput').click();
-            });
-            
-            document.getElementById('imageInput').addEventListener('change', function() {
-                if (this.files) {
-                    Array.from(this.files).forEach(file => handleImageUpload(file));
-                }
-            });
-            
-            document.getElementById('searchOrders').addEventListener('input', renderOrders);
-            document.getElementById('filterStatus').addEventListener('change', renderOrders);
-            
+        const STATUS={new:{l:'Nouvelle',i:'🆕',c:'status-new'},pending:{l:'En attente',i:'⏳',c:'status-pending'},confirmed:{l:'Confirmée',i:'✅',c:'status-confirmed'},unreachable:{l:'Injoignable',i:'📵',c:'status-unreachable'},cancelled:{l:'Annulée',i:'❌',c:'status-cancelled'},shipped:{l:'Expédiée',i:'🚚',c:'status-shipped'},delivered:{l:'Livrée',i:'✔️',c:'status-delivered'},returned:{l:'Retournée',i:'↩️',c:'status-returned'}};
+
+        document.addEventListener('DOMContentLoaded',()=>{
+            document.querySelectorAll('.sidebar-item').forEach(i=>i.addEventListener('click',()=>showPage(i.dataset.page)));
+            document.getElementById('productForm').addEventListener('submit',saveProduct);
+            document.getElementById('categoryForm').addEventListener('submit',saveCategory);
+            setupDrop();
             initSupabase();
         });
 
-        // ===== SUPABASE =====
-        async function initSupabase() {
-            try {
-                db = supabase.createClient(settings.supaUrl || SUPA_URL, settings.supaKey || SUPA_KEY);
-                
-                // Test connexion
-                const { data, error } = await db.from('products').select('id').limit(1);
-                
-                if (error) {
-                    console.log('⚠️ Tables may not exist:', error.message);
-                    if (error.message.includes('does not exist')) {
-                        document.getElementById('status').textContent = '⚠️ Tables manquantes';
-                        document.getElementById('status').className = 'text-xs text-orange-500';
-                        toast('Cliquez "Créer Tables" dans Paramètres', 'warning');
-                    }
-                    return;
-                }
-                
-                connected = true;
-                document.getElementById('status').textContent = '● Connecté';
-                document.getElementById('status').className = 'text-xs text-green-500';
-                document.getElementById('dbStatus').textContent = '✓ Connecté à Supabase';
-                document.getElementById('dbStatus').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl text-sm';
-                
-                await loadFromSupabase();
-                
-                // Auto-refresh every 30s
-                setInterval(loadFromSupabase, 30000);
-                
-            } catch (e) {
-                console.error('Init error:', e);
-                document.getElementById('status').textContent = '● Mode Local';
-                document.getElementById('status').className = 'text-xs text-yellow-500';
-            }
+        function setupDrop(){
+            const dz=document.getElementById('dropZone');
+            dz.onclick=()=>document.getElementById('imageInput').click();
+            ['dragenter','dragover','dragleave','drop'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();ev.stopPropagation()},false));
+            ['dragenter','dragover'].forEach(e=>dz.addEventListener(e,()=>dz.classList.add('dragover')));
+            ['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('dragover')));
+            dz.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
         }
 
-        async function createTables() {
-            if (!db) {
-                toast('Configurez Supabase d\'abord', 'error');
-                return;
-            }
-            
-            toast('Création des tables...', 'info');
-            
-            // Note: Tables should be created in Supabase dashboard
-            // This is just a test insert
-            try {
-                // Test products table
-                const { error: pErr } = await db.from('products').select('id').limit(1);
-                if (pErr && pErr.message.includes('does not exist')) {
-                    toast('Créez les tables dans Supabase Dashboard!', 'error');
-                    alert(`
-Allez sur: https://supabase.com/dashboard/project/mbvskiaqfpbbnxhgzpga/sql
-
-Exécutez ce SQL:
-
-CREATE TABLE IF NOT EXISTS products (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    sku TEXT,
-    price DECIMAL(10,2) NOT NULL,
-    compare_price DECIMAL(10,2),
-    stock INTEGER DEFAULT 0,
-    category TEXT,
-    description TEXT,
-    images TEXT[],
-    is_featured BOOLEAN DEFAULT false,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS orders (
-    id SERIAL PRIMARY KEY,
-    order_number TEXT UNIQUE,
-    customer_name TEXT,
-    customer_phone TEXT,
-    shipping_address TEXT,
-    shipping_city TEXT,
-    subtotal DECIMAL(10,2),
-    shipping_cost DECIMAL(10,2),
-    total DECIMAL(10,2),
-    status TEXT DEFAULT 'new',
-    tracking_number TEXT,
-    payment_method TEXT DEFAULT 'cod',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-
--- Allow all operations for anon
-CREATE POLICY "Allow all" ON products FOR ALL USING (true);
-CREATE POLICY "Allow all" ON orders FOR ALL USING (true);
-                    `);
-                    return;
-                }
-                
-                toast('Tables OK!', 'success');
-                await loadFromSupabase();
-                
-            } catch (e) {
-                console.error(e);
-                toast('Erreur: ' + e.message, 'error');
-            }
-        }
-
-        async function loadFromSupabase() {
-            if (!connected || !db) return;
-            
-            try {
-                const [productsRes, ordersRes] = await Promise.all([
-                    db.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }),
-                    db.from('orders').select('*').order('created_at', { ascending: false })
-                ]);
-                
-                if (productsRes.data) {
-                    products = productsRes.data;
-                    console.log('✅ Loaded', products.length, 'products');
-                }
-                
-                if (ordersRes.data) {
-                    orders = ordersRes.data;
-                    console.log('✅ Loaded', orders.length, 'orders');
-                }
-                
-                updateUI();
-                
-            } catch (e) {
-                console.error('Load error:', e);
-            }
-        }
-
-        async function testSupabase() {
-            const url = document.getElementById('sSupaUrl').value.trim();
-            const key = document.getElementById('sSupaKey').value.trim();
-            
-            if (!url || !key) {
-                toast('URL et Key requis!', 'error');
-                return;
-            }
-            
-            try {
-                const testDb = supabase.createClient(url, key);
-                const { error } = await testDb.from('products').select('id').limit(1);
-                
-                if (error && !error.message.includes('does not exist')) {
-                    throw error;
-                }
-                
-                document.getElementById('dbStatus').textContent = '✓ Connexion OK!';
-                document.getElementById('dbStatus').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl text-sm';
-                toast('Connexion réussie!');
-                
-            } catch (e) {
-                document.getElementById('dbStatus').textContent = '✗ Erreur: ' + e.message;
-                document.getElementById('dbStatus').className = 'px-4 py-2 bg-red-100 text-red-800 rounded-xl text-sm';
-                toast('Erreur connexion', 'error');
-            }
-        }
-
-        // ===== SETTINGS =====
-        function loadSettings() {
-            try {
-                const saved = localStorage.getItem('hichoux_settings');
-                if (saved) settings = { ...settings, ...JSON.parse(saved) };
-            } catch(e) {}
-            applySettings();
-        }
-
-        function applySettings() {
-            document.getElementById('sName').value = settings.name || '';
-            document.getElementById('sPhone').value = settings.phone || '';
-            document.getElementById('sWhatsapp').value = settings.whatsapp || '';
-            document.getElementById('sShipping').value = settings.shipping || 30;
-            document.getElementById('sSupaUrl').value = settings.supaUrl || SUPA_URL;
-            document.getElementById('sSupaKey').value = settings.supaKey || SUPA_KEY;
-        }
-
-        function saveSettings() {
-            settings.name = document.getElementById('sName').value;
-            settings.phone = document.getElementById('sPhone').value;
-            settings.whatsapp = document.getElementById('sWhatsapp').value;
-            settings.shipping = parseFloat(document.getElementById('sShipping').value) || 30;
-            settings.supaUrl = document.getElementById('sSupaUrl').value;
-            settings.supaKey = document.getElementById('sSupaKey').value;
-            
-            localStorage.setItem('hichoux_settings', JSON.stringify(settings));
-            toast('Paramètres sauvegardés!');
-        }
-
-        // ===== NAVIGATION =====
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.querySelector(`.sidebar-item[data-page="${pageId}"]`)?.classList.add('active');
-            
-            if (pageId === 'orders') renderOrders();
-            if (pageId === 'confirmation') renderConfirmation();
-            if (pageId === 'shipping') renderShipping();
-            if (pageId === 'products') renderProducts();
-        }
-
-        function toast(msg, type = 'success') {
-            const el = document.getElementById('toast');
-            const inner = el.querySelector('div');
-            inner.textContent = msg;
-            inner.className = (type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-green-500') + ' text-white px-6 py-3 rounded-xl shadow-lg';
-            el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 3000);
-        }
-
-        async function refresh() {
-            toast('Actualisation...', 'info');
-            await loadFromSupabase();
-            toast('OK!');
-        }
-
-        // ===== UI =====
-        function updateUI() {
-            updateStats();
-            updateBadges();
-            renderRecentOrders();
-            document.getElementById('totalProducts').textContent = products.length;
-        }
-
-        function updateStats() {
-            const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0 };
-            let revenue = 0;
-            orders.forEach(o => {
-                if (stats[o.status] !== undefined) stats[o.status]++;
-                if (o.status === 'delivered') revenue += parseFloat(o.total) || 0;
+        function handleFiles(files){
+            Array.from(files).forEach(f=>{
+                if(productImages.length>=5){toast('Max 5 images!','error');return}
+                if(!f.type.startsWith('image/')){toast('Fichier invalide','error');return}
+                if(f.size>2*1024*1024){toast('Image trop grande (max 2MB)','error');return}
+                const r=new FileReader();
+                r.onload=e=>{productImages.push(e.target.result);renderImages()};
+                r.readAsDataURL(f);
             });
-            document.getElementById('statNew').textContent = stats.new;
-            document.getElementById('statConfirmed').textContent = stats.confirmed;
-            document.getElementById('statShipped').textContent = stats.shipped;
-            document.getElementById('statDelivered').textContent = stats.delivered;
-            document.getElementById('totalOrders').textContent = orders.length;
-            document.getElementById('totalRevenue').textContent = revenue.toLocaleString() + ' DH';
         }
 
-        function updateBadges() {
-            const n = orders.filter(o => o.status === 'new').length;
-            const c = orders.filter(o => o.status === 'confirmed').length;
-            setBadge('badgeOrders', n);
-            setBadge('badgeConfirm', n);
-            setBadge('badgeShip', c);
+        function renderImages(){
+            document.getElementById('imagesPreview').innerHTML=productImages.map((img,i)=>`<div class="image-thumb"><img src="${img}"><button type="button" class="del" onclick="removeImg(${i})">&times;</button></div>`).join('');
         }
 
-        function setBadge(id, count) {
-            const el = document.getElementById(id);
-            if (count > 0) {
-                el.textContent = count;
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
+        function removeImg(i){productImages.splice(i,1);renderImages()}
+
+        async function initSupabase(){
+            try{
+                db=supabase.createClient(SUPA_URL,SUPA_KEY);
+                const{error}=await db.from('products').select('id').limit(1);
+                if(error)throw error;
+                connected=true;
+                document.getElementById('connectionStatus').textContent='● Connecté';
+                document.getElementById('connectionStatus').className='text-xs text-green-500 mt-1';
+                document.getElementById('dbStatusText').textContent='✅ Connecté';
+                await loadData();
+                setInterval(loadData,30000);
+            }catch(e){
+                document.getElementById('connectionStatus').textContent='● Erreur';
+                document.getElementById('connectionStatus').className='text-xs text-red-500 mt-1';
+                document.getElementById('dbStatusText').textContent='❌ '+e.message;
             }
         }
 
-        function getImage(p) {
-            if (p.images && p.images.length > 0) return p.images[0];
-            if (p.image_data) return p.image_data;
-            return PLACEHOLDER;
+        async function loadData(){
+            if(!connected)return;
+            const[p,c,o,s]=await Promise.all([
+                db.from('products').select('*').eq('is_active',true).order('created_at',{ascending:false}),
+                db.from('categories').select('*').eq('is_active',true).order('sort_order'),
+                db.from('orders').select('*').order('created_at',{ascending:false}),
+                db.from('settings').select('*')
+            ]);
+            if(p.data)products=p.data;
+            if(c.data)categories=c.data;
+            if(o.data)orders=o.data;
+            if(s.data)s.data.forEach(x=>settings[x.key]=x.value);
+            updateDashboard();
+            updateBadges();
+            document.getElementById('dbProductsCount').textContent=products.length;
+            document.getElementById('dbOrdersCount').textContent=orders.length;
+            populateCatFilters();
         }
 
-        function formatDate(d) {
-            return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        async function refreshData(){toast('Actualisation...');await loadData();toast('OK!')}
+
+        function showPage(p){
+            document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+            document.getElementById('page-'+p).classList.add('active');
+            document.querySelector(`.sidebar-item[data-page="${p}"]`)?.classList.add('active');
+            const t={dashboard:['Dashboard','Vue d\'ensemble'],orders:['Commandes',orders.length+' commandes'],products:['Produits',products.length+' produits'],categories:['Catégories',categories.length+' catégories'],settings:['Paramètres','Configuration']};
+            document.getElementById('pageTitle').textContent=t[p]?.[0]||p;
+            document.getElementById('pageSubtitle').textContent=t[p]?.[1]||'';
+            if(p==='orders')renderOrders();
+            if(p==='products')renderProducts();
+            if(p==='categories')renderCategories();
+            if(p==='settings')loadSettings();
         }
 
-        function statusBadge(s) {
-            const m = { new: ['Nouvelle', 'yellow'], confirmed: ['Confirmée', 'blue'], shipped: ['Expédiée', 'purple'], delivered: ['Livrée', 'green'], cancelled: ['Annulée', 'red'] };
-            const [l, c] = m[s] || [s, 'gray'];
-            return `<span class="px-2 py-1 rounded-full text-xs bg-${c}-100 text-${c}-800">${l}</span>`;
+        function closeModal(id){document.getElementById(id).classList.remove('active')}
+        function toast(m,t='success'){const el=document.getElementById('toast');el.querySelector('div').textContent=m;el.querySelector('div').className=`${t==='error'?'bg-red-500':t==='warning'?'bg-yellow-500':'bg-green-500'} text-white px-6 py-3 rounded-xl shadow-lg`;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),3000)}
+
+        function updateDashboard(){
+            const period=document.getElementById('periodFilter').value;
+            const f=filterPeriod(orders,period);
+            const del=f.filter(o=>o.status==='delivered');
+            const rev=del.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+            const cost=del.reduce((s,o)=>s+(parseFloat(o.total_cost)||0)+(parseFloat(o.delivery_cost)||0),0);
+            const prof=rev-cost;
+            document.getElementById('statTotalOrders').textContent=f.length;
+            document.getElementById('statNewOrders').textContent=f.filter(o=>o.status==='new').length;
+            document.getElementById('statRevenue').textContent=rev.toLocaleString()+' DH';
+            document.getElementById('statCosts').textContent=cost.toLocaleString()+' DH';
+            document.getElementById('statProfit').textContent=prof.toLocaleString()+' DH';
+            document.getElementById('statProfitMargin').textContent='Marge: '+(rev>0?((prof/rev)*100).toFixed(1):0)+'%';
+            renderStatusChart(f);
+            renderRecent();
         }
 
-        // ===== ORDERS =====
-        function renderRecentOrders() {
-            const recent = orders.slice(0, 5);
-            document.getElementById('recentOrders').innerHTML = recent.length ? recent.map(o => `
-                <div class="flex justify-between items-center py-3 border-b last:border-0">
-                    <div>
-                        <p class="font-medium">${o.order_number || 'N/A'}</p>
-                        <p class="text-sm text-gray-500">${o.customer_name || ''}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold">${o.total || 0} DH</p>
-                        ${statusBadge(o.status)}
-                    </div>
-                </div>
-            `).join('') : '<p class="text-gray-500 text-center py-4">Aucune commande</p>';
+        function filterPeriod(items,p){
+            const now=new Date();let s;
+            if(p==='today')s=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+            else if(p==='week')s=new Date(now.getTime()-7*24*60*60*1000);
+            else if(p==='month')s=new Date(now.getFullYear(),now.getMonth(),1);
+            else return items;
+            return items.filter(i=>new Date(i.created_at)>=s);
         }
 
-        function renderOrders() {
-            const search = document.getElementById('searchOrders').value.toLowerCase();
-            const status = document.getElementById('filterStatus').value;
-            const filtered = orders.filter(o => 
-                (!search || (o.order_number || '').toLowerCase().includes(search) || (o.customer_name || '').toLowerCase().includes(search) || (o.customer_phone || '').includes(search)) &&
-                (!status || o.status === status)
-            );
-            
-            document.getElementById('ordersTable').innerHTML = filtered.length ? `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Commande</th>
-                        <th class="p-4">Client</th>
-                        <th class="p-4">Tel</th>
-                        <th class="p-4">Ville</th>
-                        <th class="p-4">Total</th>
-                        <th class="p-4">Statut</th>
-                        <th class="p-4">Date</th>
-                    </tr></thead>
-                    <tbody>${filtered.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4 font-medium">${o.order_number}</td>
-                            <td class="p-4">${o.customer_name}</td>
-                            <td class="p-4">${o.customer_phone}</td>
-                            <td class="p-4">${o.shipping_city}</td>
-                            <td class="p-4 font-bold">${o.total} DH</td>
-                            <td class="p-4">${statusBadge(o.status)}</td>
-                            <td class="p-4 text-sm text-gray-500">${formatDate(o.created_at)}</td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            ` : '<p class="text-center py-8 text-gray-500">Aucune commande</p>';
+        function renderStatusChart(f){
+            const cnt={};Object.keys(STATUS).forEach(k=>cnt[k]=0);
+            f.forEach(o=>{if(cnt[o.status]!==undefined)cnt[o.status]++});
+            const tot=f.length||1;
+            let h='';
+            Object.entries(STATUS).forEach(([k,v])=>{
+                const n=cnt[k],pct=((n/tot)*100).toFixed(0);
+                h+=`<div class="flex items-center"><span class="w-28 text-sm">${v.i} ${v.l}</span><div class="flex-1 mx-3 bg-gray-200 rounded-full h-2"><div class="${v.c} h-2 rounded-full" style="width:${pct}%"></div></div><span class="text-sm font-medium w-10 text-right">${n}</span></div>`;
+            });
+            document.getElementById('statusChart').innerHTML=h;
         }
 
-        function renderConfirmation() {
-            const pending = orders.filter(o => o.status === 'new');
-            document.getElementById('pendingCount').textContent = pending.length;
-            
-            if (!pending.length) {
-                document.getElementById('confirmationList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">✅</div><h3 class="text-xl font-semibold">Tout est confirmé!</h3></div>';
-                return;
-            }
-            
-            document.getElementById('confirmationList').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-3">Commande</th>
-                        <th class="p-3">Client</th>
-                        <th class="p-3">Tel</th>
-                        <th class="p-3">Ville</th>
-                        <th class="p-3">Total</th>
-                        <th class="p-3">Actions</th>
-                    </tr></thead>
-                    <tbody>${pending.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3"><p class="font-medium">${o.order_number}</p><p class="text-xs text-gray-400">${formatDate(o.created_at)}</p></td>
-                            <td class="p-3">${o.customer_name}</td>
-                            <td class="p-3"><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></td>
-                            <td class="p-3">${o.shipping_city}</td>
-                            <td class="p-3 font-bold text-green-600">${o.total} DH</td>
-                            <td class="p-3">
-                                <div class="flex gap-1">
-                                    <a href="tel:${o.customer_phone}" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">📞</a>
-                                    <a href="https://wa.me/212${(o.customer_phone || '').replace(/^0/, '')}" target="_blank" class="px-2 py-1 bg-green-500 text-white rounded text-sm">💬</a>
-                                    <button onclick="confirmOrder(${o.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-sm">✅</button>
-                                    <button onclick="cancelOrder(${o.id})" class="px-2 py-1 bg-red-500 text-white rounded text-sm">❌</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+        function renderRecent(){
+            const r=orders.slice(0,5);
+            if(!r.length){document.getElementById('recentOrdersTable').innerHTML='<p class="text-gray-500 text-center py-4">Aucune</p>';return}
+            let h='<table class="table"><tbody>';
+            r.forEach(o=>{const s=STATUS[o.status]||{l:o.status,c:''};h+=`<tr class="cursor-pointer" onclick="openOrderModal(${o.id})"><td class="font-medium">${o.order_number}</td><td>${o.customer_name}</td><td class="font-semibold">${o.total} DH</td><td><span class="px-2 py-1 rounded-full text-xs ${s.c}">${s.l}</span></td></tr>`});
+            h+='</tbody></table>';
+            document.getElementById('recentOrdersTable').innerHTML=h;
         }
 
-        function renderShipping() {
-            const toShip = orders.filter(o => o.status === 'confirmed');
-            document.getElementById('toShipCount').textContent = toShip.length;
-            
-            if (!toShip.length) {
-                document.getElementById('shippingList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">📦</div><h3 class="text-xl font-semibold">Rien à expédier</h3></div>';
-                return;
-            }
-            
-            document.getElementById('shippingList').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-3">Commande</th>
-                        <th class="p-3">Client</th>
-                        <th class="p-3">Adresse</th>
-                        <th class="p-3">Ville</th>
-                        <th class="p-3">Total</th>
-                        <th class="p-3">Actions</th>
-                    </tr></thead>
-                    <tbody>${toShip.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3 font-medium">${o.order_number}</td>
-                            <td class="p-3">${o.customer_name}<br><span class="text-sm text-gray-500">${o.customer_phone}</span></td>
-                            <td class="p-3 text-sm">${o.shipping_address || ''}</td>
-                            <td class="p-3">${o.shipping_city}</td>
-                            <td class="p-3 font-bold">${o.total} DH</td>
-                            <td class="p-3"><button onclick="shipOrder(${o.id})" class="px-3 py-1 bg-purple-600 text-white rounded text-sm">🚚 Expédier</button></td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+        function updateBadges(){const c=orders.filter(o=>o.status==='new').length;const b=document.getElementById('newOrdersBadge');if(c>0){b.textContent=c;b.classList.remove('hidden')}else b.classList.add('hidden')}
+
+        // ORDERS
+        function renderOrders(){
+            const sf=document.getElementById('orderStatusFilter').value;
+            const se=document.getElementById('orderSearch').value.toLowerCase();
+            let f=orders.filter(o=>{
+                if(sf&&o.status!==sf)return false;
+                if(se&&!`${o.order_number} ${o.customer_name} ${o.customer_phone}`.toLowerCase().includes(se))return false;
+                return true;
+            });
+            if(!f.length){document.getElementById('ordersTableBody').innerHTML='<tr><td colspan="8" class="text-center py-8 text-gray-500">Aucune commande</td></tr>';return}
+            let h='';
+            f.forEach(o=>{
+                const s=STATUS[o.status]||{l:o.status,c:''};
+                h+=`<tr><td class="font-medium">${o.order_number}</td><td>${o.customer_name}</td><td><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></td><td>${o.shipping_city}</td><td class="font-semibold">${o.total} DH</td><td><span class="px-2 py-1 rounded-full text-xs ${s.c}">${s.i} ${s.l}</span></td><td class="text-gray-400 text-sm">${fmtDate(o.created_at)}</td><td><button onclick="openOrderModal(${o.id})" class="p-1 hover:bg-gray-100 rounded">👁️</button><button onclick="printTicket(${o.id})" class="p-1 hover:bg-gray-100 rounded">🖨️</button><button onclick="openWhatsApp(${o.id})" class="p-1 hover:bg-gray-100 rounded">💬</button></td></tr>`;
+            });
+            document.getElementById('ordersTableBody').innerHTML=h;
         }
 
-        async function confirmOrder(id) {
-            await updateOrderStatus(id, 'confirmed');
-            toast('Commande confirmée!');
+        function openOrderModal(id){
+            const o=orders.find(x=>x.id===id);if(!o)return;
+            const s=STATUS[o.status]||{l:o.status,c:''};
+            let h=`<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h4 class="font-semibold mb-3 text-sm text-gray-500 uppercase">Commande</h4><div class="space-y-2"><div class="flex justify-between"><span class="text-gray-500">Numéro</span><span class="font-semibold">${o.order_number}</span></div><div class="flex justify-between"><span class="text-gray-500">Date</span><span>${fmtDate(o.created_at)}</span></div><div class="flex justify-between"><span class="text-gray-500">Statut</span><span class="px-2 py-1 rounded-full text-xs ${s.c}">${s.i} ${s.l}</span></div></div></div><div><h4 class="font-semibold mb-3 text-sm text-gray-500 uppercase">Client</h4><div class="space-y-2"><div class="flex justify-between"><span class="text-gray-500">Nom</span><span class="font-semibold">${o.customer_name}</span></div><div class="flex justify-between"><span class="text-gray-500">Tél</span><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></div><div class="flex justify-between"><span class="text-gray-500">Ville</span><span>${o.shipping_city}</span></div><div><span class="text-gray-500">Adresse</span><p class="text-sm mt-1">${o.shipping_address}</p></div></div></div></div>`;
+            h+=`<div class="mt-6 p-4 bg-gray-50 rounded-xl"><div class="grid grid-cols-3 gap-4 text-center"><div><p class="text-sm text-gray-500">Sous-total</p><p class="font-semibold">${o.subtotal||0} DH</p></div><div><p class="text-sm text-gray-500">Livraison</p><p class="font-semibold">${o.shipping_cost||0} DH</p></div><div><p class="text-sm text-gray-500">Total</p><p class="text-xl font-bold text-green-600">${o.total} DH</p></div></div></div>`;
+            h+=`<div class="mt-6 pt-6 border-t"><h4 class="font-semibold mb-4">Actions</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-2">`;
+            if(o.status==='new')h+=`<button onclick="openConfirmModal(${o.id})" class="btn btn-success">✅ Confirmer</button><button onclick="updateStatus(${o.id},'pending')" class="btn btn-warning">⏳ Attente</button><button onclick="updateStatus(${o.id},'unreachable')" class="btn btn-secondary">📵 Injoignable</button><button onclick="updateStatus(${o.id},'cancelled')" class="btn btn-danger">❌ Annuler</button>`;
+            if(o.status==='pending'||o.status==='unreachable')h+=`<button onclick="openConfirmModal(${o.id})" class="btn btn-success">✅ Confirmer</button><button onclick="updateStatus(${o.id},'cancelled')" class="btn btn-danger">❌ Annuler</button>`;
+            if(o.status==='confirmed')h+=`<button onclick="updateStatus(${o.id},'shipped')" class="btn btn-primary">🚚 Expédiée</button>`;
+            if(o.status==='shipped')h+=`<button onclick="updateStatus(${o.id},'delivered')" class="btn btn-success">✔️ Livrée</button><button onclick="updateStatus(${o.id},'returned')" class="btn btn-danger">↩️ Retournée</button>`;
+            h+=`</div><div class="flex gap-3 mt-4"><button onclick="printTicket(${o.id})" class="btn btn-secondary flex-1">🖨️ Ticket</button><button onclick="openWhatsApp(${o.id})" class="btn btn-success flex-1">💬 WhatsApp</button></div></div>`;
+            document.getElementById('orderModalContent').innerHTML=h;
+            document.getElementById('orderModal').classList.add('active');
         }
 
-        async function cancelOrder(id) {
-            if (!confirm('Annuler cette commande?')) return;
-            await updateOrderStatus(id, 'cancelled');
-            toast('Commande annulée');
+        function openConfirmModal(id){
+            const o=orders.find(x=>x.id===id);if(!o)return;
+            orderToConfirm=o;
+            document.getElementById('confirmModalContent').innerHTML=`<div class="text-center mb-4"><p class="text-lg font-bold">${o.order_number}</p></div><div class="space-y-2 text-sm"><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Client</span><span class="font-semibold">${o.customer_name}</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Téléphone</span><span class="font-semibold">${o.customer_phone}</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Ville</span><span class="font-semibold">${o.shipping_city}</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-lg"><span>Adresse</span><span class="font-semibold text-right">${o.shipping_address}</span></div><div class="flex justify-between p-3 bg-green-50 rounded-lg text-lg"><span>Total</span><span class="font-bold text-green-600">${o.total} DH</span></div></div>`;
+            document.getElementById('confirmModal').classList.add('active');
         }
 
-        async function shipOrder(id) {
-            const tracking = prompt('Numéro de tracking:', 'DG' + Date.now().toString().slice(-8));
-            if (!tracking) return;
-            await updateOrderStatus(id, 'shipped', tracking);
-            toast('Commande expédiée!');
+        async function confirmOrderFinal(){
+            if(!orderToConfirm)return;
+            try{
+                await db.from('orders').update({status:'confirmed',confirmed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',orderToConfirm.id);
+                toast('✅ Commande confirmée!');
+                closeModal('confirmModal');
+                closeModal('orderModal');
+                orderToConfirm=null;
+                await loadData();
+                renderOrders();
+            }catch(e){toast('Erreur: '+e.message,'error')}
         }
 
-        async function updateOrderStatus(id, newStatus, tracking = null) {
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            
-            order.status = newStatus;
-            if (tracking) order.tracking_number = tracking;
-            order.updated_at = new Date().toISOString();
-            
-            if (connected && db) {
-                try {
-                    const updateData = { status: newStatus, updated_at: order.updated_at };
-                    if (tracking) updateData.tracking_number = tracking;
-                    await db.from('orders').update(updateData).eq('id', id);
-                } catch (e) {
-                    console.error('Update error:', e);
-                    toast('Erreur mise à jour', 'error');
-                }
-            }
-            
-            updateUI();
-            renderConfirmation();
-            renderShipping();
-            renderOrders();
+        async function updateStatus(id,st){
+            try{
+                const upd={status:st,updated_at:new Date().toISOString()};
+                if(st==='confirmed')upd.confirmed_at=new Date().toISOString();
+                if(st==='cancelled')upd.cancelled_at=new Date().toISOString();
+                if(st==='shipped')upd.shipped_at=new Date().toISOString();
+                if(st==='delivered')upd.delivered_at=new Date().toISOString();
+                await db.from('orders').update(upd).eq('id',id);
+                toast(`${STATUS[st]?.l||st}!`);
+                closeModal('orderModal');
+                await loadData();
+                renderOrders();
+            }catch(e){toast('Erreur: '+e.message,'error')}
         }
 
-        // ===== PRODUCTS =====
-        function renderProducts() {
-            document.getElementById('productsCount').textContent = products.length;
-            
-            if (!products.length) {
-                document.getElementById('productsTable').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">🏷️</div><h3 class="text-xl font-semibold mb-2">Aucun produit</h3><button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button></div>';
-                return;
-            }
-            
-            document.getElementById('productsTable').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Image</th>
-                        <th class="p-4">Produit</th>
-                        <th class="p-4">SKU</th>
-                        <th class="p-4">Prix</th>
-                        <th class="p-4">Stock</th>
-                        <th class="p-4">⭐</th>
-                        <th class="p-4">Actions</th>
-                    </tr></thead>
-                    <tbody>${products.map(p => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4"><img src="${getImage(p)}" class="w-12 h-12 rounded-lg object-cover bg-gray-100"></td>
-                            <td class="p-4"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category || ''}</p></td>
-                            <td class="p-4 font-mono text-sm">${p.sku || '-'}</td>
-                            <td class="p-4"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price}</p>` : ''}</td>
-                            <td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td>
-                            <td class="p-4">${p.is_featured ? '⭐' : ''}</td>
-                            <td class="p-4"><button onclick="editProduct(${p.id})" class="text-blue-600 mr-2">✏️</button><button onclick="deleteProduct(${p.id})" class="text-red-600">🗑️</button></td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+        function openWhatsApp(id){
+            const o=orders.find(x=>x.id===id);if(!o)return;
+            const ph=o.customer_phone.replace(/^0/,'212');
+            const msg=encodeURIComponent(`Bonjour ${o.customer_name}!\n\nVotre commande *${o.order_number}* de *${o.total} DH* a été enregistrée.\n\n📍 ${o.shipping_city}\n💰 Paiement à la livraison\n\nMerci! 🙏`);
+            window.open(`https://wa.me/${ph}?text=${msg}`,'_blank');
         }
 
-        function openModal(product = null) {
-            document.getElementById('modalTitle').textContent = product ? 'Modifier Produit' : 'Ajouter Produit';
-            document.getElementById('editId').value = product?.id || '';
-            document.getElementById('pName').value = product?.name || '';
-            document.getElementById('pSku').value = product?.sku || '';
-            document.getElementById('pPrice').value = product?.price || '';
-            document.getElementById('pOldPrice').value = product?.compare_price || '';
-            document.getElementById('pStock').value = product?.stock ?? 100;
-            document.getElementById('pCategory').value = product?.category || 'homme';
-            document.getElementById('pDesc').value = product?.description || '';
-            document.getElementById('pFeatured').checked = product?.is_featured || false;
-            
-            // Load existing images
-            currentImages = product?.images || [];
-            if (product?.image_data && !currentImages.includes(product.image_data)) {
-                currentImages = [product.image_data];
-            }
-            renderImagesPreview();
-            
+        function printTicket(id){
+            const o=orders.find(x=>x.id===id);if(!o)return;
+            const w=window.open('','_blank');
+            w.document.write(`<html><head><title>Ticket ${o.order_number}</title></head><body style="font-family:monospace;max-width:300px;margin:20px"><div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px"><h2 style="margin:0">🏪 HICHOUX STORE</h2><p>BON DE COMMANDE</p></div><p><b>N°:</b> ${o.order_number}</p><p><b>Date:</b> ${fmtDate(o.created_at)}</p><hr style="border:1px dashed #000"><p><b>CLIENT</b></p><p>${o.customer_name}</p><p>📞 ${o.customer_phone}</p><p>📍 ${o.shipping_city}</p><p style="font-size:11px">${o.shipping_address}</p><hr style="border:1px dashed #000"><table style="width:100%"><tr><td>Sous-total</td><td style="text-align:right">${o.subtotal||0} DH</td></tr><tr><td>Livraison</td><td style="text-align:right">${o.shipping_cost||0} DH</td></tr><tr style="font-weight:bold"><td>TOTAL</td><td style="text-align:right">${o.total} DH</td></tr></table><hr style="border:2px dashed #000"><p style="text-align:center"><b>💰 PAIEMENT À LA LIVRAISON</b></p></body></html>`);
+            w.document.close();w.print();
+        }
+
+        function exportOrders(){
+            const csv=[['N°','Client','Tél','Ville','Adresse','Total','Statut','Date'].join(';'),...orders.map(o=>[o.order_number,o.customer_name,o.customer_phone,o.shipping_city,`"${o.shipping_address}"`,o.total,STATUS[o.status]?.l||o.status,fmtDate(o.created_at)].join(';'))].join('\n');
+            const b=new Blob([csv],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='commandes.csv';a.click();
+            toast('Export téléchargé!');
+        }
+
+        // PRODUCTS
+        function populateCatFilters(){
+            const opts='<option value="">Toutes</option>'+categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('productCategoryFilter').innerHTML=opts;
+            document.getElementById('productCategory').innerHTML='<option value="">Sans</option>'+categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        function renderProducts(){
+            const cf=document.getElementById('productCategoryFilter').value;
+            const se=document.getElementById('productSearch').value.toLowerCase();
+            let f=products.filter(p=>{
+                if(cf&&p.category_id!=cf)return false;
+                if(se&&!`${p.name} ${p.sku}`.toLowerCase().includes(se))return false;
+                return true;
+            });
+            if(!f.length){document.getElementById('productsTableBody').innerHTML='<tr><td colspan="8" class="text-center py-8 text-gray-500">Aucun produit</td></tr>';return}
+            let h='';
+            f.forEach(p=>{
+                const img=(p.images&&p.images[0])||'';
+                const mg=p.cost_price?((p.price-p.cost_price)/p.price*100).toFixed(0):'-';
+                const cat=categories.find(c=>c.id===p.category_id);
+                h+=`<tr><td>${img?`<img src="${img}" class="w-12 h-12 rounded-lg object-cover">`:'<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">📷</div>'}</td><td><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${cat?.name||''}</p></td><td class="font-mono text-sm text-gray-500">${p.sku||'-'}</td><td class="font-semibold">${p.price} DH</td><td class="text-gray-500">${p.cost_price||'-'}</td><td><span class="px-2 py-1 rounded-full text-xs ${mg>30?'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}">${mg}%</span></td><td><span class="px-2 py-1 rounded-full text-xs ${p.stock<10?'bg-red-100 text-red-800':'bg-green-100 text-green-800'}">${p.stock}</span></td><td><button onclick="editProduct(${p.id})" class="p-1 hover:bg-gray-100 rounded">✏️</button><button onclick="deleteProduct(${p.id})" class="p-1 hover:bg-gray-100 rounded text-red-500">🗑️</button></td></tr>`;
+            });
+            document.getElementById('productsTableBody').innerHTML=h;
+        }
+
+        function openProductModal(p=null){
+            productImages=p?.images||[];
+            document.getElementById('productModalTitle').textContent=p?'Modifier':'Nouveau Produit';
+            document.getElementById('productId').value=p?.id||'';
+            document.getElementById('productName').value=p?.name||'';
+            document.getElementById('productSku').value=p?.sku||'';
+            document.getElementById('productCategory').value=p?.category_id||'';
+            document.getElementById('productPrice').value=p?.price||'';
+            document.getElementById('productCostPrice').value=p?.cost_price||'';
+            document.getElementById('productComparePrice').value=p?.compare_price||'';
+            document.getElementById('productStock').value=p?.stock??100;
+            document.getElementById('productDescription').value=p?.description||'';
+            document.getElementById('productFeatured').checked=p?.is_featured||false;
+            renderImages();
             document.getElementById('productModal').classList.add('active');
         }
 
-        function closeModal() {
-            document.getElementById('productModal').classList.remove('active');
-            document.getElementById('productForm').reset();
-            currentImages = [];
-            renderImagesPreview();
-            document.getElementById('imageInput').value = '';
-        }
+        function editProduct(id){const p=products.find(x=>x.id===id);if(p)openProductModal(p)}
 
-        function editProduct(id) {
-            const p = products.find(x => x.id === id);
-            if (p) openModal(p);
-        }
-
-        // ===== MULTI-IMAGE HANDLING =====
-        function handleImageUpload(file) {
-            if (currentImages.length >= 5) {
-                toast('Maximum 5 images!', 'warning');
-                return;
-            }
-            
-            if (file.size > 2 * 1024 * 1024) {
-                toast('Image trop grande! Max 2MB', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentImages.push(e.target.result);
-                renderImagesPreview();
-                toast('Image ajoutée!');
-            };
-            reader.onerror = function() {
-                toast('Erreur lecture image', 'error');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function renderImagesPreview() {
-            const container = document.getElementById('imagesPreview');
-            container.innerHTML = currentImages.map((img, idx) => `
-                <div class="image-thumb">
-                    <img src="${img}" class="w-16 h-16 rounded-lg object-cover border">
-                    <button type="button" onclick="removeImage(${idx})" class="delete-btn w-5 h-5 bg-red-500 text-white rounded-full text-xs">×</button>
-                </div>
-            `).join('');
-        }
-
-        function removeImage(idx) {
-            currentImages.splice(idx, 1);
-            renderImagesPreview();
-        }
-
-        async function saveProduct() {
-            const id = document.getElementById('editId').value;
-            const name = document.getElementById('pName').value.trim();
-            const price = parseFloat(document.getElementById('pPrice').value);
-            
-            if (!name) { toast('Nom requis!', 'error'); return; }
-            if (!price || price <= 0) { toast('Prix requis!', 'error'); return; }
-            
-            const productData = {
-                name: name,
-                sku: document.getElementById('pSku').value.trim() || 'SKU-' + Date.now(),
-                price: price,
-                compare_price: parseFloat(document.getElementById('pOldPrice').value) || null,
-                stock: parseInt(document.getElementById('pStock').value) || 0,
-                category: document.getElementById('pCategory').value,
-                description: document.getElementById('pDesc').value.trim(),
-                is_featured: document.getElementById('pFeatured').checked,
-                images: currentImages,
-                is_active: true
-            };
-            
-            console.log('💾 Saving product:', productData.name, 'with', currentImages.length, 'images');
-            
-            if (!connected || !db) {
-                toast('Non connecté à Supabase!', 'error');
-                return;
-            }
-
-            try {
-                if (id) {
-                    // Update
-                    const { error } = await db.from('products').update(productData).eq('id', parseInt(id));
-                    if (error) throw error;
-                    toast('Produit modifié!');
-                } else {
-                    // Insert
-                    const { error } = await db.from('products').insert(productData);
-                    if (error) throw error;
-                    toast('Produit ajouté!');
-                }
-                
-                await loadFromSupabase();
-                closeModal();
+        async function saveProduct(e){
+            e.preventDefault();
+            const id=document.getElementById('productId').value;
+            const name=document.getElementById('productName').value.trim();
+            const price=parseFloat(document.getElementById('productPrice').value);
+            if(!name||!price){toast('Nom et prix requis!','error');return}
+            const data={name,sku:document.getElementById('productSku').value.trim()||'SKU-'+Date.now(),category_id:document.getElementById('productCategory').value||null,price,cost_price:parseFloat(document.getElementById('productCostPrice').value)||0,compare_price:parseFloat(document.getElementById('productComparePrice').value)||null,stock:parseInt(document.getElementById('productStock').value)||0,description:document.getElementById('productDescription').value.trim(),images:productImages,is_featured:document.getElementById('productFeatured').checked,is_active:true};
+            try{
+                if(id){await db.from('products').update(data).eq('id',parseInt(id));toast('Modifié!')}
+                else{await db.from('products').insert(data);toast('Ajouté!')}
+                closeModal('productModal');
+                productImages=[];
+                await loadData();
                 renderProducts();
-                
-            } catch (e) {
-                console.error('Save error:', e);
-                toast('Erreur: ' + e.message, 'error');
-            }
+            }catch(e){toast('Erreur: '+e.message,'error')}
         }
 
-        async function deleteProduct(id) {
-            if (!confirm('Supprimer ce produit?')) return;
-            
-            if (connected && db) {
-                try {
-                    await db.from('products').update({ is_active: false }).eq('id', id);
-                    await loadFromSupabase();
-                    toast('Produit supprimé');
-                } catch (e) {
-                    toast('Erreur', 'error');
-                }
-            }
-            
-            renderProducts();
+        async function deleteProduct(id){
+            if(!confirm('Supprimer?'))return;
+            try{await db.from('products').update({is_active:false}).eq('id',id);toast('Supprimé');await loadData();renderProducts()}catch(e){toast('Erreur','error')}
         }
 
-        // ===== EXPORT/IMPORT =====
-        function exportData() {
-            const data = { products, orders, settings, exported_at: new Date().toISOString() };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'hichoux-backup-' + new Date().toISOString().split('T')[0] + '.json';
-            a.click();
-            toast('Exporté!');
+        // CATEGORIES
+        function renderCategories(){
+            document.getElementById('categoriesCount').textContent=categories.length;
+            if(!categories.length){document.getElementById('categoriesGrid').innerHTML='<div class="col-span-3 text-center py-12"><p class="text-gray-500 mb-4">Aucune</p><button onclick="openCategoryModal()" class="btn btn-primary">+ Créer</button></div>';return}
+            let h='';
+            categories.forEach(c=>{const n=products.filter(p=>p.category_id===c.id).length;h+=`<div class="card p-6"><div class="flex items-center justify-between mb-4"><h3 class="font-semibold text-lg">${c.name}</h3><div><button onclick="editCategory(${c.id})" class="p-1 hover:bg-gray-100 rounded">✏️</button><button onclick="deleteCategory(${c.id})" class="p-1 hover:bg-gray-100 rounded text-red-500">🗑️</button></div></div><p class="text-sm"><span class="font-semibold">${n}</span> produits</p></div>`});
+            document.getElementById('categoriesGrid').innerHTML=h;
         }
 
-        async function importData(input) {
-            if (!input.files || !input.files[0]) return;
-            
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (data.products && connected && db) {
-                        for (const p of data.products) {
-                            const { id, ...productData } = p;
-                            await db.from('products').upsert(productData);
-                        }
-                    }
-                    
-                    if (data.settings) {
-                        settings = { ...settings, ...data.settings };
-                        localStorage.setItem('hichoux_settings', JSON.stringify(settings));
-                        applySettings();
-                    }
-                    
-                    await loadFromSupabase();
-                    toast('Importé!');
-                    
-                } catch (e) {
-                    toast('Erreur import: ' + e.message, 'error');
-                }
-            };
-            reader.readAsText(input.files[0]);
+        function openCategoryModal(c=null){
+            document.getElementById('categoryModalTitle').textContent=c?'Modifier':'Nouvelle Catégorie';
+            document.getElementById('categoryId').value=c?.id||'';
+            document.getElementById('categoryName').value=c?.name||'';
+            document.getElementById('categorySlug').value=c?.slug||'';
+            document.getElementById('categoryModal').classList.add('active');
         }
 
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        function editCategory(id){const c=categories.find(x=>x.id===id);if(c)openCategoryModal(c)}
+
+        async function saveCategory(e){
+            e.preventDefault();
+            const id=document.getElementById('categoryId').value;
+            const name=document.getElementById('categoryName').value.trim();
+            if(!name){toast('Nom requis!','error');return}
+            const slug=document.getElementById('categorySlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+            const data={name,slug,is_active:true};
+            try{
+                if(id){await db.from('categories').update(data).eq('id',parseInt(id));toast('Modifié!')}
+                else{await db.from('categories').insert(data);toast('Ajouté!')}
+                closeModal('categoryModal');
+                await loadData();
+                renderCategories();
+            }catch(e){toast('Erreur: '+e.message,'error')}
+        }
+
+        async function deleteCategory(id){
+            if(!confirm('Supprimer?'))return;
+            try{await db.from('categories').update({is_active:false}).eq('id',id);toast('Supprimé');await loadData();renderCategories()}catch(e){toast('Erreur','error')}
+        }
+
+        // SETTINGS
+        function loadSettings(){
+            const st=settings.store||{},sh=settings.shipping||{},ca=settings.carrier_api||{};
+            document.getElementById('settingStoreName').value=st.name||'Hichoux Store';
+            document.getElementById('settingStorePhone').value=st.phone||'';
+            document.getElementById('settingStoreWhatsapp').value=st.whatsapp||'';
+            document.getElementById('settingShippingDefault').value=sh.default_cost||30;
+            document.getElementById('settingFreeShipping').value=sh.free_shipping_min||500;
+            document.getElementById('settingCarrierEnabled').checked=ca.enabled||false;
+            document.getElementById('settingCarrierProvider').value=ca.provider||'digylog';
+            document.getElementById('settingCarrierUrl').value=ca.api_url||'';
+            document.getElementById('settingCarrierKey').value=ca.api_key||'';
+        }
+
+        async function saveStoreSettings(){try{const v={name:document.getElementById('settingStoreName').value,phone:document.getElementById('settingStorePhone').value,whatsapp:document.getElementById('settingStoreWhatsapp').value};await db.from('settings').upsert({key:'store',value:v,updated_at:new Date().toISOString()});settings.store=v;toast('OK!')}catch(e){toast('Erreur','error')}}
+        async function saveShippingSettings(){try{const v={default_cost:parseInt(document.getElementById('settingShippingDefault').value),free_shipping_min:parseInt(document.getElementById('settingFreeShipping').value)};await db.from('settings').upsert({key:'shipping',value:v,updated_at:new Date().toISOString()});settings.shipping=v;toast('OK!')}catch(e){toast('Erreur','error')}}
+        async function saveCarrierSettings(){try{const v={enabled:document.getElementById('settingCarrierEnabled').checked,provider:document.getElementById('settingCarrierProvider').value,api_url:document.getElementById('settingCarrierUrl').value,api_key:document.getElementById('settingCarrierKey').value};await db.from('settings').upsert({key:'carrier_api',value:v,updated_at:new Date().toISOString()});settings.carrier_api=v;toast('OK!')}catch(e){toast('Erreur','error')}}
+
+        function fmtDate(d){return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('orderModal');closeModal('productModal');closeModal('categoryModal');closeModal('confirmModal')}});
     </script>
 </body>
 </html>
