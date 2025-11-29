@@ -19,10 +19,7 @@
     </style>
 </head>
 <body class="bg-gray-100">
-    <!-- Toast -->
-    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
-        <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg"></div>
-    </div>
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden"><div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg"></div></div>
 
     <!-- Product Modal -->
     <div id="productModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-40 p-4">
@@ -33,88 +30,35 @@
             </div>
             <form id="productForm" class="p-6 space-y-4">
                 <input type="hidden" id="editId">
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Nom du produit *</label>
-                    <input type="text" id="pName" class="w-full px-4 py-2 border rounded-xl" required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">SKU</label>
-                    <input type="text" id="pSku" class="w-full px-4 py-2 border rounded-xl" placeholder="Auto si vide">
-                </div>
-                
+                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="pName" class="w-full px-4 py-2 border rounded-xl" required></div>
+                <div><label class="block text-sm font-medium mb-1">SKU</label><input type="text" id="pSku" class="w-full px-4 py-2 border rounded-xl" placeholder="Auto"></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Prix (DH) *</label>
-                        <input type="number" id="pPrice" class="w-full px-4 py-2 border rounded-xl" required min="0">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Ancien prix</label>
-                        <input type="number" id="pOldPrice" class="w-full px-4 py-2 border rounded-xl" min="0">
-                    </div>
+                    <div><label class="block text-sm font-medium mb-1">Prix (DH) *</label><input type="number" id="pPrice" class="w-full px-4 py-2 border rounded-xl" required min="0"></div>
+                    <div><label class="block text-sm font-medium mb-1">Ancien prix</label><input type="number" id="pOldPrice" class="w-full px-4 py-2 border rounded-xl" min="0"></div>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Stock</label>
-                        <input type="number" id="pStock" class="w-full px-4 py-2 border rounded-xl" value="100">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Catégorie</label>
-                        <select id="pCategory" class="w-full px-4 py-2 border rounded-xl">
-                            <option value="homme">Homme</option>
-                            <option value="femme">Femme</option>
-                            <option value="unisexe">Unisexe</option>
-                            <option value="cosmetique">Cosmétique</option>
-                        </select>
-                    </div>
+                    <div><label class="block text-sm font-medium mb-1">Stock</label><input type="number" id="pStock" class="w-full px-4 py-2 border rounded-xl" value="100"></div>
+                    <div><label class="block text-sm font-medium mb-1">Catégorie</label><select id="pCategory" class="w-full px-4 py-2 border rounded-xl"><option value="homme">Homme</option><option value="femme">Femme</option><option value="unisexe">Unisexe</option><option value="cosmetique">Cosmétique</option></select></div>
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-medium mb-2">📷 Image du produit</label>
+                    <label class="block text-sm font-medium mb-2">📷 Image</label>
                     <div id="uploadZone" class="upload-zone rounded-xl p-6 text-center cursor-pointer">
-                        <div id="imgPlaceholder">
-                            <div class="text-4xl mb-2">📷</div>
-                            <p class="text-gray-500">Cliquez pour ajouter une image</p>
-                            <p class="text-xs text-gray-400">JPG, PNG - Max 2MB</p>
-                        </div>
-                        <div id="imgPreview" class="hidden">
-                            <img id="previewImg" class="w-32 h-32 object-cover rounded-xl mx-auto mb-2">
-                            <p class="text-green-600 text-sm">✓ Image ajoutée</p>
-                            <button type="button" onclick="removeImage(event)" class="text-red-500 text-sm underline">Supprimer</button>
-                        </div>
+                        <div id="imgPlaceholder"><div class="text-4xl mb-2">📷</div><p class="text-gray-500">Cliquez pour ajouter</p><p class="text-xs text-gray-400">Max 2MB</p></div>
+                        <div id="imgPreview" class="hidden"><img id="previewImg" class="w-32 h-32 object-cover rounded-xl mx-auto mb-2"><p class="text-green-600 text-sm">✓ Image OK</p><button type="button" onclick="removeImage(event)" class="text-red-500 text-sm underline">Supprimer</button></div>
                     </div>
                     <input type="file" id="imageInput" accept="image/*" class="hidden">
                     <input type="hidden" id="pImageData">
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Description</label>
-                    <textarea id="pDesc" rows="2" class="w-full px-4 py-2 border rounded-xl"></textarea>
-                </div>
-                
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" id="pFeatured" class="w-5 h-5">
-                    <span>⭐ Produit vedette</span>
-                </label>
-                
-                <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 border rounded-xl hover:bg-gray-50">Annuler</button>
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">💾 Enregistrer</button>
-                </div>
+                <div><label class="block text-sm font-medium mb-1">Description</label><textarea id="pDesc" rows="2" class="w-full px-4 py-2 border rounded-xl"></textarea></div>
+                <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="pFeatured" class="w-5 h-5"><span>⭐ Vedette</span></label>
+                <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 border rounded-xl">Annuler</button><button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl">💾 Enregistrer</button></div>
             </form>
         </div>
     </div>
 
-    <!-- Main Layout -->
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <aside class="w-64 bg-white border-r flex flex-col">
-            <div class="p-6 border-b">
-                <h1 class="font-bold text-xl">🏪 Hichoux Store</h1>
-                <p id="status" class="text-xs text-gray-400">● Connexion...</p>
-            </div>
+            <div class="p-6 border-b"><h1 class="font-bold text-xl">🏪 Hichoux Store</h1><p id="status" class="text-xs text-gray-400">● Connexion...</p></div>
             <nav class="flex-1 p-4 space-y-1">
                 <div class="sidebar-item active flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="dashboard">📊 Dashboard</div>
                 <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="orders">📦 Commandes <span id="badgeOrders" class="ml-auto bg-red-500 text-white text-xs px-2 rounded-full hidden">0</span></div>
@@ -123,90 +67,53 @@
                 <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="products">🏷️ Produits</div>
                 <div class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl" data-page="settings">⚙️ Paramètres</div>
             </nav>
-            <div class="p-4 border-t">
-                <button onclick="refresh()" class="w-full px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200">🔄 Actualiser</button>
-            </div>
+            <div class="p-4 border-t"><button onclick="refresh()" class="w-full px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200">🔄 Actualiser</button></div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 overflow-auto p-8">
             <!-- Dashboard -->
             <div id="page-dashboard" class="page active">
                 <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">🆕 Nouvelles</p><p id="statNew" class="text-3xl font-bold text-yellow-600">0</p></div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">✅ Confirmées</p><p id="statConfirmed" class="text-3xl font-bold text-blue-600">0</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm cursor-pointer" onclick="showPage('confirmation')"><p class="text-gray-500 text-sm">🆕 Nouvelles</p><p id="statNew" class="text-3xl font-bold text-yellow-600">0</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm cursor-pointer" onclick="showPage('shipping')"><p class="text-gray-500 text-sm">✅ Confirmées</p><p id="statConfirmed" class="text-3xl font-bold text-blue-600">0</p></div>
                     <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">🚚 Expédiées</p><p id="statShipped" class="text-3xl font-bold text-purple-600">0</p></div>
                     <div class="bg-white rounded-2xl p-6 shadow-sm"><p class="text-gray-500 text-sm">🎉 Livrées</p><p id="statDelivered" class="text-3xl font-bold text-green-600">0</p></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">Commandes Récentes</h3>
-                        <div id="recentOrders"></div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold mb-4">Stats</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Total Commandes</span><span id="totalOrders" class="font-bold">0</span></div>
-                            <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Chiffre d'Affaires</span><span id="totalRevenue" class="font-bold text-green-600">0 DH</span></div>
-                            <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Produits</span><span id="totalProducts" class="font-bold">0</span></div>
-                        </div>
-                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold mb-4">Commandes Récentes</h3><div id="recentOrders"></div></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm"><h3 class="font-bold mb-4">Stats</h3><div class="space-y-3"><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Total Commandes</span><span id="totalOrders" class="font-bold">0</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>CA</span><span id="totalRevenue" class="font-bold text-green-600">0 DH</span></div><div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span>Produits</span><span id="totalProducts" class="font-bold">0</span></div></div></div>
                 </div>
             </div>
 
-            <!-- Orders Page -->
+            <!-- Orders -->
             <div id="page-orders" class="page">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Toutes les Commandes</h2>
-                    <div class="flex gap-3">
-                        <input type="text" id="searchOrders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl">
-                        <select id="filterStatus" class="px-4 py-2 border rounded-xl">
-                            <option value="">Tous</option>
-                            <option value="new">Nouvelles</option>
-                            <option value="confirmed">Confirmées</option>
-                            <option value="shipped">Expédiées</option>
-                            <option value="delivered">Livrées</option>
-                            <option value="cancelled">Annulées</option>
-                        </select>
-                    </div>
-                </div>
+                <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Commandes</h2><div class="flex gap-3"><input type="text" id="searchOrders" placeholder="Rechercher..." class="px-4 py-2 border rounded-xl"><select id="filterStatus" class="px-4 py-2 border rounded-xl"><option value="">Tous</option><option value="new">Nouvelles</option><option value="confirmed">Confirmées</option><option value="shipped">Expédiées</option><option value="delivered">Livrées</option><option value="cancelled">Annulées</option></select></div></div>
                 <div id="ordersTable" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
             </div>
 
-            <!-- Confirmation Page -->
+            <!-- Confirmation -->
             <div id="page-confirmation" class="page">
-                <div class="flex justify-between items-center mb-6">
-                    <div><h2 class="text-2xl font-bold">📞 Confirmation</h2><p class="text-gray-500"><span id="pendingCount">0</span> en attente</p></div>
-                    <button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button>
-                </div>
+                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">📞 Confirmation</h2><p class="text-gray-500"><span id="pendingCount">0</span> en attente</p></div><button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button></div>
                 <div id="confirmationList" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
             </div>
 
-            <!-- Shipping Page -->
+            <!-- Shipping -->
             <div id="page-shipping" class="page">
-                <div class="flex justify-between items-center mb-6">
-                    <div><h2 class="text-2xl font-bold">🚚 Expédition</h2><p class="text-gray-500"><span id="toShipCount">0</span> à expédier</p></div>
-                    <button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button>
-                </div>
+                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">🚚 Expédition</h2><p class="text-gray-500"><span id="toShipCount">0</span> à expédier</p></div><button onclick="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">🔄</button></div>
                 <div id="shippingList" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
             </div>
 
-            <!-- Products Page -->
+            <!-- Products -->
             <div id="page-products" class="page">
-                <div class="flex justify-between items-center mb-6">
-                    <div><h2 class="text-2xl font-bold">🏷️ Produits</h2><p class="text-gray-500"><span id="productsCount">0</span> produits</p></div>
-                    <button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">+ Ajouter Produit</button>
-                </div>
+                <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">🏷️ Produits</h2><p class="text-gray-500"><span id="productsCount">0</span> produits</p></div><button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button></div>
                 <div id="productsTable" class="bg-white rounded-2xl shadow-sm overflow-hidden"></div>
             </div>
 
-            <!-- Settings Page -->
+            <!-- Settings -->
             <div id="page-settings" class="page">
                 <h2 class="text-2xl font-bold mb-6">⚙️ Paramètres</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    
-                    <!-- Boutique -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">🏪 Boutique</h3>
                         <div class="space-y-4">
@@ -216,158 +123,108 @@
                             <div><label class="block text-sm font-medium mb-1">Frais livraison (DH)</label><input type="number" id="sShipping" class="w-full px-4 py-2 border rounded-xl" value="30"></div>
                         </div>
                     </div>
-
-                    <!-- Supabase -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">🗄️ Supabase</h3>
                         <div class="space-y-4">
                             <div><label class="block text-sm font-medium mb-1">URL</label><input type="text" id="sSupaUrl" class="w-full px-4 py-2 border rounded-xl text-sm"></div>
                             <div><label class="block text-sm font-medium mb-1">Anon Key</label><input type="password" id="sSupaKey" class="w-full px-4 py-2 border rounded-xl text-sm"></div>
                             <div id="dbStatus" class="px-4 py-2 bg-gray-100 rounded-xl text-sm">⚪ Non testé</div>
-                            <button type="button" onclick="testSupabase()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl">🔌 Tester connexion</button>
+                            <button type="button" onclick="testSupabase()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl">🔌 Tester</button>
                         </div>
                     </div>
-
-                    <!-- Google Sheets -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">📊 Google Sheets</h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Apps Script URL (Web App)</label>
-                                <input type="url" id="sGasUrl" class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="https://script.google.com/macros/s/...">
-                                <p class="text-xs text-gray-500 mt-1">URL après déploiement du script Google Apps Script</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Sheet ID</label>
-                                <input type="text" id="sSheetId" class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="1qKkOSPisPkqUQEkH...">
-                            </div>
-                            <a id="sheetLink" href="#" target="_blank" class="block text-blue-600 text-sm hover:underline">📄 Ouvrir Google Sheet</a>
-                            <button type="button" onclick="syncSheets()" class="w-full px-4 py-2 bg-green-600 text-white rounded-xl">📤 Synchroniser vers Sheets</button>
+                            <div><label class="block text-sm font-medium mb-1">Apps Script URL</label><input type="url" id="sGasUrl" class="w-full px-4 py-2 border rounded-xl text-sm" placeholder="https://script.google.com/macros/s/..."></div>
+                            <div><label class="block text-sm font-medium mb-1">Sheet ID</label><input type="text" id="sSheetId" class="w-full px-4 py-2 border rounded-xl text-sm"></div>
+                            <a id="sheetLink" href="#" target="_blank" class="block text-blue-600 text-sm hover:underline">📄 Ouvrir Sheet</a>
+                            <button type="button" onclick="syncSheets()" class="w-full px-4 py-2 bg-green-600 text-white rounded-xl">📤 Sync Sheets</button>
                         </div>
                     </div>
-
-                    <!-- Digylog -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 class="font-bold mb-4">🚚 Digylog</h3>
                         <div class="space-y-4">
                             <div><label class="block text-sm font-medium mb-1">Email</label><input type="email" id="sDigyEmail" class="w-full px-4 py-2 border rounded-xl"></div>
-                            <div><label class="block text-sm font-medium mb-1">Mot de passe</label><input type="password" id="sDigyPass" class="w-full px-4 py-2 border rounded-xl"></div>
-                            <a href="https://www.digylog.com" target="_blank" class="block text-blue-600 text-sm hover:underline">🔗 digylog.com</a>
+                            <div><label class="block text-sm font-medium mb-1">Password</label><input type="password" id="sDigyPass" class="w-full px-4 py-2 border rounded-xl"></div>
+                            <a href="https://www.digylog.com" target="_blank" class="block text-blue-600 text-sm">🔗 digylog.com</a>
                         </div>
                     </div>
-
-                    <!-- Export -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm lg:col-span-2">
                         <h3 class="font-bold mb-4">💾 Données</h3>
                         <div class="flex flex-wrap gap-4">
-                            <button onclick="exportData()" class="px-6 py-3 bg-green-600 text-white rounded-xl">📥 Exporter JSON</button>
-                            <label class="px-6 py-3 bg-purple-600 text-white rounded-xl cursor-pointer">📤 Importer JSON<input type="file" accept=".json" onchange="importData(this)" class="hidden"></label>
-                            <button onclick="clearData()" class="px-6 py-3 bg-red-500 text-white rounded-xl">🗑️ Effacer local</button>
+                            <button onclick="exportData()" class="px-6 py-3 bg-green-600 text-white rounded-xl">📥 Export</button>
+                            <label class="px-6 py-3 bg-purple-600 text-white rounded-xl cursor-pointer">📤 Import<input type="file" accept=".json" onchange="importData(this)" class="hidden"></label>
+                            <button onclick="clearData()" class="px-6 py-3 bg-red-500 text-white rounded-xl">🗑️ Effacer</button>
                         </div>
                     </div>
                 </div>
-                <button onclick="saveSettings()" class="mt-6 px-8 py-3 bg-blue-600 text-white rounded-xl font-medium">💾 Sauvegarder Paramètres</button>
+                <button onclick="saveSettings()" class="mt-6 px-8 py-3 bg-blue-600 text-white rounded-xl font-medium">💾 Sauvegarder</button>
             </div>
         </main>
     </div>
 
     <script>
-        // === CONFIG ===
         const SUPA_URL = 'https://mbvskiaqfpbbnxhgzpga.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE';
         const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%239ca3af'%3E📷%3C/text%3E%3C/svg%3E";
 
-        // === STATE ===
-        let db = null;
-        let connected = false;
-        let products = [];
-        let orders = [];
-        let settings = {
-            name: 'Hichoux Store',
-            phone: '0600000000',
-            whatsapp: '212600000000',
-            shipping: 30,
-            supaUrl: SUPA_URL,
-            supaKey: SUPA_KEY,
-            gasUrl: '',
-            sheetId: '',
-            digyEmail: '',
-            digyPass: ''
-        };
+        let db = null, connected = false;
+        let products = [], orders = [];
+        let settings = { name: 'Hichoux Store', phone: '0600000000', whatsapp: '212600000000', shipping: 30, supaUrl: SUPA_URL, supaKey: SUPA_KEY, gasUrl: '', sheetId: '', digyEmail: '', digyPass: '' };
 
-        // === INIT ===
+        // ===== INIT =====
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Admin starting...');
-            
-            // Load saved data
             loadSettings();
             loadLocalData();
             
-            // Setup navigation
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const page = this.dataset.page;
-                    showPage(page);
-                });
+                item.addEventListener('click', function() { showPage(this.dataset.page); });
             });
             
-            // Setup product form
             document.getElementById('productForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 saveProduct();
             });
             
-            // Setup image upload
-            document.getElementById('uploadZone').addEventListener('click', function() {
-                document.getElementById('imageInput').click();
+            document.getElementById('uploadZone').addEventListener('click', function(e) {
+                if (e.target.tagName !== 'BUTTON') document.getElementById('imageInput').click();
             });
             
             document.getElementById('imageInput').addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    handleImageUpload(this.files[0]);
-                }
+                if (this.files && this.files[0]) handleImageUpload(this.files[0]);
             });
             
-            // Setup order filters
             document.getElementById('searchOrders').addEventListener('input', renderOrders);
             document.getElementById('filterStatus').addEventListener('change', renderOrders);
             
-            // Connect to Supabase
             initSupabase();
-            
-            // Auto refresh
-            setInterval(function() {
-                if (connected) loadFromSupabase();
-            }, 30000);
+            setInterval(function() { if (connected) loadFromSupabase(); }, 30000);
         });
 
-        // === SETTINGS ===
+        // ===== SETTINGS =====
         function loadSettings() {
-            const saved = localStorage.getItem('hichoux_settings');
-            if (saved) {
-                settings = { ...settings, ...JSON.parse(saved) };
-            }
-            // Force correct Supabase credentials
+            try {
+                const saved = localStorage.getItem('hichoux_settings');
+                if (saved) settings = { ...settings, ...JSON.parse(saved) };
+            } catch(e) { console.error('Load settings error:', e); }
             settings.supaUrl = SUPA_URL;
             settings.supaKey = SUPA_KEY;
             applySettings();
         }
 
         function applySettings() {
-            document.getElementById('sName').value = settings.name;
-            document.getElementById('sPhone').value = settings.phone;
-            document.getElementById('sWhatsapp').value = settings.whatsapp;
-            document.getElementById('sShipping').value = settings.shipping;
-            document.getElementById('sSupaUrl').value = settings.supaUrl;
-            document.getElementById('sSupaKey').value = settings.supaKey;
+            document.getElementById('sName').value = settings.name || '';
+            document.getElementById('sPhone').value = settings.phone || '';
+            document.getElementById('sWhatsapp').value = settings.whatsapp || '';
+            document.getElementById('sShipping').value = settings.shipping || 30;
+            document.getElementById('sSupaUrl').value = settings.supaUrl || '';
+            document.getElementById('sSupaKey').value = settings.supaKey || '';
             document.getElementById('sGasUrl').value = settings.gasUrl || '';
             document.getElementById('sSheetId').value = settings.sheetId || '';
             document.getElementById('sDigyEmail').value = settings.digyEmail || '';
             document.getElementById('sDigyPass').value = settings.digyPass || '';
-            
-            if (settings.sheetId) {
-                document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/' + settings.sheetId;
-            }
+            if (settings.sheetId) document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/' + settings.sheetId;
         }
 
         function saveSettings() {
@@ -382,35 +239,32 @@
             settings.digyEmail = document.getElementById('sDigyEmail').value;
             settings.digyPass = document.getElementById('sDigyPass').value;
             
-            localStorage.setItem('hichoux_settings', JSON.stringify(settings));
+            try {
+                localStorage.setItem('hichoux_settings', JSON.stringify(settings));
+                console.log('✅ Settings saved:', settings);
+            } catch(e) { console.error('Save settings error:', e); }
             
-            if (settings.sheetId) {
-                document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/' + settings.sheetId;
-            }
-            
+            if (settings.sheetId) document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/' + settings.sheetId;
             toast('Paramètres sauvegardés!');
-            console.log('Settings saved:', settings);
         }
 
-        // === SUPABASE ===
+        // ===== SUPABASE =====
         async function initSupabase() {
             try {
                 db = supabase.createClient(SUPA_URL, SUPA_KEY);
                 const { error } = await db.from('products').select('id').limit(1);
                 if (error) throw error;
-                
                 connected = true;
                 document.getElementById('status').textContent = '● Connecté';
                 document.getElementById('status').className = 'text-xs text-green-500';
-                document.getElementById('dbStatus').textContent = '✓ Connecté à Supabase';
+                document.getElementById('dbStatus').textContent = '✓ Connecté';
                 document.getElementById('dbStatus').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl text-sm';
-                
                 await loadFromSupabase();
             } catch (e) {
-                console.error('Supabase error:', e);
+                console.log('Mode local:', e.message);
                 document.getElementById('status').textContent = '● Mode Local';
                 document.getElementById('status').className = 'text-xs text-yellow-500';
-                document.getElementById('dbStatus').textContent = '⚠️ Mode hors ligne';
+                document.getElementById('dbStatus').textContent = '⚠️ Local';
                 document.getElementById('dbStatus').className = 'px-4 py-2 bg-yellow-100 text-yellow-800 rounded-xl text-sm';
                 updateUI();
             }
@@ -419,43 +273,35 @@
         async function testSupabase() {
             const url = document.getElementById('sSupaUrl').value.trim();
             const key = document.getElementById('sSupaKey').value.trim();
-            
-            if (!url || !key) {
-                toast('URL et Key requis!', 'error');
-                return;
-            }
-            
+            if (!url || !key) { toast('URL et Key requis!', 'error'); return; }
             try {
                 const testDb = supabase.createClient(url, key);
                 const { error } = await testDb.from('products').select('id').limit(1);
                 if (error) throw error;
-                
-                document.getElementById('dbStatus').textContent = '✓ Connexion OK!';
+                document.getElementById('dbStatus').textContent = '✓ OK!';
                 document.getElementById('dbStatus').className = 'px-4 py-2 bg-green-100 text-green-800 rounded-xl text-sm';
-                toast('Connexion réussie!');
+                toast('Connexion OK!');
             } catch (e) {
-                document.getElementById('dbStatus').textContent = '✗ Erreur: ' + e.message;
+                document.getElementById('dbStatus').textContent = '✗ Erreur';
                 document.getElementById('dbStatus').className = 'px-4 py-2 bg-red-100 text-red-800 rounded-xl text-sm';
-                toast('Erreur connexion', 'error');
+                toast('Erreur', 'error');
             }
         }
 
         async function loadFromSupabase() {
             try {
+                const localProducts = [...products];
                 const [ordersRes, productsRes] = await Promise.all([
                     db.from('orders').select('*').order('created_at', { ascending: false }),
                     db.from('products').select('*').order('created_at', { ascending: false })
                 ]);
                 
-                const localProducts = JSON.parse(localStorage.getItem('hichoux_products') || '[]');
-                
-                if (ordersRes.data) {
+                if (ordersRes.data && ordersRes.data.length > 0) {
                     orders = ordersRes.data;
                     localStorage.setItem('hichoux_orders', JSON.stringify(orders));
                 }
                 
-                if (productsRes.data) {
-                    // Merge with local images
+                if (productsRes.data && productsRes.data.length > 0) {
                     products = productsRes.data.map(p => {
                         const local = localProducts.find(lp => lp.id == p.id || lp.sku === p.sku);
                         return { ...p, image_data: local?.image_data || p.image_data || '' };
@@ -464,29 +310,27 @@
                 }
                 
                 updateUI();
-                console.log('Loaded from Supabase:', products.length, 'products,', orders.length, 'orders');
-            } catch (e) {
-                console.error('Load error:', e);
-            }
+            } catch (e) { console.error('Load error:', e); }
         }
 
-        // === LOCAL DATA ===
         function loadLocalData() {
-            const savedOrders = localStorage.getItem('hichoux_orders');
-            const savedProducts = localStorage.getItem('hichoux_products');
-            if (savedOrders) orders = JSON.parse(savedOrders);
-            if (savedProducts) products = JSON.parse(savedProducts);
+            try {
+                const savedOrders = localStorage.getItem('hichoux_orders');
+                const savedProducts = localStorage.getItem('hichoux_products');
+                if (savedOrders) orders = JSON.parse(savedOrders);
+                if (savedProducts) products = JSON.parse(savedProducts);
+                console.log('📦 Local data loaded:', products.length, 'products,', orders.length, 'orders');
+            } catch(e) { console.error('Load local error:', e); }
             updateUI();
         }
 
-        // === NAVIGATION ===
+        // ===== NAVIGATION =====
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            
             document.getElementById('page-' + pageId).classList.add('active');
-            document.querySelector(`.sidebar-item[data-page="${pageId}"]`).classList.add('active');
-            
+            const nav = document.querySelector(`.sidebar-item[data-page="${pageId}"]`);
+            if (nav) nav.classList.add('active');
             if (pageId === 'orders') renderOrders();
             if (pageId === 'confirmation') renderConfirmation();
             if (pageId === 'shipping') renderShipping();
@@ -504,15 +348,12 @@
 
         async function refresh() {
             toast('Actualisation...', 'info');
-            if (connected) {
-                await loadFromSupabase();
-            } else {
-                loadLocalData();
-            }
-            toast('Données actualisées!');
+            if (connected) await loadFromSupabase();
+            else loadLocalData();
+            toast('OK!');
         }
 
-        // === UI UPDATES ===
+        // ===== UI =====
         function updateUI() {
             updateStats();
             updateBadges();
@@ -523,12 +364,7 @@
         function updateStats() {
             const stats = { new: 0, confirmed: 0, shipped: 0, delivered: 0 };
             let revenue = 0;
-            
-            orders.forEach(o => {
-                if (stats[o.status] !== undefined) stats[o.status]++;
-                if (o.status === 'delivered') revenue += parseFloat(o.total) || 0;
-            });
-            
+            orders.forEach(o => { if (stats[o.status] !== undefined) stats[o.status]++; if (o.status === 'delivered') revenue += parseFloat(o.total) || 0; });
             document.getElementById('statNew').textContent = stats.new;
             document.getElementById('statConfirmed').textContent = stats.confirmed;
             document.getElementById('statShipped').textContent = stats.shipped;
@@ -538,242 +374,67 @@
         }
 
         function updateBadges() {
-            const newCount = orders.filter(o => o.status === 'new').length;
-            const confirmedCount = orders.filter(o => o.status === 'confirmed').length;
-            
-            setBadge('badgeOrders', newCount);
-            setBadge('badgeConfirm', newCount);
-            setBadge('badgeShip', confirmedCount);
+            const n = orders.filter(o => o.status === 'new').length;
+            const c = orders.filter(o => o.status === 'confirmed').length;
+            setBadge('badgeOrders', n); setBadge('badgeConfirm', n); setBadge('badgeShip', c);
         }
 
-        function setBadge(id, count) {
-            const el = document.getElementById(id);
-            if (count > 0) {
-                el.textContent = count;
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
-            }
-        }
+        function setBadge(id, count) { const el = document.getElementById(id); if (count > 0) { el.textContent = count; el.classList.remove('hidden'); } else el.classList.add('hidden'); }
+        function getImage(p) { return p.image_data || p.image_url || PLACEHOLDER; }
+        function formatDate(d) { return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+        function statusBadge(s) { const m = { new: ['Nouvelle', 'yellow'], confirmed: ['Confirmée', 'blue'], shipped: ['Expédiée', 'purple'], delivered: ['Livrée', 'green'], cancelled: ['Annulée', 'red'] }; const [l, c] = m[s] || [s, 'gray']; return `<span class="px-2 py-1 rounded-full text-xs bg-${c}-100 text-${c}-800">${l}</span>`; }
 
-        function getImage(p) {
-            return p.image_data || p.image_url || PLACEHOLDER;
-        }
-
-        function formatDate(d) {
-            return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-        }
-
-        function statusBadge(status) {
-            const map = {
-                new: ['Nouvelle', 'yellow'],
-                confirmed: ['Confirmée', 'blue'],
-                shipped: ['Expédiée', 'purple'],
-                delivered: ['Livrée', 'green'],
-                cancelled: ['Annulée', 'red']
-            };
-            const [label, color] = map[status] || [status, 'gray'];
-            return `<span class="px-2 py-1 rounded-full text-xs bg-${color}-100 text-${color}-800">${label}</span>`;
-        }
-
-        // === ORDERS ===
+        // ===== ORDERS =====
         function renderRecentOrders() {
             const recent = orders.slice(0, 5);
-            const container = document.getElementById('recentOrders');
-            
-            if (!recent.length) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">Aucune commande</p>';
-                return;
-            }
-            
-            container.innerHTML = recent.map(o => `
-                <div class="flex justify-between items-center py-3 border-b last:border-0">
-                    <div>
-                        <p class="font-medium">${o.order_number}</p>
-                        <p class="text-sm text-gray-500">${o.customer_name}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold">${o.total} DH</p>
-                        ${statusBadge(o.status)}
-                    </div>
-                </div>
-            `).join('');
+            document.getElementById('recentOrders').innerHTML = recent.length ? recent.map(o => `<div class="flex justify-between items-center py-3 border-b last:border-0"><div><p class="font-medium">${o.order_number}</p><p class="text-sm text-gray-500">${o.customer_name}</p></div><div class="text-right"><p class="font-bold">${o.total} DH</p>${statusBadge(o.status)}</div></div>`).join('') : '<p class="text-gray-500 text-center py-4">Aucune</p>';
         }
 
         function renderOrders() {
             const search = document.getElementById('searchOrders').value.toLowerCase();
             const status = document.getElementById('filterStatus').value;
-            
-            const filtered = orders.filter(o => {
-                const matchSearch = !search || 
-                    (o.order_number || '').toLowerCase().includes(search) ||
-                    (o.customer_name || '').toLowerCase().includes(search) ||
-                    (o.customer_phone || '').includes(search);
-                const matchStatus = !status || o.status === status;
-                return matchSearch && matchStatus;
-            });
-            
-            document.getElementById('ordersTable').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Tel</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th><th class="p-4">Date</th>
-                    </tr></thead>
-                    <tbody>${filtered.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4 font-medium">${o.order_number}</td>
-                            <td class="p-4">${o.customer_name}</td>
-                            <td class="p-4">${o.customer_phone}</td>
-                            <td class="p-4">${o.shipping_city}</td>
-                            <td class="p-4 font-bold">${o.total} DH</td>
-                            <td class="p-4">${statusBadge(o.status)}</td>
-                            <td class="p-4 text-sm text-gray-500">${formatDate(o.created_at)}</td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+            const filtered = orders.filter(o => (!search || (o.order_number || '').toLowerCase().includes(search) || (o.customer_name || '').toLowerCase().includes(search) || (o.customer_phone || '').includes(search)) && (!status || o.status === status));
+            document.getElementById('ordersTable').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Commande</th><th class="p-4">Client</th><th class="p-4">Tel</th><th class="p-4">Ville</th><th class="p-4">Total</th><th class="p-4">Statut</th><th class="p-4">Date</th></tr></thead><tbody>${filtered.map(o => `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${o.order_number}</td><td class="p-4">${o.customer_name}</td><td class="p-4">${o.customer_phone}</td><td class="p-4">${o.shipping_city}</td><td class="p-4 font-bold">${o.total} DH</td><td class="p-4">${statusBadge(o.status)}</td><td class="p-4 text-sm text-gray-500">${formatDate(o.created_at)}</td></tr>`).join('')}</tbody></table>`;
         }
 
         function renderConfirmation() {
             const pending = orders.filter(o => o.status === 'new');
             document.getElementById('pendingCount').textContent = pending.length;
-            
-            if (!pending.length) {
-                document.getElementById('confirmationList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">✅</div><h3 class="text-xl font-semibold">Tout est confirmé!</h3></div>';
-                return;
-            }
-            
-            document.getElementById('confirmationList').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Tel</th><th class="p-3">Ville</th><th class="p-3">Total</th><th class="p-3">Actions</th>
-                    </tr></thead>
-                    <tbody>${pending.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3"><p class="font-medium">${o.order_number}</p><p class="text-xs text-gray-400">${formatDate(o.created_at)}</p></td>
-                            <td class="p-3">${o.customer_name}</td>
-                            <td class="p-3"><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></td>
-                            <td class="p-3">${o.shipping_city}</td>
-                            <td class="p-3 font-bold text-green-600">${o.total} DH</td>
-                            <td class="p-3">
-                                <div class="flex gap-1">
-                                    <a href="tel:${o.customer_phone}" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">📞</a>
-                                    <a href="https://wa.me/212${(o.customer_phone || '').slice(1)}" target="_blank" class="px-2 py-1 bg-green-500 text-white rounded text-sm">💬</a>
-                                    <button onclick="confirmOrder('${o.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-sm">✅</button>
-                                    <button onclick="cancelOrder('${o.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-sm">❌</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+            if (!pending.length) { document.getElementById('confirmationList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">✅</div><h3 class="text-xl font-semibold">Tout confirmé!</h3></div>'; return; }
+            document.getElementById('confirmationList').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Tel</th><th class="p-3">Ville</th><th class="p-3">Total</th><th class="p-3">Actions</th></tr></thead><tbody>${pending.map(o => `<tr class="border-b hover:bg-gray-50"><td class="p-3"><p class="font-medium">${o.order_number}</p><p class="text-xs text-gray-400">${formatDate(o.created_at)}</p></td><td class="p-3">${o.customer_name}</td><td class="p-3"><a href="tel:${o.customer_phone}" class="text-blue-600">${o.customer_phone}</a></td><td class="p-3">${o.shipping_city}</td><td class="p-3 font-bold text-green-600">${o.total} DH</td><td class="p-3"><div class="flex gap-1"><a href="tel:${o.customer_phone}" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">📞</a><a href="https://wa.me/212${(o.customer_phone || '').slice(1)}" target="_blank" class="px-2 py-1 bg-green-500 text-white rounded text-sm">💬</a><button onclick="confirmOrder('${o.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-sm">✅</button><button onclick="cancelOrder('${o.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-sm">❌</button></div></td></tr>`).join('')}</tbody></table>`;
         }
 
         function renderShipping() {
             const toShip = orders.filter(o => o.status === 'confirmed');
             document.getElementById('toShipCount').textContent = toShip.length;
-            
-            if (!toShip.length) {
-                document.getElementById('shippingList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">📦</div><h3 class="text-xl font-semibold">Rien à expédier</h3></div>';
-                return;
-            }
-            
-            document.getElementById('shippingList').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Adresse</th><th class="p-3">Ville</th><th class="p-3">Total</th><th class="p-3">Actions</th>
-                    </tr></thead>
-                    <tbody>${toShip.map(o => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3 font-medium">${o.order_number}</td>
-                            <td class="p-3">${o.customer_name}<br><span class="text-sm text-gray-500">${o.customer_phone}</span></td>
-                            <td class="p-3 text-sm">${o.shipping_address || ''}</td>
-                            <td class="p-3">${o.shipping_city}</td>
-                            <td class="p-3 font-bold">${o.total} DH</td>
-                            <td class="p-3"><button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded text-sm">🚚 Expédier</button></td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+            if (!toShip.length) { document.getElementById('shippingList').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">📦</div><h3 class="text-xl font-semibold">Rien à expédier</h3></div>'; return; }
+            document.getElementById('shippingList').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Adresse</th><th class="p-3">Ville</th><th class="p-3">Total</th><th class="p-3">Actions</th></tr></thead><tbody>${toShip.map(o => `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-medium">${o.order_number}</td><td class="p-3">${o.customer_name}<br><span class="text-sm text-gray-500">${o.customer_phone}</span></td><td class="p-3 text-sm">${o.shipping_address || ''}</td><td class="p-3">${o.shipping_city}</td><td class="p-3 font-bold">${o.total} DH</td><td class="p-3"><button onclick="shipOrder('${o.id}')" class="px-3 py-1 bg-purple-600 text-white rounded text-sm">🚚 Expédier</button></td></tr>`).join('')}</tbody></table>`;
         }
 
-        async function confirmOrder(id) {
-            await updateOrderStatus(id, 'confirmed');
-            toast('Commande confirmée!');
-        }
-
-        async function cancelOrder(id) {
-            if (!confirm('Annuler cette commande?')) return;
-            await updateOrderStatus(id, 'cancelled');
-            toast('Commande annulée');
-        }
-
-        async function shipOrder(id) {
-            const tracking = prompt('Numéro tracking Digylog:', 'DG' + Date.now().toString().slice(-8));
-            if (!tracking) return;
-            await updateOrderStatus(id, 'shipped', tracking);
-            toast('Commande expédiée!');
-        }
+        async function confirmOrder(id) { await updateOrderStatus(id, 'confirmed'); toast('Confirmée!'); }
+        async function cancelOrder(id) { if (!confirm('Annuler?')) return; await updateOrderStatus(id, 'cancelled'); toast('Annulée'); }
+        async function shipOrder(id) { const t = prompt('Tracking Digylog:', 'DG' + Date.now().toString().slice(-8)); if (!t) return; await updateOrderStatus(id, 'shipped', t); toast('Expédiée!'); }
 
         async function updateOrderStatus(id, newStatus, tracking = null) {
             const order = orders.find(o => o.id == id);
             if (!order) return;
-            
             order.status = newStatus;
             if (tracking) order.tracking_number = tracking;
             order.updated_at = new Date().toISOString();
-            
-            localStorage.setItem('hichoux_orders', JSON.stringify(orders));
-            
-            if (connected && db) {
-                try {
-                    const data = { status: newStatus, updated_at: order.updated_at };
-                    if (tracking) data.tracking_number = tracking;
-                    await db.from('orders').update(data).eq('id', id);
-                } catch (e) {
-                    console.error('Update error:', e);
-                }
-            }
-            
-            updateUI();
-            renderConfirmation();
-            renderShipping();
-            renderOrders();
+            try { localStorage.setItem('hichoux_orders', JSON.stringify(orders)); } catch(e) {}
+            if (connected && db) { try { const d = { status: newStatus, updated_at: order.updated_at }; if (tracking) d.tracking_number = tracking; await db.from('orders').update(d).eq('id', id); } catch (e) { console.error(e); } }
+            updateUI(); renderConfirmation(); renderShipping(); renderOrders();
         }
 
-        // === PRODUCTS ===
+        // ===== PRODUCTS =====
         function renderProducts() {
             document.getElementById('productsCount').textContent = products.length;
-            
-            if (!products.length) {
-                document.getElementById('productsTable').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">🏷️</div><h3 class="text-xl font-semibold mb-2">Aucun produit</h3><button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button></div>';
-                return;
-            }
-            
-            document.getElementById('productsTable').innerHTML = `
-                <table class="w-full">
-                    <thead><tr class="text-left text-gray-500 text-sm bg-gray-50">
-                        <th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">SKU</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">⭐</th><th class="p-4">Actions</th>
-                    </tr></thead>
-                    <tbody>${products.map(p => `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4"><img src="${getImage(p)}" class="w-12 h-12 rounded-lg object-cover bg-gray-100"></td>
-                            <td class="p-4"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category || ''}</p></td>
-                            <td class="p-4 font-mono text-sm">${p.sku || '-'}</td>
-                            <td class="p-4"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price}</p>` : ''}</td>
-                            <td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td>
-                            <td class="p-4">${p.is_featured ? '⭐' : ''}</td>
-                            <td class="p-4">
-                                <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:underline mr-2">✏️</button>
-                                <button onclick="deleteProduct('${p.id}')" class="text-red-600 hover:underline">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
+            if (!products.length) { document.getElementById('productsTable').innerHTML = '<div class="text-center py-12"><div class="text-4xl mb-4">🏷️</div><h3 class="text-xl font-semibold mb-2">Aucun produit</h3><button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl">+ Ajouter</button></div>'; return; }
+            document.getElementById('productsTable').innerHTML = `<table class="w-full"><thead><tr class="text-left text-gray-500 text-sm bg-gray-50"><th class="p-4">Image</th><th class="p-4">Produit</th><th class="p-4">SKU</th><th class="p-4">Prix</th><th class="p-4">Stock</th><th class="p-4">⭐</th><th class="p-4">Actions</th></tr></thead><tbody>${products.map(p => `<tr class="border-b hover:bg-gray-50"><td class="p-4"><img src="${getImage(p)}" class="w-12 h-12 rounded-lg object-cover bg-gray-100"></td><td class="p-4"><p class="font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.category || ''}</p></td><td class="p-4 font-mono text-sm">${p.sku || '-'}</td><td class="p-4"><p class="font-semibold">${p.price} DH</p>${p.compare_price ? `<p class="text-xs text-gray-400 line-through">${p.compare_price}</p>` : ''}</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.stock < 20 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${p.stock}</span></td><td class="p-4">${p.is_featured ? '⭐' : ''}</td><td class="p-4"><button onclick="editProduct('${p.id}')" class="text-blue-600 mr-2">✏️</button><button onclick="deleteProduct('${p.id}')" class="text-red-600">🗑️</button></td></tr>`).join('')}</tbody></table>`;
         }
 
         function openModal(product = null) {
-            document.getElementById('modalTitle').textContent = product ? 'Modifier Produit' : 'Ajouter Produit';
+            document.getElementById('modalTitle').textContent = product ? 'Modifier' : 'Ajouter';
             document.getElementById('editId').value = product?.id || '';
             document.getElementById('pName').value = product?.name || '';
             document.getElementById('pSku').value = product?.sku || '';
@@ -784,16 +445,8 @@
             document.getElementById('pDesc').value = product?.description || '';
             document.getElementById('pFeatured').checked = product?.is_featured || false;
             document.getElementById('pImageData').value = product?.image_data || '';
-            
-            if (product?.image_data) {
-                document.getElementById('previewImg').src = product.image_data;
-                document.getElementById('imgPreview').classList.remove('hidden');
-                document.getElementById('imgPlaceholder').classList.add('hidden');
-            } else {
-                document.getElementById('imgPreview').classList.add('hidden');
-                document.getElementById('imgPlaceholder').classList.remove('hidden');
-            }
-            
+            if (product?.image_data) { document.getElementById('previewImg').src = product.image_data; document.getElementById('imgPreview').classList.remove('hidden'); document.getElementById('imgPlaceholder').classList.add('hidden'); }
+            else { document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('imgPlaceholder').classList.remove('hidden'); }
             document.getElementById('productModal').classList.add('active');
         }
 
@@ -803,39 +456,24 @@
             document.getElementById('pImageData').value = '';
             document.getElementById('imgPreview').classList.add('hidden');
             document.getElementById('imgPlaceholder').classList.remove('hidden');
+            document.getElementById('imageInput').value = '';
         }
 
-        function editProduct(id) {
-            const product = products.find(p => p.id == id);
-            if (product) openModal(product);
-        }
+        function editProduct(id) { const p = products.find(x => x.id == id); if (p) openModal(p); }
 
         function handleImageUpload(file) {
-            console.log('📷 Uploading image:', file.name, file.size);
-            
-            if (file.size > 2 * 1024 * 1024) {
-                toast('Image trop grande! Max 2MB', 'error');
-                return;
-            }
-            
+            console.log('📷 Upload:', file.name, file.size);
+            if (file.size > 2 * 1024 * 1024) { toast('Max 2MB!', 'error'); return; }
             const reader = new FileReader();
-            
             reader.onload = function(e) {
-                const imageData = e.target.result;
-                console.log('📷 Image loaded, length:', imageData.length);
-                
-                document.getElementById('pImageData').value = imageData;
-                document.getElementById('previewImg').src = imageData;
+                console.log('📷 OK, length:', e.target.result.length);
+                document.getElementById('pImageData').value = e.target.result;
+                document.getElementById('previewImg').src = e.target.result;
                 document.getElementById('imgPreview').classList.remove('hidden');
                 document.getElementById('imgPlaceholder').classList.add('hidden');
-                
-                toast('Image ajoutée!');
+                toast('Image OK!');
             };
-            
-            reader.onerror = function() {
-                toast('Erreur lecture image', 'error');
-            };
-            
+            reader.onerror = function() { toast('Erreur', 'error'); };
             reader.readAsDataURL(file);
         }
 
@@ -851,17 +489,10 @@
             const id = document.getElementById('editId').value;
             const name = document.getElementById('pName').value.trim();
             const price = parseFloat(document.getElementById('pPrice').value);
+            if (!name) { toast('Nom requis!', 'error'); return; }
+            if (!price || price <= 0) { toast('Prix requis!', 'error'); return; }
             
-            if (!name) {
-                toast('Nom requis!', 'error');
-                return;
-            }
-            if (!price || price <= 0) {
-                toast('Prix requis!', 'error');
-                return;
-            }
-            
-            const productData = {
+            const data = {
                 name: name,
                 sku: document.getElementById('pSku').value.trim() || 'SKU-' + Date.now(),
                 price: price,
@@ -874,164 +505,84 @@
                 is_active: true
             };
             
-            console.log('💾 Saving product:', productData.name, 'Image length:', productData.image_data.length);
+            console.log('💾 Save:', data.name, 'img:', data.image_data.length);
 
             if (id) {
-                // Update
                 const idx = products.findIndex(p => p.id == id);
-                if (idx !== -1) {
-                    products[idx] = { ...products[idx], ...productData };
-                }
-                
-                if (connected && db) {
-                    try {
-                        const { image_data, ...dbData } = productData;
-                        await db.from('products').update(dbData).eq('id', id);
-                    } catch (e) {
-                        console.error('Update error:', e);
-                    }
-                }
-                
-                toast('Produit modifié!');
+                if (idx !== -1) products[idx] = { ...products[idx], ...data };
+                if (connected && db) { try { const { image_data, ...dbData } = data; await db.from('products').update(dbData).eq('id', id); } catch (e) { console.error(e); } }
+                toast('Modifié!');
             } else {
-                // Create
-                const newProduct = {
-                    id: Date.now().toString(),
-                    ...productData,
-                    created_at: new Date().toISOString()
-                };
-                
-                products.unshift(newProduct);
-                
-                if (connected && db) {
-                    try {
-                        const { image_data, id: localId, ...dbData } = newProduct;
-                        const { data: res } = await db.from('products').insert(dbData).select().single();
-                        if (res) {
-                            const idx = products.findIndex(p => p.id === localId);
-                            if (idx !== -1) products[idx].id = res.id;
-                        }
-                    } catch (e) {
-                        console.error('Insert error:', e);
-                    }
-                }
-                
-                toast('Produit ajouté!');
+                const np = { id: Date.now().toString(), ...data, created_at: new Date().toISOString() };
+                products.unshift(np);
+                if (connected && db) { try { const { image_data, id: lid, ...dbData } = np; const { data: res } = await db.from('products').insert(dbData).select().single(); if (res) { const idx = products.findIndex(p => p.id === lid); if (idx !== -1) products[idx].id = res.id; } } catch (e) { console.error(e); } }
+                toast('Ajouté!');
             }
             
-            localStorage.setItem('hichoux_products', JSON.stringify(products));
+            try {
+                localStorage.setItem('hichoux_products', JSON.stringify(products));
+                console.log('✅ Products saved to localStorage:', products.length);
+            } catch(e) { console.error('Save error:', e); toast('Erreur sauvegarde!', 'error'); }
+            
             closeModal();
             renderProducts();
             updateUI();
         }
 
         async function deleteProduct(id) {
-            if (!confirm('Supprimer ce produit?')) return;
-            
+            if (!confirm('Supprimer?')) return;
             products = products.filter(p => p.id != id);
-            
-            if (connected && db) {
-                try {
-                    await db.from('products').delete().eq('id', id);
-                } catch (e) {
-                    console.error('Delete error:', e);
-                }
-            }
-            
-            localStorage.setItem('hichoux_products', JSON.stringify(products));
+            if (connected && db) { try { await db.from('products').delete().eq('id', id); } catch (e) {} }
+            try { localStorage.setItem('hichoux_products', JSON.stringify(products)); } catch(e) {}
             renderProducts();
-            toast('Produit supprimé');
+            toast('Supprimé');
         }
 
-        // === GOOGLE SHEETS ===
+        // ===== SHEETS =====
         async function syncSheets() {
             const url = settings.gasUrl || document.getElementById('sGasUrl').value.trim();
-            
-            if (!url) {
-                toast('Apps Script URL requis! Ajoutez-le dans Paramètres.', 'warning');
-                return;
-            }
-            
-            toast('Synchronisation en cours...', 'info');
-            
-            try {
-                await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'sync',
-                        orders: orders,
-                        products: products
-                    })
-                });
-                
-                toast('Données envoyées! Vérifiez Google Sheets.');
-            } catch (e) {
-                toast('Erreur: ' + e.message, 'error');
-            }
+            if (!url) { toast('Apps Script URL requis!', 'warning'); return; }
+            toast('Sync...', 'info');
+            try { await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'sync', orders, products }) }); toast('Envoyé!'); } catch (e) { toast('Erreur', 'error'); }
         }
 
-        // === EXPORT/IMPORT ===
+        // ===== EXPORT =====
         function exportData() {
-            const data = {
-                settings: settings,
-                products: products,
-                orders: orders,
-                exportDate: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'hichoux-backup-' + new Date().toISOString().split('T')[0] + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            toast('Données exportées!');
+            const d = { settings, products, orders, date: new Date().toISOString() };
+            const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'hichoux-' + new Date().toISOString().split('T')[0] + '.json'; a.click();
+            toast('Exporté!');
         }
 
         function importData(input) {
             if (!input.files || !input.files[0]) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
+            const r = new FileReader();
+            r.onload = function(e) {
                 try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.settings) settings = { ...settings, ...data.settings };
-                    if (data.products) products = data.products;
-                    if (data.orders) orders = data.orders;
-                    
+                    const d = JSON.parse(e.target.result);
+                    if (d.settings) settings = { ...settings, ...d.settings };
+                    if (d.products) products = d.products;
+                    if (d.orders) orders = d.orders;
                     localStorage.setItem('hichoux_settings', JSON.stringify(settings));
                     localStorage.setItem('hichoux_products', JSON.stringify(products));
                     localStorage.setItem('hichoux_orders', JSON.stringify(orders));
-                    
-                    applySettings();
-                    updateUI();
-                    renderProducts();
-                    toast('Données importées!');
-                } catch (e) {
-                    toast('Erreur fichier JSON', 'error');
-                }
+                    applySettings(); updateUI(); renderProducts();
+                    toast('Importé!');
+                } catch (e) { toast('Erreur', 'error'); }
             };
-            reader.readAsText(input.files[0]);
+            r.readAsText(input.files[0]);
         }
 
         function clearData() {
-            if (!confirm('Effacer toutes les données locales?')) return;
+            if (!confirm('Effacer tout?')) return;
             localStorage.removeItem('hichoux_orders');
             localStorage.removeItem('hichoux_products');
-            orders = [];
-            products = [];
-            updateUI();
-            renderProducts();
-            toast('Données effacées');
+            orders = []; products = [];
+            updateUI(); renderProducts();
+            toast('Effacé');
         }
 
-        // Close modal on Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
-        });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
     </script>
 </body>
 </html>
