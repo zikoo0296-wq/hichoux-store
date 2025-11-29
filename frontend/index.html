@@ -19,7 +19,8 @@
         .product-card { transition: all 0.3s; }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .whatsapp-float { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); z-index: 50; }
-        .whatsapp-float:hover { transform: scale(1.1); }
+        .thumb-img { transition: all 0.2s; cursor: pointer; }
+        .thumb-img:hover, .thumb-img.active { border-color: #D4AF37; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -29,66 +30,50 @@
     <header class="bg-black text-white sticky top-0 z-40">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between py-4">
-                <a href="#" onclick="showPage('home');return false;" class="flex items-center space-x-2">
-                    <span id="storeName" class="font-display text-2xl font-bold">Hichoux Store</span>
-                </a>
+                <a href="#" onclick="showPage('home');return false;" class="font-display text-2xl font-bold" id="storeName">Hichoux Store</a>
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="#" onclick="showPage('home');return false;" class="hover:text-yellow-400">Accueil</a>
                     <a href="#" onclick="showPage('catalog');return false;" class="hover:text-yellow-400">Catalogue</a>
                     <a href="#" onclick="showPage('tracking');return false;" class="hover:text-yellow-400">Suivi</a>
-                    <a href="#" onclick="showPage('contact');return false;" class="hover:text-yellow-400">Contact</a>
                 </nav>
                 <div class="flex items-center space-x-4">
                     <button onclick="showPage('cart')" class="relative p-2 hover:text-yellow-400">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <span id="cartBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button onclick="toggleMenu()" class="md:hidden p-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
                 </div>
             </div>
-        </div>
-        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 py-4">
-            <nav class="container mx-auto px-4 space-y-4">
-                <a href="#" onclick="showPage('home');toggleMenu();return false;" class="block">Accueil</a>
-                <a href="#" onclick="showPage('catalog');toggleMenu();return false;" class="block">Catalogue</a>
-                <a href="#" onclick="showPage('tracking');toggleMenu();return false;" class="block">Suivi</a>
-                <a href="#" onclick="showPage('contact');toggleMenu();return false;" class="block">Contact</a>
-            </nav>
         </div>
     </header>
 
     <main>
         <!-- Home -->
         <div id="page-home" class="page active">
-            <section class="relative bg-black text-white py-20 md:py-32 overflow-hidden">
+            <section class="relative bg-black text-white py-20 overflow-hidden">
                 <div class="absolute inset-0" style="background:radial-gradient(ellipse at top right,rgba(212,175,55,0.15),transparent 50%);"></div>
                 <div class="container mx-auto px-4 relative z-10">
                     <div class="max-w-2xl">
                         <p class="gold uppercase tracking-widest mb-4">Nouvelle Collection</p>
-                        <h1 class="font-display text-4xl md:text-6xl font-bold mb-6">Découvrez l'Excellence</h1>
-                        <p class="text-gray-300 text-lg mb-8">Des produits uniques de qualité premium.</p>
-                        <div class="flex flex-wrap gap-4">
-                            <button onclick="showPage('catalog')" class="btn-gold px-8 py-4 rounded-full">Voir le Catalogue</button>
-                            <button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-400 px-8 py-4 rounded-full hover:bg-yellow-400 hover:text-black transition">Suivre ma Commande</button>
-                        </div>
+                        <h1 class="font-display text-4xl md:text-5xl font-bold mb-6">Découvrez l'Excellence</h1>
+                        <p class="text-gray-300 text-lg mb-8">Des produits de qualité premium livrés partout au Maroc.</p>
+                        <button onclick="showPage('catalog')" class="btn-gold px-8 py-4 rounded-full">Voir le Catalogue</button>
                     </div>
                 </div>
             </section>
             <section class="py-12 bg-white">
                 <div class="container mx-auto px-4">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <div><div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🚚</div><h3 class="font-semibold">Livraison Rapide</h3><p class="text-gray-600 text-sm">24-48h</p></div>
-                        <div><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">💰</div><h3 class="font-semibold">Paiement COD</h3><p class="text-gray-600 text-sm">À la livraison</p></div>
-                        <div><div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✨</div><h3 class="font-semibold">Qualité Premium</h3><p class="text-gray-600 text-sm">100% authentique</p></div>
-                        <div><div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">📞</div><h3 class="font-semibold">Support 24/7</h3><p class="text-gray-600 text-sm">WhatsApp</p></div>
+                        <div><div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">🚚</div><h3 class="font-semibold">Livraison Rapide</h3><p class="text-gray-500 text-sm">24-48h</p></div>
+                        <div><div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">💰</div><h3 class="font-semibold">Paiement COD</h3><p class="text-gray-500 text-sm">À la livraison</p></div>
+                        <div><div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">✨</div><h3 class="font-semibold">Qualité Premium</h3><p class="text-gray-500 text-sm">100% authentique</p></div>
+                        <div><div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">📞</div><h3 class="font-semibold">Support</h3><p class="text-gray-500 text-sm">WhatsApp</p></div>
                     </div>
                 </div>
             </section>
             <section class="py-16">
                 <div class="container mx-auto px-4">
-                    <div class="text-center mb-12"><h2 class="font-display text-3xl font-bold mb-4">Produits Vedettes</h2></div>
+                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Produits Vedettes</h2>
                     <div id="featuredProducts" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-                    <div class="text-center mt-12"><button onclick="showPage('catalog')" class="btn-gold px-8 py-3 rounded-full">Voir Tous</button></div>
                 </div>
             </section>
         </div>
@@ -98,8 +83,8 @@
             <section class="py-12">
                 <div class="container mx-auto px-4">
                     <div class="flex flex-col md:flex-row gap-8">
-                        <aside class="md:w-64 shrink-0">
-                            <div class="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
+                        <aside class="md:w-56 shrink-0">
+                            <div class="bg-white rounded-2xl p-5 shadow-sm sticky top-24">
                                 <h3 class="font-semibold mb-4">Catégories</h3>
                                 <div class="space-y-2">
                                     <label class="flex items-center cursor-pointer"><input type="radio" name="cat" value="" checked onchange="filterProducts()" class="mr-2">Tous</label>
@@ -113,7 +98,7 @@
                         <div class="flex-1">
                             <div class="flex justify-between items-center mb-6">
                                 <h2 class="text-2xl font-bold">Catalogue (<span id="productCount">0</span>)</h2>
-                                <select onchange="sortProducts(this.value)" class="px-4 py-2 border rounded-xl bg-white"><option value="">Trier</option><option value="price-asc">Prix ↑</option><option value="price-desc">Prix ↓</option><option value="name">Nom</option></select>
+                                <select onchange="sortProducts(this.value)" class="px-4 py-2 border rounded-xl bg-white"><option value="">Trier</option><option value="price-asc">Prix ↑</option><option value="price-desc">Prix ↓</option></select>
                             </div>
                             <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
                         </div>
@@ -127,7 +112,7 @@
             <section class="py-12">
                 <div class="container mx-auto px-4">
                     <button onclick="showPage('catalog')" class="mb-6 text-gray-600 hover:text-black">← Retour</button>
-                    <div id="productDetail" class="grid grid-cols-1 md:grid-cols-2 gap-12"></div>
+                    <div id="productDetail"></div>
                 </div>
             </section>
         </div>
@@ -162,12 +147,12 @@
                         <div class="bg-white rounded-2xl p-6 shadow-sm">
                             <h3 class="font-semibold text-lg mb-6">Livraison</h3>
                             <form id="checkoutForm" class="space-y-4">
-                                <div><label class="block text-sm font-medium mb-1">Nom *</label><input type="text" id="cName" required class="w-full px-4 py-3 border rounded-xl"></div>
+                                <div><label class="block text-sm font-medium mb-1">Nom complet *</label><input type="text" id="cName" required class="w-full px-4 py-3 border rounded-xl"></div>
                                 <div><label class="block text-sm font-medium mb-1">Téléphone *</label><input type="tel" id="cPhone" required placeholder="06..." class="w-full px-4 py-3 border rounded-xl"></div>
                                 <div><label class="block text-sm font-medium mb-1">Ville *</label><select id="cCity" required class="w-full px-4 py-3 border rounded-xl"><option value="">Sélectionner</option><option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Fès</option><option>Tanger</option><option>Agadir</option><option>Meknès</option><option>Oujda</option><option>Kénitra</option><option>Tétouan</option><option>Autre</option></select></div>
-                                <div><label class="block text-sm font-medium mb-1">Adresse *</label><textarea id="cAddress" required rows="2" class="w-full px-4 py-3 border rounded-xl"></textarea></div>
+                                <div><label class="block text-sm font-medium mb-1">Adresse complète *</label><textarea id="cAddress" required rows="2" class="w-full px-4 py-3 border rounded-xl"></textarea></div>
                                 <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3"><div class="text-2xl">💵</div><div><p class="font-semibold text-green-800">Paiement à la Livraison</p></div></div>
-                                <button type="submit" class="w-full btn-gold py-4 rounded-xl text-lg mt-6">✓ Confirmer</button>
+                                <button type="submit" class="w-full btn-gold py-4 rounded-xl text-lg mt-6">✓ Confirmer la Commande</button>
                             </form>
                         </div>
                         <div>
@@ -190,11 +175,11 @@
         <div id="page-success" class="page">
             <section class="py-16">
                 <div class="container mx-auto px-4 max-w-lg text-center">
-                    <div class="text-6xl mb-6">✓</div>
+                    <div class="text-6xl mb-6">✅</div>
                     <h2 class="font-display text-3xl font-bold mb-4">Commande Confirmée!</h2>
                     <p class="text-gray-600 mb-4">Vous recevrez un appel de confirmation.</p>
                     <div class="bg-white rounded-2xl p-6 shadow-sm mb-8"><p class="text-sm text-gray-500">Numéro</p><p id="successOrder" class="text-2xl font-bold gold">HCX...</p></div>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center"><button onclick="showPage('home')" class="btn-gold px-8 py-3 rounded-full">Accueil</button><button onclick="showPage('tracking')" class="border-2 border-yellow-400 text-yellow-600 px-8 py-3 rounded-full">Suivre</button></div>
+                    <button onclick="showPage('home')" class="btn-gold px-8 py-3 rounded-full">Accueil</button>
                 </div>
             </section>
         </div>
@@ -205,37 +190,20 @@
                 <div class="container mx-auto px-4 max-w-lg">
                     <h2 class="font-display text-3xl font-bold mb-8 text-center">Suivi Commande</h2>
                     <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
-                        <label class="block text-sm font-medium mb-2">Numéro ou téléphone</label>
+                        <label class="block text-sm font-medium mb-2">Numéro de commande ou téléphone</label>
                         <div class="flex gap-2"><input type="text" id="trackInput" class="flex-1 px-4 py-3 border rounded-xl" placeholder="HCX... ou 06..."><button onclick="trackOrder()" class="btn-gold px-6 py-3 rounded-xl">🔍</button></div>
                     </div>
                     <div id="trackResult"></div>
                 </div>
             </section>
         </div>
-
-        <!-- Contact -->
-        <div id="page-contact" class="page">
-            <section class="py-12">
-                <div class="container mx-auto px-4 max-w-2xl">
-                    <h2 class="font-display text-3xl font-bold mb-8 text-center">Contact</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <a href="#" id="phoneLink" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md"><div class="text-4xl mb-4">📞</div><h3 class="font-semibold mb-2">Téléphone</h3><p id="phoneDisplay" class="gold">0600000000</p></a>
-                        <a href="#" id="waLink" target="_blank" class="bg-white rounded-2xl p-6 shadow-sm text-center hover:shadow-md"><div class="text-4xl mb-4">💬</div><h3 class="font-semibold mb-2">WhatsApp</h3><p class="text-green-600">Discuter</p></a>
-                    </div>
-                </div>
-            </section>
-        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-black text-white py-12 mt-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div><span id="footerName" class="font-display text-xl font-bold">Hichoux Store</span></div>
-                <div><h4 class="font-semibold mb-4">Liens</h4><ul class="space-y-2 text-gray-400 text-sm"><li><a href="#" onclick="showPage('home');return false;">Accueil</a></li><li><a href="#" onclick="showPage('catalog');return false;">Catalogue</a></li><li><a href="#" onclick="showPage('tracking');return false;">Suivi</a></li></ul></div>
-                <div><h4 class="font-semibold mb-4">Contact</h4><p id="footerPhone" class="text-gray-400 text-sm">📞 0600000000</p></div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm"><p>© 2025 <span id="footerName2">Hichoux Store</span></p></div>
+    <footer class="bg-black text-white py-10 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p id="footerName" class="font-display text-xl font-bold mb-4">Hichoux Store</p>
+            <p class="text-gray-400 text-sm">© 2025 Tous droits réservés</p>
         </div>
     </footer>
 
@@ -243,72 +211,62 @@
     <a href="#" id="waFloat" target="_blank" class="whatsapp-float"><svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
 
     <script>
-        // ===== CONFIGURATION - MODIFIEZ CES VALEURS =====
+        // ===== CONFIGURATION =====
         const CONFIG = {
-            // Supabase (même que admin)
             SUPA_URL: 'https://mbvskiaqfpbbnxhgzpga.supabase.co',
             SUPA_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnNraWFxZnBiYm54aGd6cGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNzg2NjEsImV4cCI6MjA3OTg1NDY2MX0.2mSDA90x5SEOEGOrMYrZaSgE4Bjv1-FRTPoqTZLB7hE',
-            
-            // Boutique - MODIFIEZ CES VALEURS
             STORE_NAME: 'Hichoux Store',
             PHONE: '0600000000',
             WHATSAPP: '212600000000',
-            SHIPPING_FEE: 30,  // Frais de livraison en DH
-            FREE_SHIPPING_MIN: 500  // Livraison gratuite à partir de ce montant
+            SHIPPING_FEE: 30,
+            FREE_SHIPPING_MIN: 500
         };
-        // ===== FIN CONFIGURATION =====
 
-        const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='200' y='200' text-anchor='middle' dominant-baseline='middle' fill='%239ca3af' font-size='20'%3EProduit%3C/text%3E%3C/svg%3E";
+        const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='200' y='200' text-anchor='middle' dominant-baseline='middle' fill='%239ca3af' font-size='18'%3EProduit%3C/text%3E%3C/svg%3E";
 
         let db = null, connected = false;
-        let products = [], orders = [], cart = [];
+        let products = [], cart = [];
 
         // ===== INIT =====
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Frontend starting...');
+            console.log('🚀 Store starting...');
             applyConfig();
             loadCart();
-            initData();
+            initSupabase();
             document.getElementById('checkoutForm').addEventListener('submit', submitOrder);
         });
 
         function applyConfig() {
             document.getElementById('storeName').textContent = CONFIG.STORE_NAME;
             document.getElementById('footerName').textContent = CONFIG.STORE_NAME;
-            document.getElementById('footerName2').textContent = CONFIG.STORE_NAME;
-            document.getElementById('phoneDisplay').textContent = CONFIG.PHONE;
-            document.getElementById('footerPhone').textContent = '📞 ' + CONFIG.PHONE;
-            document.getElementById('phoneLink').href = 'tel:' + CONFIG.PHONE;
-            document.getElementById('waLink').href = 'https://wa.me/' + CONFIG.WHATSAPP;
             document.getElementById('waFloat').href = 'https://wa.me/' + CONFIG.WHATSAPP;
         }
 
-        async function initData() {
-            // Try Supabase first
+        async function initSupabase() {
             try {
                 db = supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_KEY);
-                const { data: p, error } = await db.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
+                
+                const { data, error } = await db.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
+                
                 if (error) throw error;
                 
-                if (p && p.length > 0) {
-                    products = p;
+                if (data && data.length > 0) {
+                    products = data;
                     connected = true;
                     console.log('✅ Loaded', products.length, 'products from Supabase');
                 }
+                
             } catch (e) {
-                console.log('⚠️ Supabase error:', e.message);
+                console.log('⚠️ Error:', e.message);
             }
-
-            // Fallback to demo products
+            
+            // If no products, show message
             if (!products.length) {
-                products = [
-                    { id: '1', name: 'Produit Demo 1', price: 150, compare_price: 199, stock: 45, category: 'homme', is_featured: true, image_data: '', description: 'Description du produit.' },
-                    { id: '2', name: 'Produit Demo 2', price: 200, compare_price: 250, stock: 32, category: 'femme', is_featured: true, image_data: '', description: 'Description du produit.' },
-                    { id: '3', name: 'Produit Demo 3', price: 120, compare_price: 150, stock: 28, category: 'unisexe', is_featured: true, image_data: '', description: 'Description du produit.' }
-                ];
-                console.log('📦 Using demo products');
+                document.getElementById('featuredProducts').innerHTML = '<p class="col-span-4 text-center text-gray-500 py-8">Aucun produit disponible</p>';
+                document.getElementById('productsGrid').innerHTML = '<p class="col-span-3 text-center text-gray-500 py-8">Aucun produit disponible</p>';
+                return;
             }
-
+            
             renderFeatured();
             renderCatalog();
         }
@@ -320,64 +278,189 @@
             window.scrollTo(0, 0);
             if (id === 'cart') renderCart();
             if (id === 'checkout') renderCheckout();
-            if (id === 'catalog') renderCatalog();
         }
 
-        function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('hidden'); }
-        function toast(msg, type = 'success') { const el = document.getElementById('toast'); el.querySelector('div').textContent = msg; el.querySelector('div').className = (type === 'error' ? 'bg-red-500' : 'bg-green-500') + ' text-white px-6 py-3 rounded-xl shadow-lg'; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 3000); }
-        function getImage(p) { return p.image_data || p.image_url || PLACEHOLDER; }
+        function toast(msg, type = 'success') {
+            const el = document.getElementById('toast');
+            el.querySelector('div').textContent = msg;
+            el.querySelector('div').className = (type === 'error' ? 'bg-red-500' : 'bg-green-500') + ' text-white px-6 py-3 rounded-xl shadow-lg';
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+
+        function getImage(p) {
+            if (p.images && p.images.length > 0) return p.images[0];
+            if (p.image_data) return p.image_data;
+            return PLACEHOLDER;
+        }
+
+        function getAllImages(p) {
+            if (p.images && p.images.length > 0) return p.images;
+            if (p.image_data) return [p.image_data];
+            return [PLACEHOLDER];
+        }
 
         // ===== PRODUCTS =====
         function productCard(p) {
-            const d = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
-            return `<div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="viewProduct('${p.id}')"><div class="relative"><img src="${getImage(p)}" alt="${p.name}" class="w-full aspect-square object-cover bg-gray-100">${d > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-${d}%</span>` : ''}</div><div class="p-4"><p class="text-xs text-gray-500 mb-1">${p.category || ''}</p><h3 class="font-semibold mb-2 truncate">${p.name}</h3><div class="flex items-center justify-between"><div><span class="text-lg font-bold gold">${p.price} DH</span>${p.compare_price ? `<span class="text-sm text-gray-400 line-through ml-2">${p.compare_price}</span>` : ''}</div><button onclick="event.stopPropagation();addToCart('${p.id}')" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">+</button></div></div></div>`;
+            const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
+            return `
+                <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="viewProduct(${p.id})">
+                    <div class="relative">
+                        <img src="${getImage(p)}" alt="${p.name}" class="w-full aspect-square object-cover bg-gray-100">
+                        ${discount > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-${discount}%</span>` : ''}
+                    </div>
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-1">${p.category || ''}</p>
+                        <h3 class="font-semibold mb-2 truncate">${p.name}</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-lg font-bold gold">${p.price} DH</span>
+                                ${p.compare_price ? `<span class="text-sm text-gray-400 line-through ml-2">${p.compare_price}</span>` : ''}
+                            </div>
+                            <button onclick="event.stopPropagation();addToCart(${p.id})" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-black hover:scale-110 transition">+</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function renderFeatured() { const f = products.filter(p => p.is_featured); document.getElementById('featuredProducts').innerHTML = f.length ? f.slice(0, 8).map(productCard).join('') : '<p class="col-span-4 text-center text-gray-500">Aucun produit</p>'; }
-        function renderCatalog() { filterProducts(); }
+        function renderFeatured() {
+            const featured = products.filter(p => p.is_featured);
+            const toShow = featured.length > 0 ? featured : products;
+            document.getElementById('featuredProducts').innerHTML = toShow.slice(0, 8).map(productCard).join('');
+        }
+
+        function renderCatalog() {
+            filterProducts();
+        }
 
         function filterProducts() {
             const cat = document.querySelector('input[name="cat"]:checked')?.value || '';
-            let f = products.filter(p => !cat || p.category === cat);
-            document.getElementById('productCount').textContent = f.length;
-            document.getElementById('productsGrid').innerHTML = f.length ? f.map(productCard).join('') : '<p class="col-span-full text-center text-gray-500 py-8">Aucun produit</p>';
+            let filtered = products.filter(p => !cat || p.category === cat);
+            document.getElementById('productCount').textContent = filtered.length;
+            document.getElementById('productsGrid').innerHTML = filtered.length ? filtered.map(productCard).join('') : '<p class="col-span-full text-center text-gray-500 py-8">Aucun produit</p>';
         }
 
         function sortProducts(by) {
             if (by === 'price-asc') products.sort((a, b) => a.price - b.price);
             else if (by === 'price-desc') products.sort((a, b) => b.price - a.price);
-            else if (by === 'name') products.sort((a, b) => a.name.localeCompare(b.name));
             filterProducts();
         }
 
         function viewProduct(id) {
-            const p = products.find(x => x.id == id);
+            const p = products.find(x => x.id === id);
             if (!p) return;
-            const d = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
-            document.getElementById('productDetail').innerHTML = `<div class="relative"><img src="${getImage(p)}" class="w-full rounded-2xl bg-gray-100">${d > 0 ? `<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-${d}%</span>` : ''}</div><div><p class="text-sm text-gray-500 mb-2">${p.category || ''}</p><h1 class="font-display text-3xl font-bold mb-4">${p.name}</h1><div class="flex items-center space-x-4 mb-6"><span class="text-3xl font-bold gold">${p.price} DH</span>${p.compare_price ? `<span class="text-xl text-gray-400 line-through">${p.compare_price}</span>` : ''}</div><p class="text-gray-600 mb-6">${p.description || ''}</p><div class="flex items-center space-x-4 mb-6"><div class="flex items-center border rounded-xl"><button onclick="changeQty(-1)" class="w-12 h-12 text-xl hover:bg-gray-100">-</button><span id="prodQty" class="w-12 text-center font-semibold">1</span><button onclick="changeQty(1)" class="w-12 h-12 text-xl hover:bg-gray-100">+</button></div><button onclick="addToCart('${p.id}',getQty())" class="flex-1 btn-gold py-4 rounded-xl text-lg">Ajouter au panier</button></div><div class="bg-gray-50 rounded-xl p-4 space-y-2"><p class="text-sm">🚚 Livraison ${CONFIG.SHIPPING_FEE} DH (gratuite dès ${CONFIG.FREE_SHIPPING_MIN} DH)</p><p class="text-sm">💰 Paiement à la livraison</p></div></div>`;
+            
+            const images = getAllImages(p);
+            const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
+            
+            document.getElementById('productDetail').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="relative mb-4">
+                            <img id="mainImage" src="${images[0]}" class="w-full rounded-2xl bg-gray-100 aspect-square object-cover">
+                            ${discount > 0 ? `<span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full">-${discount}%</span>` : ''}
+                        </div>
+                        ${images.length > 1 ? `
+                            <div class="flex gap-2 overflow-x-auto pb-2">
+                                ${images.map((img, idx) => `
+                                    <img src="${img}" onclick="changeMainImage('${img}', this)" class="thumb-img w-16 h-16 rounded-lg object-cover border-2 ${idx === 0 ? 'border-yellow-500' : 'border-gray-200'}">
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">${p.category || ''}</p>
+                        <h1 class="font-display text-3xl font-bold mb-4">${p.name}</h1>
+                        <div class="flex items-center space-x-4 mb-6">
+                            <span class="text-3xl font-bold gold">${p.price} DH</span>
+                            ${p.compare_price ? `<span class="text-xl text-gray-400 line-through">${p.compare_price}</span>` : ''}
+                        </div>
+                        <p class="text-gray-600 mb-6">${p.description || 'Produit de qualité premium.'}</p>
+                        <div class="flex items-center space-x-4 mb-6">
+                            <div class="flex items-center border rounded-xl">
+                                <button onclick="changeQty(-1)" class="w-12 h-12 text-xl hover:bg-gray-100">-</button>
+                                <span id="prodQty" class="w-12 text-center font-semibold">1</span>
+                                <button onclick="changeQty(1)" class="w-12 h-12 text-xl hover:bg-gray-100">+</button>
+                            </div>
+                            <button onclick="addToCart(${p.id}, getQty())" class="flex-1 btn-gold py-4 rounded-xl text-lg">Ajouter au panier</button>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+                            <p class="text-sm">🚚 Livraison ${CONFIG.SHIPPING_FEE} DH (gratuite dès ${CONFIG.FREE_SHIPPING_MIN} DH)</p>
+                            <p class="text-sm">💰 Paiement à la livraison</p>
+                            <p class="text-sm">📦 Stock: ${p.stock > 0 ? p.stock + ' disponibles' : 'Épuisé'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
             showPage('product');
         }
 
-        function changeQty(d) { const el = document.getElementById('prodQty'); let q = parseInt(el.textContent) + d; if (q < 1) q = 1; if (q > 10) q = 10; el.textContent = q; }
-        function getQty() { return parseInt(document.getElementById('prodQty')?.textContent || '1'); }
-
-        // ===== CART =====
-        function loadCart() { try { const c = localStorage.getItem('hichoux_cart'); if (c) cart = JSON.parse(c); } catch(e) {} updateCartBadge(); }
-        function saveCart() { try { localStorage.setItem('hichoux_cart', JSON.stringify(cart)); } catch(e) {} updateCartBadge(); }
-        function updateCartBadge() { const count = cart.reduce((s, i) => s + i.qty, 0); const badge = document.getElementById('cartBadge'); badge.textContent = count; badge.classList.toggle('hidden', count === 0); }
-
-        function addToCart(id, qty = 1) {
-            const p = products.find(x => x.id == id);
-            if (!p) return;
-            const existing = cart.find(i => i.id == id);
-            if (existing) existing.qty += qty;
-            else cart.push({ id: p.id, name: p.name, price: p.price, image: getImage(p), qty: qty });
-            saveCart();
-            toast(p.name + ' ajouté!');
+        function changeMainImage(src, el) {
+            document.getElementById('mainImage').src = src;
+            document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('border-yellow-500'));
+            el.classList.add('border-yellow-500');
         }
 
-        function removeFromCart(id) { cart = cart.filter(i => i.id != id); saveCart(); renderCart(); }
-        function updateCartQty(id, d) { const item = cart.find(i => i.id == id); if (!item) return; item.qty += d; if (item.qty < 1) { removeFromCart(id); return; } saveCart(); renderCart(); }
+        function changeQty(d) {
+            const el = document.getElementById('prodQty');
+            let q = parseInt(el.textContent) + d;
+            if (q < 1) q = 1;
+            if (q > 10) q = 10;
+            el.textContent = q;
+        }
+
+        function getQty() {
+            return parseInt(document.getElementById('prodQty')?.textContent || '1');
+        }
+
+        // ===== CART =====
+        function loadCart() {
+            try { const c = localStorage.getItem('hichoux_cart'); if (c) cart = JSON.parse(c); } catch(e) {}
+            updateCartBadge();
+        }
+
+        function saveCart() {
+            try { localStorage.setItem('hichoux_cart', JSON.stringify(cart)); } catch(e) {}
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            const count = cart.reduce((s, i) => s + i.qty, 0);
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = count;
+            badge.classList.toggle('hidden', count === 0);
+        }
+
+        function addToCart(id, qty = 1) {
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            
+            const existing = cart.find(i => i.id === id);
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({ id: p.id, name: p.name, price: p.price, image: getImage(p), qty: qty });
+            }
+            
+            saveCart();
+            toast(p.name + ' ajouté au panier!');
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(i => i.id !== id);
+            saveCart();
+            renderCart();
+        }
+
+        function updateCartQty(id, d) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += d;
+            if (item.qty < 1) { removeFromCart(id); return; }
+            saveCart();
+            renderCart();
+        }
 
         function getCartTotals() {
             const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
@@ -388,9 +471,32 @@
         function renderCart() {
             const empty = document.getElementById('cartEmpty');
             const content = document.getElementById('cartContent');
-            if (cart.length === 0) { empty.classList.remove('hidden'); content.classList.add('hidden'); return; }
-            empty.classList.add('hidden'); content.classList.remove('hidden');
-            document.getElementById('cartItems').innerHTML = cart.map(i => `<div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4"><img src="${i.image}" class="w-20 h-20 rounded-lg object-cover bg-gray-100"><div class="flex-1"><h4 class="font-semibold">${i.name}</h4><p class="gold font-bold">${i.price} DH</p></div><div class="flex items-center border rounded-lg"><button onclick="updateCartQty('${i.id}',-1)" class="w-10 h-10 hover:bg-gray-100">-</button><span class="w-10 text-center">${i.qty}</span><button onclick="updateCartQty('${i.id}',1)" class="w-10 h-10 hover:bg-gray-100">+</button></div><button onclick="removeFromCart('${i.id}')" class="text-red-500 p-2">🗑️</button></div>`).join('');
+            
+            if (cart.length === 0) {
+                empty.classList.remove('hidden');
+                content.classList.add('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            content.classList.remove('hidden');
+            
+            document.getElementById('cartItems').innerHTML = cart.map(i => `
+                <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4">
+                    <img src="${i.image}" class="w-20 h-20 rounded-lg object-cover bg-gray-100">
+                    <div class="flex-1">
+                        <h4 class="font-semibold">${i.name}</h4>
+                        <p class="gold font-bold">${i.price} DH</p>
+                    </div>
+                    <div class="flex items-center border rounded-lg">
+                        <button onclick="updateCartQty(${i.id}, -1)" class="w-10 h-10 hover:bg-gray-100">-</button>
+                        <span class="w-10 text-center">${i.qty}</span>
+                        <button onclick="updateCartQty(${i.id}, 1)" class="w-10 h-10 hover:bg-gray-100">+</button>
+                    </div>
+                    <button onclick="removeFromCart(${i.id})" class="text-red-500 p-2">🗑️</button>
+                </div>
+            `).join('');
+            
             const t = getCartTotals();
             document.getElementById('cartSubtotal').textContent = t.subtotal + ' DH';
             document.getElementById('cartShipping').textContent = t.shipping === 0 ? 'Gratuit' : t.shipping + ' DH';
@@ -399,7 +505,18 @@
 
         function renderCheckout() {
             if (cart.length === 0) { showPage('cart'); return; }
-            document.getElementById('checkoutItems').innerHTML = cart.map(i => `<div class="flex items-center gap-3"><img src="${i.image}" class="w-14 h-14 rounded-lg object-cover bg-gray-100"><div class="flex-1"><p class="font-medium text-sm">${i.name}</p><p class="text-gray-500 text-sm">x${i.qty}</p></div><p class="font-semibold">${i.price * i.qty} DH</p></div>`).join('');
+            
+            document.getElementById('checkoutItems').innerHTML = cart.map(i => `
+                <div class="flex items-center gap-3">
+                    <img src="${i.image}" class="w-14 h-14 rounded-lg object-cover bg-gray-100">
+                    <div class="flex-1">
+                        <p class="font-medium text-sm">${i.name}</p>
+                        <p class="text-gray-500 text-sm">x${i.qty}</p>
+                    </div>
+                    <p class="font-semibold">${i.price * i.qty} DH</p>
+                </div>
+            `).join('');
+            
             const t = getCartTotals();
             document.getElementById('coSubtotal').textContent = t.subtotal + ' DH';
             document.getElementById('coShipping').textContent = t.shipping === 0 ? 'Gratuit' : t.shipping + ' DH';
@@ -408,16 +525,21 @@
 
         async function submitOrder(e) {
             e.preventDefault();
+            
             const name = document.getElementById('cName').value.trim();
             const phone = document.getElementById('cPhone').value.trim();
             const city = document.getElementById('cCity').value;
             const address = document.getElementById('cAddress').value.trim();
-            if (!name || !phone || !city || !address) { toast('Remplissez tout', 'error'); return; }
+            
+            if (!name || !phone || !city || !address) {
+                toast('Remplissez tous les champs', 'error');
+                return;
+            }
 
             const orderNumber = 'HCX' + Date.now().toString().slice(-8);
             const t = getCartTotals();
             
-            const newOrder = {
+            const orderData = {
                 order_number: orderNumber,
                 customer_name: name,
                 customer_phone: phone,
@@ -434,10 +556,13 @@
             // Save to Supabase
             if (connected && db) {
                 try {
-                    await db.from('orders').insert(newOrder);
+                    const { error } = await db.from('orders').insert(orderData);
+                    if (error) throw error;
                     console.log('✅ Order saved to Supabase');
                 } catch (e) {
                     console.error('Order save error:', e);
+                    toast('Erreur: ' + e.message, 'error');
+                    return;
                 }
             }
 
@@ -453,27 +578,51 @@
             if (!input) { toast('Entrez un numéro', 'info'); return; }
             
             const result = document.getElementById('trackResult');
-            result.innerHTML = '<div class="text-center py-8">Recherche...</div>';
+            result.innerHTML = '<p class="text-center py-8">Recherche...</p>';
 
-            let order = null;
-            
-            if (connected && db) {
-                try {
-                    const { data } = await db.from('orders').select('*').or(`order_number.ilike.%${input}%,customer_phone.ilike.%${input}%`).limit(1).single();
-                    if (data) order = data;
-                } catch (e) {}
+            if (!connected || !db) {
+                result.innerHTML = '<p class="text-center py-8 text-red-500">Non connecté</p>';
+                return;
             }
 
-            if (order) {
-                const steps = [
-                    { label: 'Nouvelle', done: true },
-                    { label: 'Confirmée', done: ['confirmed', 'shipped', 'delivered'].includes(order.status) },
-                    { label: 'Expédiée', done: ['shipped', 'delivered'].includes(order.status) },
-                    { label: 'Livrée', done: order.status === 'delivered' }
-                ];
-                result.innerHTML = `<div class="bg-white rounded-2xl p-6 shadow-sm"><div class="flex justify-between items-start mb-6"><div><p class="text-sm text-gray-500">Commande</p><p class="text-xl font-bold">${order.order_number}</p></div><div class="text-right"><p class="text-sm text-gray-500">Total</p><p class="text-xl font-bold gold">${order.total} DH</p></div></div><div class="mb-6"><p class="text-sm text-gray-500">Destination</p><p class="font-medium">${order.shipping_city}</p></div>${order.tracking_number ? `<div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4"><p class="text-sm text-blue-600">Tracking</p><p class="font-mono font-bold text-blue-800">${order.tracking_number}</p><a href="https://www.digylog.com/suivi-de-colis/?tracking=${order.tracking_number}" target="_blank" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Suivre sur Digylog →</a></div>` : ''}<div class="relative"><div class="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200"></div>${steps.map((s, i) => `<div class="relative flex items-center mb-6 last:mb-0"><div class="w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.done ? 'bg-green-500 text-white' : 'bg-gray-200'}">${s.done ? '✓' : (i + 1)}</div><span class="ml-4 ${s.done ? 'font-semibold' : 'text-gray-400'}">${s.label}</span></div>`).join('')}</div></div>`;
-            } else {
-                result.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><h3 class="font-semibold mb-2">Non trouvée</h3><p class="text-gray-500">Vérifiez le numéro</p></div>';
+            try {
+                const { data: order } = await db.from('orders')
+                    .select('*')
+                    .or(`order_number.ilike.%${input}%,customer_phone.ilike.%${input}%`)
+                    .limit(1)
+                    .single();
+
+                if (order) {
+                    const steps = [
+                        { label: 'Nouvelle', done: true },
+                        { label: 'Confirmée', done: ['confirmed', 'shipped', 'delivered'].includes(order.status) },
+                        { label: 'Expédiée', done: ['shipped', 'delivered'].includes(order.status) },
+                        { label: 'Livrée', done: order.status === 'delivered' }
+                    ];
+                    
+                    result.innerHTML = `
+                        <div class="bg-white rounded-2xl p-6 shadow-sm">
+                            <div class="flex justify-between items-start mb-6">
+                                <div><p class="text-sm text-gray-500">Commande</p><p class="text-xl font-bold">${order.order_number}</p></div>
+                                <div class="text-right"><p class="text-sm text-gray-500">Total</p><p class="text-xl font-bold gold">${order.total} DH</p></div>
+                            </div>
+                            ${order.tracking_number ? `<div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4"><p class="text-sm text-blue-600">Tracking</p><p class="font-mono font-bold text-blue-800">${order.tracking_number}</p></div>` : ''}
+                            <div class="relative">
+                                <div class="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200"></div>
+                                ${steps.map((s, i) => `
+                                    <div class="relative flex items-center mb-6 last:mb-0">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.done ? 'bg-green-500 text-white' : 'bg-gray-200'}">${s.done ? '✓' : (i + 1)}</div>
+                                        <span class="ml-4 ${s.done ? 'font-semibold' : 'text-gray-400'}">${s.label}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><p>Commande non trouvée</p></div>';
+                }
+            } catch (e) {
+                result.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm text-center"><div class="text-4xl mb-4">❌</div><p>Commande non trouvée</p></div>';
             }
         }
     </script>
