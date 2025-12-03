@@ -1,5 +1,14 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  varchar,
+  integer,
+  decimal,
+  timestamp,
+  boolean,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -31,7 +40,9 @@ export const products = pgTable("products", {
   stock: integer("stock").notNull().default(0),
   lowStockThreshold: integer("low_stock_threshold").default(5),
   sku: text("sku").unique(),
-  images: text("images").array().default(sql`ARRAY[]::text[]`),
+  images: text("images")
+    .array()
+    .default(sql`ARRAY[]::text[]`),
   categoryId: integer("category_id").references(() => categories.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -44,10 +55,10 @@ export const ORDER_STATUSES = [
   "ANNULEE",
   "INJOIGNABLE",
   "ENVOYEE",
-  "LIVREE"
+  "LIVREE",
 ] as const;
 
-export type OrderStatus = typeof ORDER_STATUSES[number];
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 // Orders table
 export const orders = pgTable("orders", {
@@ -68,8 +79,12 @@ export const orders = pgTable("orders", {
 // Order items table
 export const orderItems = pgTable("order_items", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  orderId: integer("order_id").references(() => orders.id).notNull(),
-  productId: integer("product_id").references(() => products.id).notNull(),
+  orderId: integer("order_id")
+    .references(() => orders.id)
+    .notNull(),
+  productId: integer("product_id")
+    .references(() => products.id)
+    .notNull(),
   quantity: integer("quantity").notNull(),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   unitCost: decimal("unit_cost", { precision: 10, scale: 2 }).notNull(),
@@ -78,7 +93,9 @@ export const orderItems = pgTable("order_items", {
 // Shipping labels table
 export const shippingLabels = pgTable("shipping_labels", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  orderId: integer("order_id").references(() => orders.id).notNull(),
+  orderId: integer("order_id")
+    .references(() => orders.id)
+    .notNull(),
   labelUrl: text("label_url"),
   pdfBase64: text("pdf_base64"),
   providerName: text("provider_name"),
@@ -114,7 +131,7 @@ export const settings = pgTable("settings", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ }) => ({}));
+export const usersRelations = relations(users, ({}) => ({}));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
@@ -162,16 +179,56 @@ export const syncLogsRelations = relations(syncLogs, ({ one }) => ({
   }),
 }));
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
-export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
-export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, updatedAt: true, syncedToSheets: true, status: true, externalId: true });
-export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
-export const insertShippingLabelSchema = createInsertSchema(shippingLabels).omit({ id: true, createdAt: true });
-export const insertSyncLogSchema = createInsertSchema(syncLogs).omit({ id: true, createdAt: true });
-export const insertAdCostSchema = createInsertSchema(adCosts).omit({ id: true, createdAt: true });
-export const insertSettingSchema = createInsertSchema(settings).omit({ id: true, updatedAt: true });
+// Insert schemas - using undefined to exclude auto-generated fields (workaround for drizzle-zod bug)
+export const insertUserSchema = createInsertSchema(users, {
+  id: undefined,
+  createdAt: undefined,
+  name: (schema) => schema.min(2),
+  email: (schema) => schema.email(),
+  password: (schema) => schema.min(6),
+});
+
+export const insertCategorySchema = createInsertSchema(categories, {
+  id: undefined,
+});
+
+export const insertProductSchema = createInsertSchema(products, {
+  id: undefined,
+  createdAt: undefined,
+});
+
+export const insertOrderSchema = createInsertSchema(orders, {
+  id: undefined,
+  createdAt: undefined,
+  updatedAt: undefined,
+  syncedToSheets: undefined,
+  status: undefined,
+  externalId: undefined,
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems, {
+  id: undefined,
+});
+
+export const insertShippingLabelSchema = createInsertSchema(shippingLabels, {
+  id: undefined,
+  createdAt: undefined,
+});
+
+export const insertSyncLogSchema = createInsertSchema(syncLogs, {
+  id: undefined,
+  createdAt: undefined,
+});
+
+export const insertAdCostSchema = createInsertSchema(adCosts, {
+  id: undefined,
+  createdAt: undefined,
+});
+
+export const insertSettingSchema = createInsertSchema(settings, {
+  id: undefined,
+  updatedAt: undefined,
+});
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -218,17 +275,23 @@ export const orderFormSchema = z.object({
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
   city: z.string().min(2, "La ville est requise"),
   notes: z.string().optional(),
-  items: z.array(z.object({
-    productId: z.number(),
-    quantity: z.number().min(1),
-  })).min(1, "Au moins un produit est requis"),
+  items: z
+    .array(
+      z.object({
+        productId: z.number(),
+        quantity: z.number().min(1),
+      }),
+    )
+    .min(1, "Au moins un produit est requis"),
 });
 
 export type OrderFormData = z.infer<typeof orderFormSchema>;
 
 export const loginSchema = z.object({
   email: z.string().email("Email invalide"),
-  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  password: z
+    .string()
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
 export type LoginData = z.infer<typeof loginSchema>;

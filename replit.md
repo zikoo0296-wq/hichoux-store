@@ -71,10 +71,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 
-**Primary Database**: PostgreSQL (Neon serverless)
-- Connection pooling via @neondatabase/serverless
+**Primary Database**: PostgreSQL (Supabase)
+- Connection via pg driver with Session Pooler
+- Host: aws-1-eu-west-1.pooler.supabase.com:5432
+- SSL enabled with rejectUnauthorized: false
 - Schema defined in `shared/schema.ts`
 - Migrations managed by Drizzle Kit
+
+**Environment Variables**:
+- DATABASE_URL: Supabase PostgreSQL connection string (Session Pooler mode)
+- SESSION_SECRET: Express session secret
 
 **Session Store**: In-memory sessions (development) with option for connect-pg-simple (production)
 
