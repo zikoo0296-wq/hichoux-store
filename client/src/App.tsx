@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import NotFound from "@/pages/not-found";
+import ProtectedRoute from "@/components/protected-route";
 
 import HomePage from "@/pages/home";
 import ProductsPage from "@/pages/products";
@@ -75,18 +76,18 @@ function AdminRouter() {
           <main className="flex-1 overflow-auto">
             <Switch>
               <Route path="/admin/login" component={AdminLoginPage} />
-              <Route path="/admin" component={AdminDashboardPage} />
-              <Route path="/admin/confirmation" component={AdminConfirmationPage} />
-              <Route path="/admin/orders" component={AdminOrdersPage} />
-              <Route path="/admin/orders/:id" component={AdminOrderDetailPage} />
-              <Route path="/admin/products" component={AdminProductsPage} />
-              <Route path="/admin/products/new" component={AdminProductFormPage} />
-              <Route path="/admin/products/:id/edit" component={AdminProductFormPage} />
-              <Route path="/admin/products/import" component={AdminProductsImportPage} />
-              <Route path="/admin/categories" component={AdminCategoriesPage} />
-              <Route path="/admin/shipping-labels" component={AdminShippingLabelsPage} />
-              <Route path="/admin/analytics" component={AdminAnalyticsPage} />
-              <Route path="/admin/settings" component={AdminSettingsPage} />
+              <Route path="/admin" component={() => <ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
+              <Route path="/admin/confirmation" component={() => <ProtectedRoute><AdminConfirmationPage /></ProtectedRoute>} />
+              <Route path="/admin/orders" component={() => <ProtectedRoute><AdminOrdersPage /></ProtectedRoute>} />
+              <Route path="/admin/orders/:id" component={() => <ProtectedRoute><AdminOrderDetailPage /></ProtectedRoute>} />
+              <Route path="/admin/products" component={() => <ProtectedRoute><AdminProductsPage /></ProtectedRoute>} />
+              <Route path="/admin/products/new" component={() => <ProtectedRoute><AdminProductFormPage /></ProtectedRoute>} />
+              <Route path="/admin/products/:id/edit" component={() => <ProtectedRoute><AdminProductFormPage /></ProtectedRoute>} />
+              <Route path="/admin/products/import" component={() => <ProtectedRoute><AdminProductsImportPage /></ProtectedRoute>} />
+              <Route path="/admin/categories" component={() => <ProtectedRoute><AdminCategoriesPage /></ProtectedRoute>} />
+              <Route path="/admin/shipping-labels" component={() => <ProtectedRoute><AdminShippingLabelsPage /></ProtectedRoute>} />
+              <Route path="/admin/analytics" component={() => <ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
+              <Route path="/admin/settings" component={() => <ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
               <Route component={NotFound} />
             </Switch>
           </main>
