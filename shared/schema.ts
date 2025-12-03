@@ -9,7 +9,6 @@ import {
   boolean,
   jsonb,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Admin users table
@@ -179,55 +178,80 @@ export const syncLogsRelations = relations(syncLogs, ({ one }) => ({
   }),
 }));
 
-// Insert schemas - using undefined to exclude auto-generated fields (workaround for drizzle-zod bug)
-export const insertUserSchema = createInsertSchema(users, {
-  id: undefined,
-  createdAt: undefined,
-  name: (schema) => schema.min(2),
-  email: (schema) => schema.email(),
-  password: (schema) => schema.min(6),
+// Insert schemas - using pure Zod to avoid drizzle-zod type bugs
+export const insertUserSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.string().default("admin"),
 });
 
-export const insertCategorySchema = createInsertSchema(categories, {
-  id: undefined,
+export const insertCategorySchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  image: z.string().nullable().optional(),
 });
 
-export const insertProductSchema = createInsertSchema(products, {
-  id: undefined,
-  createdAt: undefined,
+export const insertProductSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().nullable().optional(),
+  price: z.string(),
+  compareAtPrice: z.string().nullable().optional(),
+  costPrice: z.string().nullable().optional(),
+  images: z.array(z.string()).default([]),
+  stock: z.number().int().default(0),
+  categoryId: z.number().int().nullable().optional(),
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
 });
 
-export const insertOrderSchema = createInsertSchema(orders, {
-  id: undefined,
-  createdAt: undefined,
-  updatedAt: undefined,
-  syncedToSheets: undefined,
-  status: undefined,
-  externalId: undefined,
+export const insertOrderSchema = z.object({
+  customerName: z.string().min(1),
+  phone: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  notes: z.string().nullable().optional(),
+  totalAmount: z.string(),
+  deliveryCost: z.string().default("0"),
 });
 
-export const insertOrderItemSchema = createInsertSchema(orderItems, {
-  id: undefined,
+export const insertOrderItemSchema = z.object({
+  orderId: z.number().int(),
+  productId: z.number().int(),
+  quantity: z.number().int().min(1),
+  unitPrice: z.string(),
+  unitCost: z.string().nullable().optional(),
 });
 
-export const insertShippingLabelSchema = createInsertSchema(shippingLabels, {
-  id: undefined,
-  createdAt: undefined,
+export const insertShippingLabelSchema = z.object({
+  orderId: z.number().int(),
+  trackingNumber: z.string().nullable().optional(),
+  carrier: z.string().nullable().optional(),
+  labelUrl: z.string().nullable().optional(),
+  status: z.string().default("pending"),
 });
 
-export const insertSyncLogSchema = createInsertSchema(syncLogs, {
-  id: undefined,
-  createdAt: undefined,
+export const insertSyncLogSchema = z.object({
+  orderId: z.number().int(),
+  syncType: z.string(),
+  status: z.string(),
+  errorMessage: z.string().nullable().optional(),
+  externalId: z.string().nullable().optional(),
 });
 
-export const insertAdCostSchema = createInsertSchema(adCosts, {
-  id: undefined,
-  createdAt: undefined,
+export const insertAdCostSchema = z.object({
+  date: z.string(),
+  platform: z.string(),
+  campaignName: z.string().nullable().optional(),
+  amount: z.string(),
+  currency: z.string().default("MAD"),
 });
 
-export const insertSettingSchema = createInsertSchema(settings, {
-  id: undefined,
-  updatedAt: undefined,
+export const insertSettingSchema = z.object({
+  key: z.string().min(1),
+  value: z.string(),
+  description: z.string().nullable().optional(),
 });
 
 // Types
