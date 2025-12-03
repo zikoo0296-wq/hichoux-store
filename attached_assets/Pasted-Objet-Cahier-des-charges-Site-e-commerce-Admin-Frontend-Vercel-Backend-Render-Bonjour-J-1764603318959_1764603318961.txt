@@ -1,0 +1,264 @@
+Objet : Cahier des charges — Site e-commerce + Admin (Frontend Vercel / Backend Render)
+
+Bonjour,
+
+Je souhaite développer un site e-commerce simple pour la vente en livraison (Cash on Delivery) accompagné d’un back-office (admin) complet. Merci de préparer la solution technique et de livrer le projet clé en main (code, déploiement, documentation). Voici le cahier des charges détaillé.
+
+1) Vue d’ensemble
+
+Objectif : Un site web client minimal (commande rapide, paiement à la livraison) + un panneau admin complet pour gérer catégories, produits, commandes, calculs de bénéfices et intégrations externes (Google Sheets, API société de livraison).
+
+Frontend : Déployé sur Vercel (Next.js/React).
+
+Backend / API : Déployé sur Render (Node.js + framework au choix : Express ou NestJS).
+
+Base de données : PostgreSQL (hébergée sur Render / Supabase / Railway).
+
+Stockage images : Cloudinary ou AWS S3.
+
+Authentification admin : JWT + rôle admin, sessions sécurisées.
+
+Langue : français (UI) — mais API standardisée en anglais si besoin.
+
+2) Fonctionnalités client (site public)
+
+Page produit / catalogue par catégories.
+
+Fiche produit :
+
+Titre, description, prix de vente, prix coûtant (cost), stock, plusieurs photos (galerie).
+
+Formulaire de commande simplifié (Cash on delivery) :
+
+Champs obligatoires : Nom complet, Téléphone, Adresse complète, Ville.
+
+Option : notes de livraison.
+
+Validation simple côté client + vérification backend.
+
+Après commande : confirmation affichée et stock réservé.
+
+Option pour rediriger la commande vers WhatsApp ou appeler (lien wa.me/ + numéro avec résumé commande) pour notification manuelle.
+
+Responsive (mobile first).
+
+3) Fonctionnalités Admin (Back-office)
+Gestion catalogue
+
+CRUD Catégories.
+
+CRUD Produits : plusieurs images, prix de vente, prix coûtant, code SKU, stock, description, catégorie.
+
+Import/Export CSV (optionnel).
+
+Gestion Commandes
+
+Vue liste commandes (filtrable par statut, date, ville).
+
+Statuts : NOUVELLE, EN ATTENTE, CONFIRMÉE, ANNULÉE, INJOIGNABLE (RAPPELER), ENVOYÉE, LIVRÉE.
+
+Actions rapides sur chaque commande :
+
+Confirmer (CONFIRMÉE)
+
+Annuler (ANNULÉE)
+
+Injoignable / Rappeler plus tard (INJOIGNABLE)
+
+Envoyer à la société de livraison / générer Shipping Label
+
+Lors de la confirmation :
+
+Générer entrée automatique dans Google Sheets (ligne commande).
+
+Envoyer notification (option) : message WhatsApp / SMS (via Twilio / Message API).
+
+Possibilité de marquer comme « imprimé » ou « ticket généré ».
+
+Dashboard / Analytics
+
+Nombre de commandes (période sélectionnable).
+
+Top produits vendus (top 10).
+
+Calcul bénéfices (période) :
+
+Revenu total = somme prix de vente.
+
+Coût total produits = somme (quantité × prix coûtant).
+
+Coût livraison = somme (frais société de livraison) — récupéré du tarif ou de l’API.
+
+Coût ads = input manuel / import pour période.
+
+Profit net = Revenu − (Coût produits + Coût livraison + Coût ads + autres coûts).
+
+Rapport exportable (CSV / XLSX).
+
+Graphiques simples (commandes par jour, CA, bénéfices).
+
+Intégrations
+
+Google Sheets :
+
+Lorsqu’une commande est confirmée : ajouter automatiquement une ligne dans un tableau Google Sheets (via Google Sheets API) avec colonnes : ID_commande, Date, Nom, Téléphone, Adresse, Ville, Produits (json), Prix_total, Statut.
+
+Bouton manuel de Sync pour renvoyer non synchronisées.
+
+API société de livraison :
+
+Possibilité de configuer les credentials (clé API).
+
+Quand je clique Sync : lire les commandes prêtes depuis Google Sheets ou depuis le backoffice et envoyer à la plateforme de la société de livraison via leur API (POST).
+
+Récupérer en retour le Shipping Label (PDF / base64) et l’enregistrer / afficher dans l’admin sous Shipping Labels pour impression.
+
+Supporter réponse d’échec (logs + possibilité de réessayer).
+
+WhatsApp / SMS (optionnel) : URL ou API pour envoyer notification commande.
+
+4) Workflow détaillé (exemple)
+
+Client passe commande sur le site (COD) → statut NOUVELLE.
+
+Admin voit la commande dans l’admin → clique Confirmer.
+
+Backend : met statut CONFIRMÉE, diminue stock, crée ligne dans Google Sheets.
+
+Admin clique Sync → Envoyer à société livraison (ou auto-sync si config).
+
+API société renvoie Shipping Label → stocké et affiché dans admin, statut mis à jour ENVOYÉE.
+
+Admin imprime l’étiquette depuis l’admin et remet au livreur.
+
+5) Modèle de données (extrait)
+
+users (admin) : id, name, email, password_hash, role, created_at.
+
+categories : id, name, slug.
+
+products : id, title, description, price, cost_price, stock, sku, images[] (urls), category_id.
+
+orders : id, external_id, customer_name, phone, address, city, total_price, status, created_at, updated_at.
+
+order_items : id, order_id, product_id, quantity, unit_price, unit_cost.
+
+shipping_labels : id, order_id, label_url (or pdf_base64), provider_name, created_at.
+
+sync_logs : id, order_id, action, result, details, created_at.
+
+6) API endpoints (proposition)
+
+POST /api/auth/login — admin login
+
+GET /api/products — liste produits (public)
+
+GET /api/products/:id
+
+POST /api/orders — créer commande (public)
+
+GET /api/admin/orders — liste commandes (auth)
+
+POST /api/admin/orders/:id/confirm
+
+POST /api/admin/orders/:id/cancel
+
+POST /api/admin/orders/:id/mark-unreachable
+
+POST /api/admin/orders/:id/send-to-carrier — envoie vers API société de livraison
+
+POST /api/admin/products — CRUD produit (multipart pour images)
+
+POST /api/google-sheets/sync — endpoint pour forcer sync
+
+GET /api/shipping-labels/:id/download
+
+7) Sécurité & qualité
+
+Validation et sanitation côté serveur.
+
+Rate limiting endpoints critiques.
+
+Stockage des secrets (Google API, clé delivery) dans variables d’environnement (Render / Vercel).
+
+Backups DB réguliers.
+
+Tests unitaires basiques + tests d’intégration pour endpoints critiques (création commande, sync Google Sheets, envoi au carrier).
+
+Logging erreurs + alertes (Sentry optionnel).
+
+8) UI / UX (admin)
+
+Table commandes avec filtres et colonnes importantes (client, ville, date, total, statut, actions).
+
+Vue détail commande avec boutons d’action (Confirmer, Annuler, Injoignable, Envoyer au carrier).
+
+Page Shipping Labels listant les étiquettes prêtes à imprimer.
+
+Dashboard home avec métriques clés (CA, profit, top produits).
+
+Simple, épuré et mobile friendly.
+
+9) Configuration & déploiement
+
+Frontend sur Vercel (Next.js).
+
+Backend sur Render (service web + PostgreSQL).
+
+Variables d’environnement configurées sur les deux plateformes.
+
+CI : GitHub Actions (build & tests & déploy).
+
+Fournir accès repos GitHub + démos déployées + comptes admin.
+
+10) Critères d’acceptation (tests à valider)
+
+Un client peut commander via site et la commande apparaît en admin.
+
+Admin peut confirmer une commande → ligne créée dans Google Sheets automatiquement.
+
+Admin peut envoyer une commande au carrier → reçoit shipping label et peut l’imprimer depuis admin.
+
+Dashboard affiche CA et bénéfice net corrects sur un jeu de données test.
+
+Uploads images fonctionnent et sont servies via CDN.
+
+Auth admin sécurisé.
+
+11) Livrables attendus
+
+Code source (frontend + backend) sur GitHub.
+
+Repos configurés avec GitHub Actions.
+
+Déploiement fonctionnel : frontend (Vercel) et backend (Render).
+
+Documentation technique (README) : comment configurer variables d’env, créer credentials Google Sheets, config API livraison.
+
+Postman collection ou OpenAPI/Swagger pour l’API.
+
+Compte admin test + accès affiché.
+
+Instructions d’impression Shipping Label.
+
+12) Tech stack recommandé (optionnel mais souhaité)
+
+Frontend : Next.js (React), Tailwind CSS.
+
+Backend : Node.js + Express ou NestJS.
+
+DB : PostgreSQL + Prisma ORM (ou TypeORM).
+
+Images : Cloudinary ou S3.
+
+Google Sheets : Google Sheets API (service account).
+
+Carrier integration : REST API (OAuth/Token selon provider).
+
+Notifications : Twilio (SMS/WhatsApp) ou simple wa.me link pour WhatsApp.
+
+Auth : JWT + bcrypt.
+
+Si possible, fournis un devis détaillé (heures / coût par fonctionnalité) et une estimation des étapes de livraison (MVP → tests → mise en production). Je préfère que le MVP contienne : gestion produit/catégorie multi-photo, prise de commande COD, admin avec confirmation et Google Sheets sync, envoi au carrier et génération d’étiquettes.
+
+Merci — attends pas de clarifs, commence par un prototype minimum viable (MVP) et documente chaque étape.

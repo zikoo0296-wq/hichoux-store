@@ -1,0 +1,30 @@
+# Database
+DATABASE_URL=postgresql://postgres.mbvskiaqfpbbnxhgzpga:Beqqali@123@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=password
+PGDATABASE=eshop
+
+# Session
+SESSION_SECRET=your-secret-key-here
+
+# Google Sheets Integration (optional)
+GOOGLE_SHEETS_ID=your-google-sheet-id
+GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY=your-private-key
+
+# Twilio Integration (optional)
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_PHONE_NUMBER=+1234567890
+TWILIO_WHATSAPP_NUMBER=+1234567890
+ENABLE_SMS=false
+ENABLE_WHATSAPP=false
+
+# Carrier API (optional)
+CARRIER_API_URL=https://api.carrier.com
+CARRIER_API_KEY=your-carrier-api-key
+
+# Frontend
+VITE_API_URL=http://localhost:5000

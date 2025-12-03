@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: hichoux-backend
+    env: node
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://postgres.wyiyiyvcvvpyqiobvzkv:Beqqali%40123@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+      - key: NODE_ENV
+        value: production
