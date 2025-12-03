@@ -1,0 +1,169 @@
+1) Partie Admin — accès privé & suppression du bouton public
+
+Supprimer le bouton "passer admin" visible publiquement : la page / zone admin doit être totalement cachée et accessible seulement via URL d’admin ou route protégée.
+
+Protection : authentification avec JWT + refresh tokens, HTTPS obligatoire, et protection par liste blanche IP possible (option).
+
+Accès multisession : définir une durée de session fixe (par exemple 1 heure), possibilité de forcer déconnexion pour sécurité.
+
+Pages admin à prévoir : tableau de bord, gestion produits, gestion commandes, gestion utilisateurs, paramètres d’intégration (Google Sheets, transporteurs).
+
+UI/UX : design propre, responsive et orienté desktop + mobile ; pages d’admin bien dessinées (tableaux, filtres, recherche, pagination).
+
+Contrôle des rôles : Admin Super (full), Admin simple (gestion produits/commandes), Opérateur (lecture + mise à jour statuts), Support (lecture limitée).
+
+2) Synchronisation automatique des commandes → Google Sheets
+
+Quand une commande est confirmée côté site, elle doit être automatiquement ajoutée à ce Google Sheet :
+https://docs.google.com/spreadsheets/d/1qKkOSPisPkqUQEkH-stKoUaEo1d9e63pVcV1iU9yvHw/edit?usp=sharing
+
+Logique : à l’événement order.confirmed du back, appeler un service d’export qui :
+
+Valide les données (adresse, téléphone, total, produits).
+
+Écrit une ligne nouvelle via l’API Google Sheets (OAuth2 service account / clé JSON pour serveur).
+
+En cas d’erreur, réessayer x2 puis loguer l’erreur dans un tableau d’erreur (et alerter par email).
+
+Format : colonnes fixes (date, order_id, client, tel, adresse, articles (json), total, statut_livraison, transporteur, tracking_id).
+
+Sécurité : la clé Google Sheets est serveur-side uniquement (jamais exposée au front).
+
+3) Upload d’images produits — pas d’IA mais vrais fichiers
+
+Lors de l’ajout d’un produit, l’interface d’upload doit accepter les vraies images (jpg/png/heic) et ne pas remplacer ou transformer par des images générées par IA.
+
+Stockage : option A) stockage sur bucket (ex : S3-compatible ou Replit storage) + CDN, option B) stockage sur Google Cloud Storage. Sauvegarder l’URL dans la base produit.
+
+Vérifications : taille max, type MIME, optimisation (resize to 1200px max), génération d’un thumbnail.
+
+4) Contrôle des utilisateurs
+
+Vérification email + reset password sécurisé.
+
+Permissions par rôle (voir §1).
+
+Journalisation des actions sensibles (création/suppression produit, modification prix).
+
+Option KYC/simple vérification pour commerçants si besoin.
+
+5) Design boutique — mobile first & arabe comme langue principale
+
+Langue par défaut : arabe (RTL). Support FR/EN en second.
+
+Templates responsive (mobile-first).
+
+Pages principales : catalogue, fiche produit, panier, checkout, confirmation, profil client.
+
+Boutons / libellés en arabe, police lisible en arabe, direction RTL correctement gérée.
+
+Supprimer toute mention ou bouton donnant l’accès admin depuis la boutique publique.
+
+6) Page de confirmation — sync auto vers Google Sheets
+
+Dès que le paiement est confirmé ou la commande validée → appel server qui écrit sur le Google Sheet (URL ci-dessus).
+
+Retour front : afficher un message de confirmation + numéro de commande + tracking (si disponible).
+
+7) Intégrations transporteurs (DIGYLOG, Ozon/OzonExpress, CATHEDIS, SENDIT)
+
+J’ai vérifié rapidement que ces opérateurs proposent des plateformes/plateformes web et généralement des possibilités d’intégration / synchronisation (création de colis, suivi). Voir références ci-dessous. L’intégration exacte dépendra de l’API publique de chaque société (endpoints / auth).
+
+DIGYLOG : propose gestion e-commerce, suivi colis en temps réel et plateforme partenaire (Intégration API possible). 
+digylog
++1
+
+Ozon / OzonExpress : plateforme avec volonté d’« intégration directe avec boutiques via API » (site/documentation publique). 
+ozonexpress.ma
+
+CATHEDIS : propose services Next-Day, suivi et indique synchronisation via API pour création automatisée d’envois. 
+cathedis.ma
++1
+
+SENDIT : propose tracking temps réel, demandes de ramassage et tableau de bord ; souvent propose une API pour e-commerces. 
+Sendit
++1
+
+Logique générale d’intégration + gestion des clés API
+
+Procédure générale :
+
+Créer un compte entreprise chez le transporteur (client).
+
+Demander l’accès API / clé API / credentials (souvent via un espace client ou par support).
+
+Sur notre serveur, stocker la clé dans un secret manager (ex : variables d’environnement chiffrées, Vault ou Replit secrets). Ne jamais exposer la clé au front.
+
+Implémenter : endpoints pour création d’envoi (/api/shipping/create), récupération tarif & délai (/api/shipping/quote), webhook de suivi (/webhooks/shipping/{carrier}) pour recevoir mises à jour de statuts (ramassé, en transit, livré).
+
+Implémenter retry, idempotency key (pour éviter doublons), logging détaillé + tableau de suivi depuis admin.
+
+Auth & Key rotation : prévoir une interface admin pour changer/rotater les clés (ex: ajouter nouvelle clé, marquer ancienne inactive).
+
+Exemple d’en-têtes : Authorization: Bearer <API_KEY> ou X-API-Key: <KEY> — adapter selon doc du transporteur.
+
+Webhooks : exposer endpoint sécurisé (signature HMAC si disponible) pour valider que le callback vient bien du transporteur.
+
+8) Flux concret pour une commande
+
+Client passe commande → status = pending.
+
+Paiement confirmé → status = confirmed.
+
+Backend :
+
+Écrit ligne dans Google Sheets.
+
+Crée l’envoi chez le transporteur choisi (appel API transporteur) → récupère tracking_id.
+
+Met à jour commande avec tracking_id et statut shipped ou awaiting_pickup.
+
+Transporteur notifie via webhook → backend met à jour statut (livré, en transit…) et sheet si besoin.
+
+Notifications client (email/SMS).
+
+9) Design & pages d’admin — aspects UI
+
+Dashboard KPI (CA, commandes du jour, commandes en retard).
+
+Page produits : fiche, galerie images, éditeur WYSIWYG pour description (avec support RTL).
+
+Page commandes : filtres par statut, export CSV / ré-export vers Google Sheet manuellement si besoin.
+
+Page intégrations : config clés Google Sheets + chaque transporteur (clé + activer webhook).
+
+Mobile : s’assurer que l’admin est utilisable sur mobile (grid adaptatif).
+
+10) Checklist sécurité / ops
+
+HTTPS + HSTS.
+
+CSP (Content Security Policy).
+
+Protection contre CSRF pour routes sensibles.
+
+Limitation de débit sur endpoints publics (rate limiting).
+
+Backups base de données et backups exports Google Sheets si nécessaire.
+
+Logs d’audit.
+
+Remarques / actions demandées aux développeurs
+
+Confirmer que vous pouvez implémenter OAuth2 Service Account pour écrire sur la Google Sheet fournie.
+
+Confirmer les endpoints / méthodes de chaque transporteur dès que vous créez le compte partenaire — je veux que vous notiez exactement : endpoint création livraison, endpoint tracking, méthode d’auth (API key / OAuth), et si des webhooks existent.
+
+Me proposer un schéma de base de données minimal (tables : users, products, orders, order_items, shipments, logs).
+
+Me fournir un plan de test (end-to-end) pour : checkout → Google Sheet → création livraison → webhook de mise à jour.
+
+Si tu veux, je peux aussi :
+
+Rédiger les endpoints exacts (exemples de requêtes HTTP) pour Google Sheets et un exemple générique d’appel createShipment compatible avec DIGYLOG / CATHEDIS / SENDIT / Ozon (à condition que tu me fournis les docs API spécifiques du transporteur ou que je les récupère).
+
+Préparer le modèle de table SQL pour la base.
+
+Merci — réponds quand tu veux pour que j’envoie le next step (ex : templates d’API ou diagramme DB).
+
+Citations (référence rapide) : DIGYLOG, OzonExpress, CATHEDIS et SENDIT proposent des plateformes/possibilités d’intégration et de suivi (docs/infos publiques).
