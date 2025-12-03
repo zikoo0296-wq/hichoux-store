@@ -16,7 +16,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 37663
+localPort = 36361
 externalPort = 3000
 
 [[ports]]
@@ -49,8 +49,9 @@ waitForPort = 5000
 
 [agent]
 integrations = ["google-sheet:1.0.0", "javascript_database:1.0.0", "github:1.0.0"]
+expertMode = true
 
 [userenv]
 
 [userenv.shared]
-DATABASE_URL = "postgresql://postgres:Beqqali%40123@db.mbvskiaqfpbbnxhgzpga.supabase.co:5432/postgres"
+DATABASE_URL = "postgresql://postgres.mbvskiaqfpbbnxhgzpga:Beqqali%40123@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
