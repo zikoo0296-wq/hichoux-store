@@ -1,5 +1,5 @@
 # Database
-DATABASE_URL=postgresql://postgres.mbvskiaqfpbbnxhgzpga:Beqqali@123@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.mbvskiaqfpbbnxhgzpga:Beqqali%40123@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
 PGHOST=localhost
 PGPORT=5432
 PGUSER=postgres
