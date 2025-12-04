@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
+import createMemoryStore from "memorystore";
 import multer from "multer";
 import sharp from "sharp";
 import path from "path";
@@ -11,6 +12,8 @@ import { sendOrderToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
 import bcrypt from "bcrypt";
+
+const MemoryStore = createMemoryStore(session);
 
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -100,6 +103,9 @@ export async function registerRoutes(
   
   app.use(
     session({
+      store: new MemoryStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
+      }),
       secret: sessionSecret || "dev-session-secret-not-for-production",
       resave: false,
       saveUninitialized: false,
