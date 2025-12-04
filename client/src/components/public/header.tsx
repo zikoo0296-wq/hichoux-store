@@ -26,10 +26,10 @@ export function PublicHeader() {
     { href: "/categories", label: t("nav.categories") },
   ];
 
-  const languages: { code: Language; name: string; flag: string }[] = [
-    { code: "ar", name: "العربية", flag: "🇲🇦" },
-    { code: "fr", name: "Français", flag: "🇫🇷" },
-    { code: "en", name: "English", flag: "🇬🇧" },
+  const languages: { code: Language; name: string; abbr: string }[] = [
+    { code: "ar", name: t("lang.ar"), abbr: "AR" },
+    { code: "fr", name: t("lang.fr"), abbr: "FR" },
+    { code: "en", name: t("lang.en"), abbr: "EN" },
   ];
 
   return (
@@ -81,7 +81,7 @@ export function PublicHeader() {
                     className={language === lang.code ? "bg-accent" : ""}
                     data-testid={`button-lang-${lang.code}`}
                   >
-                    <span className="me-2">{lang.flag}</span>
+                    <span className="me-2 font-semibold text-xs text-muted-foreground">{lang.abbr}</span>
                     {lang.name}
                   </DropdownMenuItem>
                 ))}

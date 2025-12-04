@@ -154,7 +154,7 @@ export default function CheckoutPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => handleChange("phone", e.target.value)}
-                          placeholder="06xxxxxxxx"
+                          placeholder={t("checkout.phonePlaceholder")}
                           className={errors.phone ? "border-destructive" : ""}
                           data-testid="input-phone"
                         />
