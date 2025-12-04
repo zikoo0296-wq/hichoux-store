@@ -27,10 +27,33 @@ The platform is built as a monolithic Express.js application with React frontend
 - Shipping quote comparison feature
 
 ### User Roles System
-- Super Admin: Full access
-- Admin: Products, orders, categories management
-- Operator: Order status updates
-- Support: Read-only access
+- Super Admin: Full access including user management, settings, analytics
+- Admin: Products, orders, categories, analytics, shipping labels management
+- Operator: Order confirmation, shipping labels, order status updates
+- Support: Dashboard and orders read-only access
+
+### User Management (Super Admin Only)
+- Full CRUD operations for admin users at `/admin/users`
+- Role assignment with role-specific access controls
+- User activation/deactivation toggle
+- Password management with bcrypt hashing
+- Last login tracking
+
+### Role-Based Access Control (RBAC)
+- Sidebar menu filters based on user role
+- Backend middleware validates user from database on every request
+- Session regeneration on login prevents session fixation
+- Last super admin protection prevents system lockout
+- Role matrix enforced:
+  - Support: Dashboard + orders read-only
+  - Operator: Support access + order status + shipping labels
+  - Admin: Operator access + products/categories + analytics + exports
+  - Super Admin: Full access + user management + settings
+
+### Production Security
+- SESSION_SECRET required in production (throws error if not set)
+- Admin seed skips in production unless ADMIN_EMAIL/ADMIN_PASSWORD are set
+- Deactivated users are blocked from login and API access
 
 ### Database Schema Updates
 - Added `is_active`, `last_login_at` to users table

@@ -33,6 +33,7 @@ import AdminCategoriesPage from "@/pages/admin/categories";
 import AdminShippingLabelsPage from "@/pages/admin/shipping-labels";
 import AdminAnalyticsPage from "@/pages/admin/analytics";
 import AdminSettingsPage from "@/pages/admin/settings";
+import AdminUsersPage from "@/pages/admin/users";
 
 function PublicRouter() {
   return (
@@ -78,6 +79,7 @@ function AdminRouter() {
               <Route path="/admin/categories" component={() => <ProtectedRoute><AdminCategoriesPage /></ProtectedRoute>} />
               <Route path="/admin/shipping-labels" component={() => <ProtectedRoute><AdminShippingLabelsPage /></ProtectedRoute>} />
               <Route path="/admin/analytics" component={() => <ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
+              <Route path="/admin/users" component={() => <ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
               <Route path="/admin/settings" component={() => <ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
               <Route component={NotFound} />
             </Switch>

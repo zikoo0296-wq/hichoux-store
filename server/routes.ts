@@ -5,21 +5,63 @@ import { storage } from "./storage";
 import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists } from "./google-sheets";
 import { sendOrderToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
-import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema } from "@shared/schema";
+import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
 import bcrypt from "bcrypt";
 
 declare module "express-session" {
   interface SessionData {
     userId?: number;
+    userRole?: UserRole;
   }
 }
 
-function requireAuth(req: Request, res: Response, next: NextFunction) {
+interface AuthRequest extends Request {
+  userId?: number;
+  userRole?: UserRole;
+}
+
+function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  req.userId = req.session.userId;
+  req.userRole = req.session.userRole;
   next();
 }
+
+function requireRole(...allowedRoles: UserRole[]) {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: "User not found" });
+    }
+    
+    if (!user.isActive) {
+      req.session.destroy(() => {});
+      return res.status(403).json({ error: "Account is deactivated" });
+    }
+    
+    const userRole = user.role as UserRole;
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ error: "Forbidden - Insufficient permissions" });
+    }
+    
+    req.session.userRole = userRole;
+    req.userId = req.session.userId;
+    req.userRole = userRole;
+    next();
+  };
+}
+
+const requireSuperAdmin = requireRole("super_admin");
+const requireAdminOrAbove = requireRole("super_admin", "admin");
+const requireOperatorOrAbove = requireRole("super_admin", "admin", "operator");
+const requireAnyRole = requireRole("super_admin", "admin", "operator", "support");
 
 export async function registerRoutes(
   httpServer: Server,
@@ -28,9 +70,14 @@ export async function registerRoutes(
   // Trust proxy for Render/Vercel
   app.set('trust proxy', 1);
   
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret && process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: SESSION_SECRET environment variable is required in production");
+  }
+  
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "eshop-secret-key-change-in-production",
+      secret: sessionSecret || "dev-session-secret-not-for-production",
       resave: false,
       saveUninitialized: false,
       proxy: true,
@@ -135,13 +182,27 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
+      if (!user.isActive) {
+        return res.status(403).json({ error: "Account is deactivated. Please contact an administrator." });
+      }
+
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      req.session.userId = user.id;
-      res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+      req.session.regenerate((err) => {
+        if (err) {
+          return res.status(500).json({ error: "Session error" });
+        }
+        
+        req.session.userId = user.id;
+        req.session.userRole = user.role as UserRole;
+        
+        storage.updateUser(user.id, { lastLoginAt: new Date() }).catch(() => {});
+        
+        res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -163,14 +224,20 @@ export async function registerRoutes(
 
     const user = await storage.getUser(req.session.userId);
     if (!user) {
+      req.session.destroy(() => {});
       return res.status(401).json({ error: "User not found" });
+    }
+
+    if (!user.isActive) {
+      req.session.destroy(() => {});
+      return res.status(403).json({ error: "Account is deactivated" });
     }
 
     res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
   });
 
   // Admin API routes
-  app.get("/api/admin/dashboard", requireAuth, async (req, res) => {
+  app.get("/api/admin/dashboard", requireAnyRole, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -179,7 +246,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/orders", requireAuth, async (req, res) => {
+  app.get("/api/admin/orders", requireAnyRole, async (req, res) => {
     try {
       const orders = await storage.getOrders();
       
@@ -222,7 +289,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/orders/recent", requireAuth, async (req, res) => {
+  app.get("/api/admin/orders/recent", requireAnyRole, async (req, res) => {
     try {
       const orders = await storage.getRecentOrders(10);
       res.json(orders);
@@ -231,7 +298,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/orders/:id", requireAuth, async (req, res) => {
+  app.get("/api/admin/orders/:id", requireAnyRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.getOrder(id);
@@ -244,7 +311,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/confirm", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/confirm", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.updateOrderStatus(id, "CONFIRMEE");
@@ -279,7 +346,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/cancel", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/cancel", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.updateOrderStatus(id, "ANNULEE");
@@ -292,7 +359,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/mark-unreachable", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/mark-unreachable", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.updateOrderStatus(id, "INJOIGNABLE");
@@ -305,7 +372,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/send-to-carrier", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/send-to-carrier", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.getOrder(id);
@@ -325,7 +392,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/mark-delivered", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/mark-delivered", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.updateOrderStatus(id, "LIVREE");
@@ -338,7 +405,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/orders/:id/sync-sheets", requireAuth, async (req, res) => {
+  app.post("/api/admin/orders/:id/sync-sheets", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.getOrder(id);
@@ -359,7 +426,7 @@ export async function registerRoutes(
   });
 
   // Products admin routes
-  app.get("/api/admin/products", requireAuth, async (req, res) => {
+  app.get("/api/admin/products", requireAdminOrAbove, async (req, res) => {
     try {
       const products = await storage.getProducts();
       res.json(products);
@@ -368,7 +435,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/products/:id", requireAuth, async (req, res) => {
+  app.get("/api/admin/products/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const product = await storage.getProduct(id);
@@ -381,7 +448,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/products", requireAuth, async (req, res) => {
+  app.post("/api/admin/products", requireAdminOrAbove, async (req, res) => {
     try {
       const productData = {
         ...req.body,
@@ -396,7 +463,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/products/:id", requireAuth, async (req, res) => {
+  app.patch("/api/admin/products/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const productData = {
@@ -415,7 +482,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/admin/products/:id", requireAuth, async (req, res) => {
+  app.delete("/api/admin/products/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProduct(id);
@@ -426,7 +493,7 @@ export async function registerRoutes(
   });
 
   // Categories admin routes
-  app.get("/api/admin/categories", requireAuth, async (req, res) => {
+  app.get("/api/admin/categories", requireAdminOrAbove, async (req, res) => {
     try {
       const categories = await storage.getCategories();
       res.json(categories);
@@ -435,7 +502,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/categories", requireAuth, async (req, res) => {
+  app.post("/api/admin/categories", requireAdminOrAbove, async (req, res) => {
     try {
       const category = await storage.createCategory(req.body);
       res.status(201).json(category);
@@ -444,7 +511,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/categories/:id", requireAuth, async (req, res) => {
+  app.patch("/api/admin/categories/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const category = await storage.updateCategory(id, req.body);
@@ -457,7 +524,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/admin/categories/:id", requireAuth, async (req, res) => {
+  app.delete("/api/admin/categories/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteCategory(id);
@@ -468,7 +535,7 @@ export async function registerRoutes(
   });
 
   // Shipping labels
-  app.get("/api/admin/shipping-labels", requireAuth, async (req, res) => {
+  app.get("/api/admin/shipping-labels", requireOperatorOrAbove, async (req, res) => {
     try {
       const labels = await storage.getShippingLabels();
       res.json(labels);
@@ -477,7 +544,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/shipping-labels/:id/download", async (req, res) => {
+  app.get("/api/shipping-labels/:id/download", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const label = await storage.getShippingLabel(id);
@@ -503,7 +570,7 @@ export async function registerRoutes(
   });
 
   // Analytics
-  app.get("/api/admin/analytics", requireAuth, async (req, res) => {
+  app.get("/api/admin/analytics", requireAdminOrAbove, async (req, res) => {
     try {
       const startDate = req.query.startDate
         ? new Date(req.query.startDate as string)
@@ -521,7 +588,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/analytics/export", requireAuth, async (req, res) => {
+  app.get("/api/admin/analytics/export", requireAdminOrAbove, async (req, res) => {
     try {
       const startDate = req.query.startDate
         ? new Date(req.query.startDate as string)
@@ -557,7 +624,7 @@ export async function registerRoutes(
   });
 
   // Ad costs
-  app.post("/api/admin/ad-costs", requireAuth, async (req, res) => {
+  app.post("/api/admin/ad-costs", requireAdminOrAbove, async (req, res) => {
     try {
       const adCost = await storage.createAdCost({
         amount: req.body.amount,
@@ -571,7 +638,7 @@ export async function registerRoutes(
   });
 
   // Settings
-  app.get("/api/admin/settings", requireAuth, async (req, res) => {
+  app.get("/api/admin/settings", requireSuperAdmin, async (req, res) => {
     try {
       const settings = await storage.getSettings();
       res.json(settings);
@@ -580,7 +647,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/settings", requireAuth, async (req, res) => {
+  app.post("/api/admin/settings", requireSuperAdmin, async (req, res) => {
     try {
       const settingsData = req.body;
       for (const [key, value] of Object.entries(settingsData)) {
@@ -594,7 +661,7 @@ export async function registerRoutes(
   });
 
   // Google Sheets sync
-  app.post("/api/admin/google-sheets/sync", requireAuth, async (req, res) => {
+  app.post("/api/admin/google-sheets/sync", requireAdminOrAbove, async (req, res) => {
     try {
       await ensureSheetExists();
       const result = await syncAllUnSyncedOrders();
@@ -605,7 +672,7 @@ export async function registerRoutes(
   });
 
   // CSV Export - Orders
-  app.get("/api/admin/orders/export/csv", requireAuth, async (req, res) => {
+  app.get("/api/admin/orders/export/csv", requireAdminOrAbove, async (req, res) => {
     try {
       const orders = await storage.getOrders();
       const csv = [
@@ -631,7 +698,7 @@ export async function registerRoutes(
   });
 
   // CSV Export - Products
-  app.get("/api/admin/products/export/csv", requireAuth, async (req, res) => {
+  app.get("/api/admin/products/export/csv", requireAdminOrAbove, async (req, res) => {
     try {
       const products = await storage.getProducts();
       const csv = [
@@ -656,7 +723,7 @@ export async function registerRoutes(
   });
 
   // Inventory alerts - Get low stock products
-  app.get("/api/admin/inventory/low-stock", requireAuth, async (req, res) => {
+  app.get("/api/admin/inventory/low-stock", requireAdminOrAbove, async (req, res) => {
     try {
       const products = await storage.getProducts();
       const lowStockProducts = products.filter(p => {
@@ -670,7 +737,7 @@ export async function registerRoutes(
   });
 
   // CSV Import - Products
-  app.post("/api/admin/products/import/csv", requireAuth, async (req, res) => {
+  app.post("/api/admin/products/import/csv", requireAdminOrAbove, async (req, res) => {
     try {
       const { csvContent } = req.body;
       if (!csvContent) {
@@ -730,7 +797,7 @@ export async function registerRoutes(
   });
 
   // Send SMS/WhatsApp notification
-  app.post("/api/admin/notifications/send", requireAuth, async (req, res) => {
+  app.post("/api/admin/notifications/send", requireAdminOrAbove, async (req, res) => {
     try {
       const { phone, message, channel } = req.body;
       
@@ -753,10 +820,134 @@ export async function registerRoutes(
   });
 
   // Upload endpoint (placeholder - would need Cloudinary/S3 integration)
-  app.post("/api/upload", requireAuth, async (req, res) => {
+  app.post("/api/upload", requireAdminOrAbove, async (req, res) => {
     try {
       const placeholderUrl = `https://picsum.photos/seed/${Date.now()}/800/800`;
       res.json({ url: placeholderUrl });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User Management Routes (Super Admin only)
+  app.get("/api/admin/users", requireSuperAdmin, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users.map(u => ({ ...u, password: undefined })));
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/users/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ ...user, password: undefined });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/users", requireSuperAdmin, async (req, res) => {
+    try {
+      const { name, email, password, role } = req.body;
+      
+      if (!name || !email || !password) {
+        return res.status(400).json({ error: "Name, email, and password are required" });
+      }
+
+      if (role && !USER_ROLES.includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already in use" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || "operator",
+      });
+
+      res.status(201).json({ ...user, password: undefined });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, email, role, isActive, password } = req.body;
+
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (role && !USER_ROLES.includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      const wouldRemoveSuperAdmin = existingUser.role === "super_admin" && (
+        (role && role !== "super_admin") || 
+        (typeof isActive === "boolean" && !isActive)
+      );
+      
+      if (wouldRemoveSuperAdmin) {
+        const users = await storage.getUsers();
+        const superAdminCount = users.filter(u => u.role === "super_admin" && u.isActive).length;
+        if (superAdminCount <= 1) {
+          return res.status(400).json({ error: "Cannot demote or deactivate the last super admin" });
+        }
+      }
+
+      const updateData: any = {};
+      if (name) updateData.name = name;
+      if (email) updateData.email = email;
+      if (role) updateData.role = role;
+      if (typeof isActive === "boolean") updateData.isActive = isActive;
+      if (password) updateData.password = await bcrypt.hash(password, 10);
+
+      const user = await storage.updateUser(id, updateData);
+      res.json({ ...user, password: undefined });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const authReq = req as AuthRequest;
+      
+      if (authReq.userId === id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+
+      const userToDelete = await storage.getUser(id);
+      if (!userToDelete) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (userToDelete.role === "super_admin") {
+        const users = await storage.getUsers();
+        const superAdminCount = users.filter(u => u.role === "super_admin" && u.isActive).length;
+        if (superAdminCount <= 1) {
+          return res.status(400).json({ error: "Cannot delete the last super admin" });
+        }
+      }
+
+      await storage.deleteUser(id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -767,16 +958,28 @@ export async function registerRoutes(
 
 async function seedAdminUser() {
   try {
-    const existingAdmin = await storage.getUserByEmail("admin@eshop.ma");
+    const isProduction = process.env.NODE_ENV === "production";
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (isProduction && (!adminEmail || !adminPassword)) {
+      console.log("Skipping admin seed in production - set ADMIN_EMAIL and ADMIN_PASSWORD to seed");
+      return;
+    }
+    
+    const email = adminEmail || "admin@eshop.ma";
+    const password = adminPassword || "admin123";
+    
+    const existingAdmin = await storage.getUserByEmail(email);
     if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash("admin123", 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       await storage.createUser({
-        name: "Admin",
-        email: "admin@eshop.ma",
+        name: "Super Admin",
+        email: email,
         password: hashedPassword,
-        role: "admin",
+        role: "super_admin",
       });
-      console.log("Admin user created: admin@eshop.ma / admin123");
+      console.log(`Super Admin user created: ${email}`);
     }
   } catch (error) {
     console.error("Error seeding admin user:", error);
