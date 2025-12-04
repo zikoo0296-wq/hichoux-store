@@ -20,7 +20,7 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, data: Partial<InsertUser>): Promise<User | undefined>;
+  updateUser(id: number, data: Partial<InsertUser> & { lastLoginAt?: Date | null; isActive?: boolean }): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
 
   // Categories
@@ -121,7 +121,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async updateUser(id: number, data: Partial<InsertUser>): Promise<User | undefined> {
+  async updateUser(id: number, data: Partial<InsertUser> & { lastLoginAt?: Date | null; isActive?: boolean }): Promise<User | undefined> {
     const [updated] = await db.update(users).set(data).where(eq(users.id, id)).returning();
     return updated || undefined;
   }

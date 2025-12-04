@@ -1,23 +1,17 @@
 import { Link, useLocation } from "wouter";
-import { ShoppingBag, Menu, X, Phone, ShoppingCart, Globe } from "lucide-react";
+import { Menu, X, Phone, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
-import { useI18n, Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 
 export function PublicHeader() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { getItemCount } = useCart();
-  const { language, setLanguage, t, isRTL } = useI18n();
+  const { t } = useI18n();
   const itemCount = getItemCount();
 
   const navLinks = [
@@ -26,29 +20,28 @@ export function PublicHeader() {
     { href: "/categories", label: t("nav.categories") },
   ];
 
-  const languages: { code: Language; name: string; abbr: string }[] = [
-    { code: "ar", name: t("lang.ar"), abbr: "AR" },
-    { code: "fr", name: t("lang.fr"), abbr: "FR" },
-    { code: "en", name: t("lang.en"), abbr: "EN" },
-  ];
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <ShoppingBag className="h-7 w-7 text-primary" />
-            <span className="font-bold text-xl hidden sm:inline">E-Shop</span>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>م</span>
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-bold text-lg block" style={{ fontFamily: 'var(--font-heading)' }}>{t("store.name")}</span>
+              <span className="text-xs text-muted-foreground">{t("store.tagline")}</span>
+            </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover-elevate px-3 py-2 rounded-md ${
+                className={`text-sm font-medium transition-colors hover-elevate px-4 py-2 rounded-full ${
                   location === link.href
-                    ? "text-primary"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 data-testid={`link-nav-${link.href.replace("/", "") || "home"}`}
@@ -61,42 +54,22 @@ export function PublicHeader() {
           <div className="flex items-center gap-2">
             <a
               href="tel:+212600000000"
-              className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-full hover-elevate"
             >
               <Phone className="h-4 w-4" />
-              <span>+212 6 00 00 00 00</span>
+              <span dir="ltr">+212 6 00 00 00 00</span>
             </a>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-language">
-                  <Globe className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align={isRTL ? "start" : "end"}>
-                {languages.map((lang) => (
-                  <DropdownMenuItem
-                    key={lang.code}
-                    onClick={() => setLanguage(lang.code)}
-                    className={language === lang.code ? "bg-accent" : ""}
-                    data-testid={`button-lang-${lang.code}`}
-                  >
-                    <span className="me-2 font-semibold text-xs text-muted-foreground">{lang.abbr}</span>
-                    {lang.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             <ThemeToggle />
 
             <Link href="/cart">
-              <Button variant="ghost" size="icon" className="relative" data-testid="button-cart">
-                <ShoppingCart className="h-5 w-5" />
+              <Button variant="default" size="default" className="relative gap-2 rounded-full" data-testid="button-cart">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("nav.cart")}</span>
                 {itemCount > 0 && (
                   <Badge
-                    variant="default"
-                    className="absolute -top-1 -end-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    variant="secondary"
+                    className="h-5 min-w-5 flex items-center justify-center p-0 text-xs"
                   >
                     {itemCount > 9 ? "9+" : itemCount}
                   </Badge>

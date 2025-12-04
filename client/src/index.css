@@ -1,49 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE */
+/* LIGHT MODE - Modern Moroccan Color Scheme */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --border: 220 13% 91%;
-  --card: 0 0% 98%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 220 13% 94%;
-  --sidebar: 0 0% 96%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-border: 220 13% 90%;
-  --sidebar-primary: 221 83% 53%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 220 14% 91%;
-  --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 221 83% 53%;
-  --popover: 0 0% 97%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 220 13% 93%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 220 14% 93%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 220 14% 95%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 220 14% 94%;
-  --accent-foreground: 222 47% 11%;
+  /* Cream/Ivory base with warm undertones */
+  --background: 40 33% 98%;
+  --foreground: 220 30% 15%;
+  --border: 40 20% 90%;
+  /* Soft cream cards */
+  --card: 40 30% 97%;
+  --card-foreground: 220 30% 15%;
+  --card-border: 40 20% 92%;
+  /* Sidebar */
+  --sidebar: 40 25% 95%;
+  --sidebar-foreground: 220 30% 15%;
+  --sidebar-border: 40 20% 88%;
+  --sidebar-primary: 171 55% 38%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 40 25% 90%;
+  --sidebar-accent-foreground: 220 30% 15%;
+  --sidebar-ring: 171 55% 38%;
+  --popover: 40 28% 96%;
+  --popover-foreground: 220 30% 15%;
+  --popover-border: 40 20% 91%;
+  /* Moroccan teal/green as primary */
+  --primary: 171 55% 38%;
+  --primary-foreground: 0 0% 100%;
+  /* Warm secondary */
+  --secondary: 40 25% 92%;
+  --secondary-foreground: 220 30% 15%;
+  --muted: 40 20% 94%;
+  --muted-foreground: 220 15% 45%;
+  --accent: 40 25% 91%;
+  --accent-foreground: 220 30% 15%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --input: 220 13% 85%;
-  --ring: 221 83% 53%;
-  --chart-1: 221 83% 53%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 40 20% 88%;
+  --ring: 171 55% 38%;
+  /* Gold/Amber for CTA accents */
+  --cta-gold: 45 90% 50%;
+  --cta-gold-foreground: 220 30% 15%;
+  --chart-1: 171 55% 38%;
   --chart-2: 142 76% 36%;
-  --chart-3: 262 83% 58%;
+  --chart-3: 45 90% 50%;
   --chart-4: 30 80% 55%;
   --chart-5: 340 82% 52%;
-  --font-sans: Inter, Open Sans, sans-serif;
+  /* Arabic fonts - Cairo for headings, Tajawal for body */
+  --font-sans: 'Tajawal', 'Cairo', system-ui, sans-serif;
+  --font-heading: 'Cairo', 'Tajawal', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
@@ -87,46 +99,54 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE - Deep Moroccan Night */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 222 47% 4%;
-  --foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --card: 222 47% 5.5%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 217 33% 8%;
-  --sidebar: 222 47% 7%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 217 33% 10%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 222 47% 11%;
-  --sidebar-accent: 217 33% 9%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 217 91% 60%;
-  --popover: 222 47% 8%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 217 33% 11%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 11%;
-  --secondary: 217 33% 11%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 10%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 217 33% 9%;
-  --accent-foreground: 210 40% 98%;
+  /* Deep warm dark background */
+  --background: 220 25% 8%;
+  --foreground: 40 20% 95%;
+  --border: 220 20% 18%;
+  /* Slightly elevated dark cards */
+  --card: 220 25% 10%;
+  --card-foreground: 40 20% 95%;
+  --card-border: 220 20% 14%;
+  /* Sidebar */
+  --sidebar: 220 25% 12%;
+  --sidebar-foreground: 40 20% 95%;
+  --sidebar-border: 220 20% 16%;
+  --sidebar-primary: 171 55% 45%;
+  --sidebar-primary-foreground: 220 25% 8%;
+  --sidebar-accent: 220 25% 15%;
+  --sidebar-accent-foreground: 40 20% 95%;
+  --sidebar-ring: 171 55% 45%;
+  --popover: 220 25% 11%;
+  --popover-foreground: 40 20% 95%;
+  --popover-border: 220 20% 15%;
+  /* Moroccan teal primary - slightly brighter for dark mode */
+  --primary: 171 55% 45%;
+  --primary-foreground: 220 25% 8%;
+  --secondary: 220 25% 15%;
+  --secondary-foreground: 40 20% 95%;
+  --muted: 220 20% 14%;
+  --muted-foreground: 40 15% 60%;
+  --accent: 220 25% 14%;
+  --accent-foreground: 40 20% 95%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --input: 217 33% 20%;
-  --ring: 217 91% 60%;
-  --chart-1: 217 91% 70%;
-  --chart-2: 142 76% 65%;
-  --chart-3: 262 83% 68%;
-  --chart-4: 30 80% 65%;
-  --chart-5: 340 82% 62%;
+  --destructive-foreground: 40 20% 95%;
+  --input: 220 20% 22%;
+  --ring: 171 55% 45%;
+  /* Gold accent */
+  --cta-gold: 45 90% 55%;
+  --cta-gold-foreground: 220 25% 8%;
+  --chart-1: 171 55% 55%;
+  --chart-2: 142 76% 55%;
+  --chart-3: 45 90% 55%;
+  --chart-4: 30 80% 60%;
+  --chart-5: 340 82% 58%;
   --shadow-2xs: 0px 2px 0px 0px hsl(217 33% 17% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(217 33% 17% / 0.10);
   --shadow-sm: 0px 2px 0px 0px hsl(217 33% 17% / 0.10), 0px 1px 2px -1px hsl(217 33% 17% / 0.20);

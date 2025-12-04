@@ -6,8 +6,24 @@ interface TranslationRecord {
   [key: string]: string;
 }
 
+// Arabic translations for the public storefront
 const translations: Record<Language, TranslationRecord> = {
   ar: {
+    // Store info
+    "store.name": "متجرنا",
+    "store.tagline": "جودة عالية - توصيل سريع",
+    // Additional footer
+    "footer.privacy": "سياسة الخصوصية",
+    "footer.terms": "شروط الاستخدام",
+    "footer.return": "سياسة الإرجاع",
+    "footer.faq": "الأسئلة الشائعة",
+    // Product details
+    "product.quantity": "الكمية",
+    "product.addToCart": "أضف للسلة",
+    "product.buyNow": "اشترِ الآن",
+    "product.description": "وصف المنتج",
+    "product.specifications": "المواصفات",
+    "product.related": "منتجات ذات صلة",
     "nav.home": "الرئيسية",
     "nav.products": "المنتجات",
     "nav.categories": "التصنيفات",
@@ -100,6 +116,16 @@ const translations: Record<Language, TranslationRecord> = {
     "common.search": "بحث",
     "common.filter": "تصفية",
     "common.sort": "ترتيب",
+    "order.placeOrder": "اطلب هذا المنتج",
+    "order.confirmed": "تم تأكيد طلبك!",
+    "order.orderNumber": "رقم الطلب",
+    "order.error": "حدث خطأ أثناء إرسال الطلب",
+    "order.fullName": "الاسم الكامل",
+    "order.phone": "رقم الهاتف",
+    "order.address": "عنوان التوصيل",
+    "order.city": "المدينة",
+    "order.notes": "ملاحظات التوصيل (اختياري)",
+    "order.confirm": "تأكيد الطلب",
   },
   fr: {
     "nav.home": "Accueil",
@@ -194,6 +220,16 @@ const translations: Record<Language, TranslationRecord> = {
     "common.search": "Rechercher",
     "common.filter": "Filtrer",
     "common.sort": "Trier",
+    "order.placeOrder": "Commander ce produit",
+    "order.confirmed": "Commande confirmée!",
+    "order.orderNumber": "Numéro de commande",
+    "order.error": "Erreur lors de la commande",
+    "order.fullName": "Nom complet",
+    "order.phone": "Téléphone",
+    "order.address": "Adresse de livraison",
+    "order.city": "Ville",
+    "order.notes": "Notes de livraison (optionnel)",
+    "order.confirm": "Confirmer la commande",
   },
   en: {
     "nav.home": "Home",
@@ -288,6 +324,16 @@ const translations: Record<Language, TranslationRecord> = {
     "common.search": "Search",
     "common.filter": "Filter",
     "common.sort": "Sort",
+    "order.placeOrder": "Order this product",
+    "order.confirmed": "Order confirmed!",
+    "order.orderNumber": "Order number",
+    "order.error": "Error placing order",
+    "order.fullName": "Full name",
+    "order.phone": "Phone",
+    "order.address": "Delivery address",
+    "order.city": "City",
+    "order.notes": "Delivery notes (optional)",
+    "order.confirm": "Confirm order",
   },
 };
 
@@ -301,19 +347,36 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 const LANGUAGE_STORAGE_KEY = "eshop_language";
+const ADMIN_LANGUAGE_KEY = "eshop_admin_language";
+
+// Check if we're in admin area
+function isAdminRoute(): boolean {
+  return typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+}
 
 export function I18nProvider({ children }: { children: ReactNode }) {
+  // Public storefront is always Arabic, admin can choose language
   const [language, setLanguageState] = useState<Language>("ar");
 
   useEffect(() => {
-    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language | null;
-    if (stored && ["ar", "fr", "en"].includes(stored)) {
-      setLanguageState(stored);
+    if (isAdminRoute()) {
+      // Admin area: allow language choice
+      const stored = localStorage.getItem(ADMIN_LANGUAGE_KEY) as Language | null;
+      if (stored && ["ar", "fr", "en"].includes(stored)) {
+        setLanguageState(stored);
+      } else {
+        setLanguageState("fr"); // Default admin language is French
+      }
+    } else {
+      // Public storefront: always Arabic
+      setLanguageState("ar");
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    if (isAdminRoute()) {
+      localStorage.setItem(ADMIN_LANGUAGE_KEY, language);
+    }
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
   }, [language]);

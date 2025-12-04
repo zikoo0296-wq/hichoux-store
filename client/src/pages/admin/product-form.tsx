@@ -9,7 +9,7 @@ import type { Product } from "@shared/schema";
 export default function AdminProductFormPage() {
   const params = useParams<{ id?: string }>();
   const isEditing = !!params.id && params.id !== "new";
-  const productId = isEditing ? parseInt(params.id) : null;
+  const productId = isEditing && params.id ? parseInt(params.id) : null;
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/admin/products", productId],

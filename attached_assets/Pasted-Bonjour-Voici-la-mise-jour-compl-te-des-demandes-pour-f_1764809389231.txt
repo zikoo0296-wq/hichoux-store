@@ -1,0 +1,86 @@
+Bonjour,
+Voici la mise à jour complète des demandes pour finaliser la boutique et la partie admin :
+
+🔹 1. Langue du site
+
+La boutique (front pour les clients) doit être entièrement en arabe (RTL).
+
+La partie admin reste en français ou en anglais, pas besoin d’arabe dans l’admin.
+
+🔹 2. Upload des produits
+
+Lors de l’ajout d’un produit, les images doivent être importées depuis mes fichiers (upload normal).
+
+Je ne veux plus d’images générées par IA.
+
+Stocker les images réelles telles qu’elles sont, avec compression légère si nécessaire.
+
+🔹 3. Design complet de la boutique
+
+Merci de créer un design moderne, propre et professionnel, adapté mobile.
+Points importants pour le design :
+
+• Charte visuelle
+
+Style arabe moderne (RTL), typographie lisible comme Cairo, Tajawal, ou Noto Arabic.
+
+Couleurs sobres : blanc, crème, gris clair ou bleu / vert marocain.
+
+Boutons arrondis (CTA vert ou or).
+
+• Mise en page
+
+Page d’accueil avec :
+
+bannière principale
+
+produits populaires
+
+catégories
+
+footer avec contact, politique, etc.
+
+Page produit :
+
+images du produit (carrousel)
+
+titre + description + prix
+
+bouton commander clair et gros
+
+Page commande en une seule étape (One Page Checkout), simple et rapide.
+
+• Fond de la boutique
+
+Merci de me créer un fond élégant :
+
+léger motif géométrique arabe (gris très clair)
+
+ou un dégradé doux (ex : blanc → beige / ivoire)
+
+Le fond doit être simple et professionnel, pas trop chargé.
+
+🔹 4. Administration (sécurisée)
+
+Enlever complètement le bouton ou le lien « passer admin » dans la boutique.
+
+L’admin doit être privée et sécurisée via URL + login.
+
+Revoir le design des pages admin : Produits, Commandes, Paramètres, Utilisateurs.
+
+🔹 5. Google Sheets – Synchronisation automatique
+
+À la confirmation d’une commande, elle doit être envoyée automatiquement dans le Google Sheet suivant :
+➡️ [ID fourni dans ma demande précédente]
+(même logique actuelle, juste corriger et stabiliser).
+
+🔹 6. API des sociétés de livraison
+
+Intégrer la logique API pour : Digylog, Ozone, Cathedis, Sendit.
+Créer un espace dans les paramètres admin pour :
+
+ajouter les API keys
+
+activer/désactiver un transporteur
+
+choisir transporteur par défaut

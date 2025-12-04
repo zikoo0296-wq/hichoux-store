@@ -18,7 +18,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import {
-  ChevronLeft,
   Minus,
   Plus,
   Truck,
@@ -28,6 +27,7 @@ import {
   Package,
 } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import type { Product, Category } from "@shared/schema";
 
 type ProductWithCategory = Product & { category?: Category | null };
@@ -36,6 +36,7 @@ export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const productId = parseInt(params.id || "0");
   const [quantity, setQuantity] = useState(1);
+  const { t } = useI18n();
 
   const { data: product, isLoading } = useQuery<ProductWithCategory>({
     queryKey: ["/api/products", productId],
@@ -59,7 +60,7 @@ export default function ProductDetailPage() {
         <main className="flex-1">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid lg:grid-cols-2 gap-12">
-              <Skeleton className="aspect-square rounded-xl" />
+              <Skeleton className="aspect-square rounded-2xl" />
               <div className="space-y-6">
                 <Skeleton className="h-8 w-3/4" />
                 <Skeleton className="h-12 w-1/3" />
@@ -83,12 +84,12 @@ export default function ProductDetailPage() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <Package className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Produit non trouvé</h1>
+            <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>المنتج غير موجود</h1>
             <p className="text-muted-foreground mb-6">
-              Le produit que vous recherchez n'existe pas ou a été supprimé.
+              المنتج الذي تبحث عنه غير موجود أو تم حذفه.
             </p>
             <Link href="/products">
-              <Button>Retour aux produits</Button>
+              <Button className="rounded-full">{t("nav.products")}</Button>
             </Link>
           </div>
         </main>
@@ -123,13 +124,13 @@ export default function ProductDetailPage() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/">Accueil</Link>
+                  <Link href="/">{t("nav.home")}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/products">Produits</Link>
+                  <Link href="/products">{t("nav.products")}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {product.category && (
@@ -162,63 +163,65 @@ export default function ProductDetailPage() {
               <div>
                 {product.category && (
                   <Link href={`/products?category=${product.category.slug}`}>
-                    <Badge variant="secondary" className="mb-3">
+                    <Badge variant="secondary" className="mb-3 rounded-full">
                       {product.category.name}
                     </Badge>
                   </Link>
                 )}
-                <h1 className="text-3xl font-bold" data-testid="text-product-title">
+                <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-heading)' }} data-testid="text-product-title">
                   {product.title}
                 </h1>
                 {product.sku && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1" dir="ltr">
                     SKU: {product.sku}
                   </p>
                 )}
               </div>
 
-              <div className="flex items-baseline gap-4">
+              <div className="flex items-baseline gap-4 flex-wrap">
                 <span className="text-4xl font-bold text-primary" data-testid="text-product-price">
-                  {price.toFixed(2)} DH
+                  {price.toFixed(2)} {t("common.dh")}
                 </span>
                 {inStock ? (
-                  <div className="flex items-center gap-1 text-sm text-green-600">
+                  <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
                     <CheckCircle className="h-4 w-4" />
-                    <span>En stock ({product.stock} disponibles)</span>
+                    <span>{t("products.inStock")} ({product.stock})</span>
                   </div>
                 ) : (
-                  <Badge variant="destructive">Rupture de stock</Badge>
+                  <Badge variant="destructive" className="rounded-full">{t("products.outOfStock")}</Badge>
                 )}
               </div>
 
               {product.description && (
                 <div className="prose prose-sm dark:prose-invert">
-                  <p className="text-muted-foreground">{product.description}</p>
+                  <p className="text-muted-foreground leading-relaxed">{product.description}</p>
                 </div>
               )}
 
               <Separator />
 
               {inStock && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium">Quantité:</span>
+                    <span className="text-sm font-medium">{t("product.quantity")}:</span>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="icon"
+                        className="rounded-full"
                         onClick={decrementQuantity}
                         disabled={quantity <= 1}
                         data-testid="button-quantity-minus"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="w-12 text-center font-medium" data-testid="text-quantity">
+                      <span className="w-12 text-center font-medium text-lg" data-testid="text-quantity">
                         {quantity}
                       </span>
                       <Button
                         variant="outline"
                         size="icon"
+                        className="rounded-full"
                         onClick={incrementQuantity}
                         disabled={quantity >= product.stock}
                         data-testid="button-quantity-plus"
@@ -228,18 +231,18 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 py-4">
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <Truck className="h-5 w-5 mb-2 text-primary" />
-                      <span className="text-xs text-muted-foreground">Livraison 24-48h</span>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-card border">
+                      <Truck className="h-6 w-6 mb-2 text-primary" />
+                      <span className="text-xs text-muted-foreground">{t("hero.fastDeliveryDesc")}</span>
                     </div>
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <CreditCard className="h-5 w-5 mb-2 text-primary" />
-                      <span className="text-xs text-muted-foreground">Paiement COD</span>
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-card border">
+                      <CreditCard className="h-6 w-6 mb-2 text-primary" />
+                      <span className="text-xs text-muted-foreground">{t("hero.codPaymentDesc")}</span>
                     </div>
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-muted/50">
-                      <Shield className="h-5 w-5 mb-2 text-primary" />
-                      <span className="text-xs text-muted-foreground">Garantie qualité</span>
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-card border">
+                      <Shield className="h-6 w-6 mb-2 text-primary" />
+                      <span className="text-xs text-muted-foreground">{t("hero.qualityGuaranteeDesc")}</span>
                     </div>
                   </div>
 
@@ -248,12 +251,11 @@ export default function ProductDetailPage() {
               )}
 
               {!inStock && (
-                <div className="p-6 rounded-lg bg-muted/50 text-center">
-                  <Package className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-                  <h3 className="font-medium mb-1">Produit temporairement indisponible</h3>
+                <div className="p-8 rounded-2xl bg-muted/50 text-center">
+                  <Package className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="font-semibold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>المنتج غير متوفر مؤقتاً</h3>
                   <p className="text-sm text-muted-foreground">
-                    Ce produit est actuellement en rupture de stock.
-                    Revenez bientôt!
+                    هذا المنتج غير متوفر حالياً. عد قريباً!
                   </p>
                 </div>
               )}
@@ -262,7 +264,7 @@ export default function ProductDetailPage() {
 
           {relatedProducts && relatedProducts.length > 0 && (
             <section className="mt-16">
-              <h2 className="text-2xl font-bold mb-6">Produits similaires</h2>
+              <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-heading)' }}>{t("product.related")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map((p) => (
                   <ProductCard key={p.id} product={p} />

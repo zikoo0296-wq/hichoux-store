@@ -1,12 +1,35 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
+import multer from "multer";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists } from "./google-sheets";
 import { sendOrderToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
 import bcrypt from "bcrypt";
+
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  },
+});
 
 declare module "express-session" {
   interface SessionData {
@@ -118,6 +141,24 @@ export async function registerRoutes(
     try {
       const categories = await storage.getCategories();
       res.json(categories);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/store-config", async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      const settingsMap = new Map(settings.map((s) => [s.key, s.value || ""]));
+      
+      res.json({
+        deliveryCost: parseFloat(settingsMap.get("delivery_cost") || "35"),
+        freeDeliveryThreshold: parseFloat(settingsMap.get("free_delivery_threshold") || "300"),
+        storeName: settingsMap.get("store_name") || "متجرنا",
+        storePhone: settingsMap.get("store_phone") || "+212 6 00 00 00 00",
+        whatsappNumber: settingsMap.get("whatsapp_number") || "212600000000",
+        defaultCarrier: settingsMap.get("default_carrier") || "digylog",
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -820,14 +861,30 @@ export async function registerRoutes(
   });
 
   // Upload endpoint (placeholder - would need Cloudinary/S3 integration)
-  app.post("/api/upload", requireAdminOrAbove, async (req, res) => {
+  app.post("/api/upload", requireAdminOrAbove, upload.single("file"), async (req, res) => {
     try {
-      const placeholderUrl = `https://picsum.photos/seed/${Date.now()}/800/800`;
-      res.json({ url: placeholderUrl });
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+      const filepath = path.join(uploadsDir, filename);
+
+      await sharp(req.file.buffer)
+        .resize(800, 800, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(filepath);
+
+      const url = `/uploads/${filename}`;
+      res.json({ url });
     } catch (error: any) {
+      console.error("Upload error:", error);
       res.status(500).json({ error: error.message });
     }
   });
+
+  const express = await import("express");
+  app.use("/uploads", express.default.static(uploadsDir));
 
   // User Management Routes (Super Admin only)
   app.get("/api/admin/users", requireSuperAdmin, async (req, res) => {
