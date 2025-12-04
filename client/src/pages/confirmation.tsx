@@ -49,9 +49,7 @@ export default function ConfirmationPage() {
         <PublicHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center py-16 px-4">
-            <h1 className="text-2xl font-bold mb-4">
-              {isRTL ? "الطلب غير موجود" : "Commande non trouvée"}
-            </h1>
+            <h1 className="text-2xl font-bold mb-4">{t("confirmation.orderNotFound")}</h1>
             <Link href="/">
               <Button data-testid="button-go-home">
                 {t("confirmation.backHome")}
@@ -101,7 +99,7 @@ export default function ConfirmationPage() {
               </div>
 
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">{isRTL ? "المنتجات" : "Produits"}</h4>
+                <h4 className="font-medium mb-3">{t("confirmation.products")}</h4>
                 <div className="space-y-2">
                   {order.items?.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm">

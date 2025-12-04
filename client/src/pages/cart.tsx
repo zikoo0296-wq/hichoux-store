@@ -25,9 +25,7 @@ export default function CartPage() {
               <ShoppingBag className="h-10 w-10 text-muted-foreground" />
             </div>
             <h1 className="text-2xl font-bold mb-2">{t("cart.empty")}</h1>
-            <p className="text-muted-foreground mb-6">
-              {isRTL ? "أضف منتجات لبدء التسوق" : "Ajoutez des produits pour commencer"}
-            </p>
+            <p className="text-muted-foreground mb-6">{t("cart.emptySubtitle")}</p>
             <Link href="/products">
               <Button className="gap-2" data-testid="button-continue-shopping">
                 {t("cart.continue")}
@@ -122,20 +120,14 @@ export default function CartPage() {
                     <span className="text-muted-foreground">{t("cart.delivery")}</span>
                     <span>
                       {deliveryCost === 0 ? (
-                        <span className="text-green-600 font-medium">
-                          {isRTL ? "مجاني" : "Gratuit"}
-                        </span>
+                        <span className="text-green-600 font-medium">{t("cart.deliveryFree")}</span>
                       ) : (
                         `${deliveryCost.toFixed(2)} ${t("common.dh")}`
                       )}
                     </span>
                   </div>
                   {deliveryCost > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {isRTL
-                        ? `التوصيل مجاني للطلبات أكثر من 300 درهم`
-                        : `Livraison gratuite pour les commandes de plus de 300 DH`}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t("cart.freeDeliveryNote")}</p>
                   )}
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold text-lg">
@@ -157,7 +149,7 @@ export default function CartPage() {
                     onClick={clearCart}
                     data-testid="button-clear-cart"
                   >
-                    {isRTL ? "إفراغ السلة" : "Vider le panier"}
+                    {t("cart.clear")}
                   </Button>
                 </CardFooter>
               </Card>

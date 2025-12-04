@@ -61,8 +61,8 @@ export default function CheckoutPage() {
     },
     onError: (error: any) => {
       toast({
-        title: isRTL ? "خطأ" : "Erreur",
-        description: error.message || (isRTL ? "فشل في إرسال الطلب" : "Échec de la commande"),
+        title: t("checkout.error"),
+        description: error.message || t("checkout.errorMessage"),
         variant: "destructive",
       });
     },
@@ -77,9 +77,7 @@ export default function CheckoutPage() {
       const newErrors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
         if (err.path[0]) {
-          newErrors[err.path[0].toString()] = isRTL
-            ? "هذا الحقل مطلوب"
-            : "Ce champ est requis";
+          newErrors[err.path[0].toString()] = t("checkout.fieldRequired");
         }
       });
       setErrors(newErrors);
@@ -141,7 +139,7 @@ export default function CheckoutPage() {
                           id="customerName"
                           value={formData.customerName}
                           onChange={(e) => handleChange("customerName", e.target.value)}
-                          placeholder={isRTL ? "أدخل اسمك الكامل" : "Votre nom complet"}
+                          placeholder={t("checkout.namePlaceholder")}
                           className={errors.customerName ? "border-destructive" : ""}
                           data-testid="input-name"
                         />
@@ -171,7 +169,7 @@ export default function CheckoutPage() {
                         id="city"
                         value={formData.city}
                         onChange={(e) => handleChange("city", e.target.value)}
-                        placeholder={isRTL ? "المدينة" : "Casablanca, Rabat, Marrakech..."}
+                        placeholder={t("checkout.cityPlaceholder")}
                         className={errors.city ? "border-destructive" : ""}
                         data-testid="input-city"
                       />
@@ -185,7 +183,7 @@ export default function CheckoutPage() {
                         id="address"
                         value={formData.address}
                         onChange={(e) => handleChange("address", e.target.value)}
-                        placeholder={isRTL ? "العنوان الكامل" : "Adresse complète"}
+                        placeholder={t("checkout.addressPlaceholder")}
                         className={errors.address ? "border-destructive" : ""}
                         rows={3}
                         data-testid="input-address"
@@ -200,7 +198,7 @@ export default function CheckoutPage() {
                         id="notes"
                         value={formData.notes}
                         onChange={(e) => handleChange("notes", e.target.value)}
-                        placeholder={isRTL ? "ملاحظات إضافية (اختياري)" : "Notes supplémentaires (optionnel)"}
+                        placeholder={t("checkout.notesPlaceholder")}
                         rows={2}
                         data-testid="input-notes"
                       />
@@ -222,11 +220,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="font-medium">{t("checkout.cod")}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {isRTL
-                            ? "ادفع عند استلام طلبك"
-                            : "Payez à la réception de votre commande"}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t("checkout.codDesc")}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -281,9 +275,7 @@ export default function CheckoutPage() {
                         <span className="text-muted-foreground">{t("cart.delivery")}</span>
                         <span>
                           {deliveryCost === 0 ? (
-                            <span className="text-green-600">
-                              {isRTL ? "مجاني" : "Gratuit"}
-                            </span>
+                            <span className="text-green-600">{t("cart.deliveryFree")}</span>
                           ) : (
                             `${deliveryCost.toFixed(2)} ${t("common.dh")}`
                           )}
@@ -305,7 +297,7 @@ export default function CheckoutPage() {
                       {orderMutation.isPending ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin me-2" />
-                          {isRTL ? "جاري الإرسال..." : "Envoi en cours..."}
+                          {t("checkout.submitting")}
                         </>
                       ) : (
                         t("checkout.submit")

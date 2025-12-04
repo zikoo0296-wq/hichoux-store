@@ -14,7 +14,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { isRTL } = useI18n();
+  const { t, isRTL } = useI18n();
   const { toast } = useToast();
 
   const price = parseFloat(product.price);
@@ -28,7 +28,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
     addToCart(product, 1);
     toast({
-      title: isRTL ? "تمت الإضافة إلى السلة" : "Ajouté au panier",
+      title: t("products.addedToCart"),
       description: product.title,
     });
   };
@@ -53,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {!inStock && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
               <Badge variant="secondary" className="text-sm">
-                {isRTL ? "نفذ من المخزون" : "Rupture de stock"}
+                {t("products.outOfStock")}
               </Badge>
             </div>
           )}
@@ -63,7 +63,7 @@ export function ProductCard({ product }: ProductCardProps) {
               variant="destructive" 
               className={`absolute top-2 ${isRTL ? "left-2" : "right-2"} text-xs`}
             >
-              {isRTL ? "مخزون محدود" : "Stock limité"}
+              {t("products.lowStock")}
             </Badge>
           )}
           
@@ -110,7 +110,7 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
             {inStock && (
               <span className="text-xs text-muted-foreground">
-                {product.stock} {isRTL ? "في المخزون" : "en stock"}
+                {product.stock} {t("products.inStock")}
               </span>
             )}
           </div>
@@ -123,7 +123,7 @@ export function ProductCard({ product }: ProductCardProps) {
             data-testid={`button-order-${product.id}`}
           >
             <ShoppingCart className="h-4 w-4" />
-            {isRTL ? "أضف" : "Ajouter"}
+            {t("products.addToCart")}
           </Button>
         </div>
       </CardContent>

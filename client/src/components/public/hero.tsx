@@ -4,7 +4,7 @@ import { ArrowRight, Truck, Shield, CreditCard } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export function Hero() {
-  const { isRTL } = useI18n();
+  const { t, isRTL } = useI18n();
 
   return (
     <section className="relative overflow-hidden">
@@ -14,39 +14,27 @@ export function Hero() {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
               <Truck className="h-4 w-4" />
-              {isRTL ? "توصيل لجميع أنحاء المغرب" : "Livraison dans tout le Maroc"}
+              {t("hero.deliveryBadge")}
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              {isRTL ? (
-                <>
-                  اكتشف{" "}
-                  <span className="text-primary">مجموعتنا الحصرية</span>
-                </>
-              ) : (
-                <>
-                  Découvrez notre{" "}
-                  <span className="text-primary">collection exclusive</span>
-                </>
-              )}
+              {t("hero.title")}
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg">
-              {isRTL 
-                ? "منتجات عالية الجودة تُوصل إلى باب منزلك. الدفع عند الاستلام، بدون التزام. راضٍ أو مسترد."
-                : "Des produits de qualité livrés chez vous. Paiement à la livraison, sans engagement. Satisfait ou remboursé."}
+              {t("hero.subtitle")}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/products">
                 <Button size="lg" className="w-full sm:w-auto gap-2" data-testid="button-shop-now">
-                  {isRTL ? "عرض المنتجات" : "Voir les produits"}
+                  {t("hero.cta")}
                   <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
                 </Button>
               </Link>
               <Link href="/categories">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto" data-testid="button-categories">
-                  {isRTL ? "تصفح التصنيفات" : "Parcourir les catégories"}
+                  {t("hero.browseCategories")}
                 </Button>
               </Link>
             </div>
@@ -74,12 +62,8 @@ export function Hero() {
               <Truck className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">
-                {isRTL ? "توصيل سريع" : "Livraison rapide"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? "خلال 24-48 ساعة في جميع أنحاء المغرب" : "Sous 24-48h partout au Maroc"}
-              </p>
+              <h3 className="font-semibold">{t("hero.fastDelivery")}</h3>
+              <p className="text-sm text-muted-foreground">{t("hero.fastDeliveryDesc")}</p>
             </div>
           </div>
           
@@ -88,12 +72,8 @@ export function Hero() {
               <CreditCard className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">
-                {isRTL ? "الدفع عند الاستلام" : "Paiement à la livraison"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? "دفع نقدي عند التوصيل آمن" : "Cash on Delivery sécurisé"}
-              </p>
+              <h3 className="font-semibold">{t("hero.codPayment")}</h3>
+              <p className="text-sm text-muted-foreground">{t("hero.codPaymentDesc")}</p>
             </div>
           </div>
           
@@ -102,12 +82,8 @@ export function Hero() {
               <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">
-                {isRTL ? "ضمان الجودة" : "Garantie qualité"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? "راضٍ أو مسترد" : "Satisfait ou remboursé"}
-              </p>
+              <h3 className="font-semibold">{t("hero.qualityGuarantee")}</h3>
+              <p className="text-sm text-muted-foreground">{t("hero.qualityGuaranteeDesc")}</p>
             </div>
           </div>
         </div>

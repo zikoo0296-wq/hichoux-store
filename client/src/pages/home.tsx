@@ -36,16 +36,12 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 py-16">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold">
-                {isRTL ? "التصنيفات" : "Catégories"}
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                {isRTL ? "تصفح تصنيفاتنا المختلفة" : "Parcourez nos différentes catégories"}
-              </p>
+              <h2 className="text-2xl md:text-3xl font-bold">{t("categories.title")}</h2>
+              <p className="text-muted-foreground mt-1">{t("categories.titleDesc")}</p>
             </div>
             <Link href="/categories">
               <Button variant="ghost" className="gap-2" data-testid="link-all-categories">
-                {isRTL ? "عرض الكل" : "Voir tout"}
+                {t("common.viewAll")}
                 <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
               </Button>
             </Link>
@@ -69,9 +65,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-xl">
-              <p className="text-muted-foreground">
-                {isRTL ? "لا توجد تصنيفات متاحة" : "Aucune catégorie disponible"}
-              </p>
+              <p className="text-muted-foreground">{t("categories.noCategories")}</p>
             </div>
           )}
         </section>
@@ -79,16 +73,12 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 py-16">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold">
-                {isRTL ? "المنتجات الشائعة" : "Produits populaires"}
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                {isRTL ? "اكتشف أفضل مبيعاتنا" : "Découvrez nos meilleures ventes"}
-              </p>
+              <h2 className="text-2xl md:text-3xl font-bold">{t("products.featured")}</h2>
+              <p className="text-muted-foreground mt-1">{t("products.featuredDesc")}</p>
             </div>
             <Link href="/products">
               <Button variant="ghost" className="gap-2" data-testid="link-all-products">
-                {isRTL ? "عرض الكل" : "Voir tout"}
+                {t("common.viewAll")}
                 <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
               </Button>
             </Link>
@@ -111,29 +101,19 @@ export default function HomePage() {
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                 <Package className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="font-medium">
-                {isRTL ? "لا توجد منتجات متاحة" : "Aucun produit disponible"}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {isRTL ? "ستظهر المنتجات هنا قريبًا" : "Les produits apparaîtront ici bientôt"}
-              </p>
+              <h3 className="font-medium">{t("products.noProducts")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{t("products.comingSoon")}</p>
             </div>
           )}
         </section>
 
         <section className="bg-primary text-primary-foreground py-16">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              {isRTL ? "توصيل لجميع أنحاء المغرب" : "Livraison partout au Maroc"}
-            </h2>
-            <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">
-              {isRTL 
-                ? "اطلب بثقة. الدفع عند الاستلام بدون التزام. توصيل سريع خلال 24-48 ساعة لجميع مدن المغرب."
-                : "Commandez en toute confiance. Paiement à la livraison (COD) sans engagement. Livraison rapide sous 24-48h dans toutes les villes du Maroc."}
-            </p>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">{t("home.deliverySection")}</h2>
+            <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">{t("home.deliverySectionDesc")}</p>
             <Link href="/products">
               <Button size="lg" variant="secondary" className="gap-2" data-testid="button-cta-shop">
-                {isRTL ? "ابدأ التسوق" : "Commencer vos achats"}
+                {t("home.startShopping")}
                 <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
               </Button>
             </Link>
