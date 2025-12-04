@@ -710,11 +710,25 @@ export async function registerRoutes(
   // Google Sheets sync
   app.post("/api/admin/google-sheets/sync", requireAdminOrAbove, async (req, res) => {
     try {
-      await ensureSheetExists();
+      const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
+      if (!spreadsheetIdSetting?.value) {
+        return res.status(400).json({ error: "Google Sheets ID not configured. Please add the Spreadsheet ID in settings." });
+      }
+
+      try {
+        await ensureSheetExists();
+      } catch (sheetError: any) {
+        return res.status(400).json({ error: sheetError.message || "Failed to connect to Google Sheets" });
+      }
+
       const result = await syncAllUnSyncedOrders();
+      if (result.error) {
+        return res.status(400).json({ error: result.error, synced: result.synced, failed: result.failed });
+      }
       res.json(result);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error("Google Sheets sync error:", error);
+      res.status(500).json({ error: error.message || "Failed to sync with Google Sheets" });
     }
   });
 

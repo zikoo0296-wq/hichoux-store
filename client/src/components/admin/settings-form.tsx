@@ -111,9 +111,19 @@ export function SettingsForm() {
       });
     },
     onError: (error: any) => {
+      let errorMessage = "Impossible de sauvegarder les paramètres.";
+      if (error.message) {
+        if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
+          errorMessage = "Erreur de serveur. Veuillez réessayer.";
+        } else if (error.message.includes(":")) {
+          errorMessage = error.message.split(":").slice(1).join(":").trim();
+        } else {
+          errorMessage = error.message;
+        }
+      }
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de sauvegarder les paramètres.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -131,9 +141,19 @@ export function SettingsForm() {
       });
     },
     onError: (error: any) => {
+      let errorMessage = "Impossible de synchroniser avec Google Sheets.";
+      if (error.message) {
+        if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
+          errorMessage = "Erreur de connexion à Google Sheets. Vérifiez la configuration.";
+        } else if (error.message.includes(":")) {
+          errorMessage = error.message.split(":").slice(1).join(":").trim();
+        } else {
+          errorMessage = error.message;
+        }
+      }
       toast({
         title: "Erreur de synchronisation",
-        description: error.message || "Impossible de synchroniser avec Google Sheets.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

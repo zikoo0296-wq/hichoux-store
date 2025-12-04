@@ -2,14 +2,18 @@ import { google } from 'googleapis';
 import { storage } from './storage';
 import type { Order, OrderItem, Product } from '@shared/schema';
 
-let connectionSettings: any;
+let connectionSettings: any = null;
 
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
+async function getAccessToken(): Promise<string> {
+  if (connectionSettings?.settings?.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
     return connectionSettings.settings.access_token;
   }
   
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  if (!hostname) {
+    throw new Error('REPLIT_CONNECTORS_HOSTNAME not configured. Please set up Google Sheets integration in Replit.');
+  }
+
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
     : process.env.WEB_REPL_RENEWAL 
@@ -17,25 +21,46 @@ async function getAccessToken() {
     : null;
 
   if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+    throw new Error('Replit authentication token not found. Please ensure the app is running in Replit environment.');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-sheet',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+  try {
+    const response = await fetch(
+      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-sheet',
+      {
+        headers: {
+          'Accept': 'application/json',
+          'X_REPLIT_TOKEN': xReplitToken
+        }
       }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Google Sheets connection: ${response.status} ${response.statusText}`);
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
 
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+    const data = await response.json();
+    connectionSettings = data.items?.[0];
 
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Google Sheet not connected');
+    if (!connectionSettings) {
+      throw new Error('Google Sheets connection not found. Please connect Google Sheets in the Replit integrations panel.');
+    }
+
+    const accessToken = connectionSettings?.settings?.access_token || 
+                       connectionSettings?.settings?.oauth?.credentials?.access_token;
+
+    if (!accessToken) {
+      throw new Error('Google Sheets access token not found. Please reconnect Google Sheets in the integrations panel.');
+    }
+
+    return accessToken;
+  } catch (error: any) {
+    connectionSettings = null;
+    if (error.message.includes('Google Sheets')) {
+      throw error;
+    }
+    throw new Error(`Failed to connect to Google Sheets: ${error.message}`);
   }
-  return accessToken;
 }
 
 async function getUncachableGoogleSheetClient() {
@@ -55,7 +80,7 @@ export async function syncOrderToGoogleSheets(order: Order, items: (OrderItem & 
     const spreadsheetId = spreadsheetIdSetting?.value;
 
     if (!spreadsheetId) {
-      throw new Error('Google Sheets ID not configured');
+      throw new Error('Google Sheets ID not configured in settings');
     }
 
     const sheets = await getUncachableGoogleSheetClient();
@@ -104,44 +129,62 @@ export async function syncOrderToGoogleSheets(order: Order, items: (OrderItem & 
   } catch (error: any) {
     console.error('Error syncing to Google Sheets:', error);
 
-    await storage.createSyncLog({
-      orderId: order.id,
-      action: 'SYNC_TO_SHEETS',
-      result: 'FAILURE',
-      details: error.message || 'Unknown error',
-    });
+    try {
+      await storage.createSyncLog({
+        orderId: order.id,
+        action: 'SYNC_TO_SHEETS',
+        result: 'FAILURE',
+        details: error.message || 'Unknown error',
+      });
+    } catch (logError) {
+      console.error('Error creating sync log:', logError);
+    }
 
     return false;
   }
 }
 
-export async function syncAllUnSyncedOrders(): Promise<{ synced: number; failed: number }> {
-  const unSyncedOrders = await storage.getUnSyncedOrders();
-  let synced = 0;
-  let failed = 0;
+export async function syncAllUnSyncedOrders(): Promise<{ synced: number; failed: number; error?: string }> {
+  try {
+    const unSyncedOrders = await storage.getUnSyncedOrders();
+    let synced = 0;
+    let failed = 0;
 
-  for (const order of unSyncedOrders) {
-    const items = await storage.getOrderItems(order.id);
-    const success = await syncOrderToGoogleSheets(order, items);
-    if (success) {
-      synced++;
-    } else {
-      failed++;
+    if (unSyncedOrders.length === 0) {
+      return { synced: 0, failed: 0 };
     }
-  }
 
-  return { synced, failed };
+    for (const order of unSyncedOrders) {
+      try {
+        const items = await storage.getOrderItems(order.id);
+        const success = await syncOrderToGoogleSheets(order, items);
+        if (success) {
+          synced++;
+        } else {
+          failed++;
+        }
+      } catch (orderError: any) {
+        console.error(`Error syncing order ${order.id}:`, orderError);
+        failed++;
+      }
+    }
+
+    return { synced, failed };
+  } catch (error: any) {
+    console.error('Error in syncAllUnSyncedOrders:', error);
+    return { synced: 0, failed: 0, error: error.message };
+  }
 }
 
 export async function ensureSheetExists(): Promise<void> {
+  const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
+  const spreadsheetId = spreadsheetIdSetting?.value;
+
+  if (!spreadsheetId) {
+    return;
+  }
+
   try {
-    const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
-    const spreadsheetId = spreadsheetIdSetting?.value;
-
-    if (!spreadsheetId) {
-      return;
-    }
-
     const sheets = await getUncachableGoogleSheetClient();
 
     const spreadsheet = await sheets.spreadsheets.get({
@@ -189,7 +232,8 @@ export async function ensureSheetExists(): Promise<void> {
         },
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error ensuring sheet exists:', error);
+    throw new Error(`Failed to verify Google Sheet: ${error.message}`);
   }
 }
