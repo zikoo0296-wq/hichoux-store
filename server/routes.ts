@@ -113,6 +113,7 @@ export async function registerRoutes(
         {
           ...orderData,
           totalPrice: totalPrice.toString(),
+          deliveryCost: orderData.deliveryCost?.toString() || "35",
         },
         orderItems as any
       );
@@ -690,18 +691,28 @@ export async function registerRoutes(
         if (values.length < 2) continue;
 
         try {
+          const productName = values[headers.indexOf("titre")] || values[headers.indexOf("name")] || values[0];
+          const productSlug = productName.toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .substring(0, 50);
+
           const product = {
-            title: values[headers.indexOf("titre")] || values[0],
+            name: productName,
+            title: productName,
+            slug: `${productSlug}-${Date.now()}-${i}`,
             description: values[headers.indexOf("description")] || "",
-            price: parseFloat(values[headers.indexOf("prix")] || values[2]),
-            costPrice: parseFloat(values[headers.indexOf("coût")] || values[3]),
+            price: (parseFloat(values[headers.indexOf("prix")] || values[2]) || 0).toString(),
+            costPrice: (parseFloat(values[headers.indexOf("coût")] || values[3]) || 0).toString(),
             stock: parseInt(values[headers.indexOf("stock")] || values[4]) || 0,
             sku: values[headers.indexOf("sku")] || null,
             categoryId: parseInt(values[headers.indexOf("categorieid")] || "1") || 1,
-            images: [],
+            images: [] as string[],
+            isActive: true,
+            isFeatured: false,
           };
 
-          if (product.price && product.costPrice && product.title) {
+          if (product.price && product.name) {
             const created = await storage.createProduct(product);
             imported.push(created);
           } else {

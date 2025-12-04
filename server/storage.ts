@@ -51,6 +51,7 @@ export interface IStorage {
   // Shipping Labels
   getShippingLabels(): Promise<(ShippingLabel & { order: Order })[]>;
   getShippingLabel(id: number): Promise<ShippingLabel | undefined>;
+  getShippingLabelByTracking(trackingNumber: string): Promise<ShippingLabel | undefined>;
   createShippingLabel(label: InsertShippingLabel): Promise<ShippingLabel>;
 
   // Sync Logs
@@ -288,6 +289,11 @@ export class DatabaseStorage implements IStorage {
 
   async getShippingLabel(id: number): Promise<ShippingLabel | undefined> {
     const [label] = await db.select().from(shippingLabels).where(eq(shippingLabels.id, id));
+    return label || undefined;
+  }
+
+  async getShippingLabelByTracking(trackingNumber: string): Promise<ShippingLabel | undefined> {
+    const [label] = await db.select().from(shippingLabels).where(eq(shippingLabels.trackingNumber, trackingNumber));
     return label || undefined;
   }
 

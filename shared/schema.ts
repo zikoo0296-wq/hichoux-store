@@ -11,6 +11,16 @@ import {
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
+// User roles enum
+export const USER_ROLES = [
+  "super_admin",  // Full access - can manage users, settings, everything
+  "admin",        // Can manage products, orders, categories
+  "operator",     // Can view and update order statuses
+  "support",      // Read-only access
+] as const;
+
+export type UserRole = (typeof USER_ROLES)[number];
+
 // Admin users table
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -18,6 +28,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("admin"),
+  isActive: boolean("is_active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -59,6 +71,16 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+// Carrier enum
+export const CARRIERS = [
+  "DIGYLOG",
+  "OZON",
+  "CATHEDIS", 
+  "SENDIT",
+] as const;
+
+export type Carrier = (typeof CARRIERS)[number];
+
 // Orders table
 export const orders = pgTable("orders", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -69,7 +91,11 @@ export const orders = pgTable("orders", {
   city: text("city").notNull(),
   notes: text("notes"),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  deliveryCost: decimal("delivery_cost", { precision: 10, scale: 2 }).default("0"),
   status: text("status").notNull().default("NOUVELLE"),
+  carrier: text("carrier"),
+  trackingNumber: text("tracking_number"),
+  carrierStatus: text("carrier_status"),
   syncedToSheets: boolean("synced_to_sheets").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -212,7 +238,7 @@ export const insertOrderSchema = z.object({
   address: z.string().min(1),
   city: z.string().min(1),
   notes: z.string().nullable().optional(),
-  totalAmount: z.string(),
+  totalPrice: z.string(),
   deliveryCost: z.string().default("0"),
 });
 
@@ -227,25 +253,22 @@ export const insertOrderItemSchema = z.object({
 export const insertShippingLabelSchema = z.object({
   orderId: z.number().int(),
   trackingNumber: z.string().nullable().optional(),
-  carrier: z.string().nullable().optional(),
+  providerName: z.string().nullable().optional(),
   labelUrl: z.string().nullable().optional(),
-  status: z.string().default("pending"),
+  pdfBase64: z.string().nullable().optional(),
 });
 
 export const insertSyncLogSchema = z.object({
   orderId: z.number().int(),
-  syncType: z.string(),
-  status: z.string(),
-  errorMessage: z.string().nullable().optional(),
-  externalId: z.string().nullable().optional(),
+  action: z.string(),
+  result: z.string(),
+  details: z.string().nullable().optional(),
 });
 
 export const insertAdCostSchema = z.object({
-  date: z.string(),
-  platform: z.string(),
-  campaignName: z.string().nullable().optional(),
+  date: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+  description: z.string().nullable().optional(),
   amount: z.string(),
-  currency: z.string().default("MAD"),
 });
 
 export const insertSettingSchema = z.object({

@@ -6,6 +6,38 @@ This is a full-stack e-commerce platform designed for Cash on Delivery (COD) sal
 
 The platform is built as a monolithic Express.js application with React frontend, designed for deployment on Vercel (frontend) and Render (backend), using PostgreSQL for data persistence.
 
+## Recent Changes (December 2025)
+
+### Multi-Language Support (i18n)
+- Added Arabic (RTL) and French language support
+- Language toggle in header with automatic RTL layout switching
+- Translations for navigation, forms, and common UI elements
+- Context-based i18n implementation in `client/src/lib/i18n.tsx`
+
+### Shopping Cart System
+- Cart context with localStorage persistence (`client/src/lib/cart.tsx`)
+- Cart page with quantity management
+- Checkout flow with COD payment
+- Order confirmation page with tracking
+
+### Multi-Carrier Integration
+- Support for 4 Moroccan carriers: DIGYLOG, OZON, CATHEDIS, SENDIT
+- Configurable carrier settings per order
+- Webhook handling for delivery status updates
+- Shipping quote comparison feature
+
+### User Roles System
+- Super Admin: Full access
+- Admin: Products, orders, categories management
+- Operator: Order status updates
+- Support: Read-only access
+
+### Database Schema Updates
+- Added `is_active`, `last_login_at` to users table
+- Added `name`, `slug`, `is_active`, `is_featured` to products
+- Added `delivery_cost`, `carrier`, `tracking_number`, `carrier_status` to orders
+- Updated sync_logs with `action`, `result`, `details` fields
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

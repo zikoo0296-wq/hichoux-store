@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth";
+import { CartProvider } from "@/lib/cart";
+import { I18nProvider } from "@/lib/i18n";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -15,6 +17,9 @@ import HomePage from "@/pages/home";
 import ProductsPage from "@/pages/products";
 import ProductDetailPage from "@/pages/product-detail";
 import CategoriesPage from "@/pages/categories";
+import CartPage from "@/pages/cart";
+import CheckoutPage from "@/pages/checkout";
+import ConfirmationPage from "@/pages/confirmation";
 
 import AdminLoginPage from "@/pages/admin/login";
 import AdminDashboardPage from "@/pages/admin/dashboard";
@@ -31,30 +36,16 @@ import AdminSettingsPage from "@/pages/admin/settings";
 
 function PublicRouter() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">E-Shop</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/products" component={ProductsPage} />
-          <Route path="/products/:id" component={ProductDetailPage} />
-          <Route path="/categories" component={CategoriesPage} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <footer className="border-t bg-muted/50 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} E-Shop. Tous droits réservés.</p>
-        </div>
-      </footer>
-    </div>
+    <Switch>
+      <Route path="/" component={HomePage} />
+      <Route path="/products" component={ProductsPage} />
+      <Route path="/products/:id" component={ProductDetailPage} />
+      <Route path="/categories" component={CategoriesPage} />
+      <Route path="/cart" component={CartPage} />
+      <Route path="/checkout" component={CheckoutPage} />
+      <Route path="/confirmation/:id" component={ConfirmationPage} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
@@ -110,12 +101,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-          </TooltipProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <CartProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Router />
+                <Toaster />
+              </TooltipProvider>
+            </AuthProvider>
+          </CartProvider>
+        </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -1,8 +1,11 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, Shield, CreditCard } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export function Hero() {
+  const { isRTL } = useI18n();
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
@@ -11,29 +14,39 @@ export function Hero() {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
               <Truck className="h-4 w-4" />
-              Livraison dans tout le Maroc
+              {isRTL ? "توصيل لجميع أنحاء المغرب" : "Livraison dans tout le Maroc"}
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Découvrez notre{" "}
-              <span className="text-primary">collection exclusive</span>
+              {isRTL ? (
+                <>
+                  اكتشف{" "}
+                  <span className="text-primary">مجموعتنا الحصرية</span>
+                </>
+              ) : (
+                <>
+                  Découvrez notre{" "}
+                  <span className="text-primary">collection exclusive</span>
+                </>
+              )}
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg">
-              Des produits de qualité livrés chez vous. Paiement à la livraison, 
-              sans engagement. Satisfait ou remboursé.
+              {isRTL 
+                ? "منتجات عالية الجودة تُوصل إلى باب منزلك. الدفع عند الاستلام، بدون التزام. راضٍ أو مسترد."
+                : "Des produits de qualité livrés chez vous. Paiement à la livraison, sans engagement. Satisfait ou remboursé."}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/products">
                 <Button size="lg" className="w-full sm:w-auto gap-2" data-testid="button-shop-now">
-                  Voir les produits
-                  <ArrowRight className="h-4 w-4" />
+                  {isRTL ? "عرض المنتجات" : "Voir les produits"}
+                  <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
                 </Button>
               </Link>
               <Link href="/categories">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto" data-testid="button-categories">
-                  Parcourir les catégories
+                  {isRTL ? "تصفح التصنيفات" : "Parcourir les catégories"}
                 </Button>
               </Link>
             </div>
@@ -61,8 +74,12 @@ export function Hero() {
               <Truck className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">Livraison rapide</h3>
-              <p className="text-sm text-muted-foreground">Sous 24-48h partout au Maroc</p>
+              <h3 className="font-semibold">
+                {isRTL ? "توصيل سريع" : "Livraison rapide"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? "خلال 24-48 ساعة في جميع أنحاء المغرب" : "Sous 24-48h partout au Maroc"}
+              </p>
             </div>
           </div>
           
@@ -71,8 +88,12 @@ export function Hero() {
               <CreditCard className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">Paiement à la livraison</h3>
-              <p className="text-sm text-muted-foreground">Cash on Delivery sécurisé</p>
+              <h3 className="font-semibold">
+                {isRTL ? "الدفع عند الاستلام" : "Paiement à la livraison"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? "دفع نقدي عند التوصيل آمن" : "Cash on Delivery sécurisé"}
+              </p>
             </div>
           </div>
           
@@ -81,8 +102,12 @@ export function Hero() {
               <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">Garantie qualité</h3>
-              <p className="text-sm text-muted-foreground">Satisfait ou remboursé</p>
+              <h3 className="font-semibold">
+                {isRTL ? "ضمان الجودة" : "Garantie qualité"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? "راضٍ أو مسترد" : "Satisfait ou remboursé"}
+              </p>
             </div>
           </div>
         </div>
