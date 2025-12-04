@@ -532,8 +532,19 @@ export async function registerRoutes(
   app.delete("/api/admin/products/:id", requireAdminOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      await storage.deleteProduct(id);
-      res.json({ success: true });
+      
+      // Check if product has associated orders
+      const hasOrders = await storage.productHasOrders(id);
+      
+      if (hasOrders) {
+        // Soft delete - mark as inactive instead of deleting
+        await storage.updateProduct(id, { isActive: false });
+        res.json({ success: true, softDeleted: true, message: "Product has orders and was deactivated instead of deleted" });
+      } else {
+        // Hard delete - no associated orders
+        await storage.deleteProduct(id);
+        res.json({ success: true });
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
