@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
 import { I18nProvider } from "@/lib/i18n";
+import { StoreConfigProvider } from "@/lib/store-config";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -104,14 +105,16 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
-          <CartProvider>
-            <AuthProvider>
-              <TooltipProvider>
-                <Router />
-                <Toaster />
-              </TooltipProvider>
-            </AuthProvider>
-          </CartProvider>
+          <StoreConfigProvider>
+            <CartProvider>
+              <AuthProvider>
+                <TooltipProvider>
+                  <Router />
+                  <Toaster />
+                </TooltipProvider>
+              </AuthProvider>
+            </CartProvider>
+          </StoreConfigProvider>
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>

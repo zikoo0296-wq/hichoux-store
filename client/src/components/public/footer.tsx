@@ -2,9 +2,11 @@ import { Link } from "wouter";
 import { Phone, Mail, MapPin, Clock, Truck } from "lucide-react";
 import { SiWhatsapp, SiFacebook, SiInstagram } from "react-icons/si";
 import { useI18n } from "@/lib/i18n";
+import { useStoreConfig } from "@/lib/store-config";
 
 export function PublicFooter() {
   const { t } = useI18n();
+  const { config } = useStoreConfig();
 
   return (
     <footer className="bg-card border-t mt-auto">
@@ -21,15 +23,25 @@ export function PublicFooter() {
           {/* Brand column */}
           <div>
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>م</span>
-              </div>
-              <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-heading)' }}>{t("store.name")}</span>
+              {config?.storeLogo ? (
+                <img 
+                  src={config.storeLogo} 
+                  alt={config?.storeName || t("store.name")} 
+                  className="w-10 h-10 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>م</span>
+                </div>
+              )}
+              <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-heading)' }}>
+                {config?.storeName || t("store.name")}
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">{t("footer.description")}</p>
             <div className="flex gap-2">
               <a
-                href="https://wa.me/212600000000"
+                href={`https://wa.me/${config?.whatsappNumber || "212600000000"}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
@@ -87,7 +99,7 @@ export function PublicFooter() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3 text-muted-foreground">
                 <Phone className="h-4 w-4 mt-0.5 shrink-0" />
-                <span dir="ltr">+212 6 00 00 00 00</span>
+                <span dir="ltr">{config?.storePhone || "+212 6 00 00 00 00"}</span>
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 shrink-0" />

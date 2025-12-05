@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Save, FileSpreadsheet, Truck, RefreshCw, MessageCircle, Store, CheckCircle } from "lucide-react";
+import { Loader2, Save, FileSpreadsheet, Truck, RefreshCw, MessageCircle, Store, CheckCircle, Upload, X, Image } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import type { Setting } from "@shared/schema";
 
@@ -38,6 +38,8 @@ interface CarrierConfig {
 
 export function SettingsForm() {
   const { toast } = useToast();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     google_sheets_id: "",
     whatsapp_number: "",
@@ -46,6 +48,8 @@ export function SettingsForm() {
     store_name: "",
     store_phone: "",
     default_carrier: "digylog" as CarrierId,
+    store_logo: "",
+    store_icon: "",
   });
 
   const [carriers, setCarriers] = useState<Record<CarrierId, CarrierConfig>>({
@@ -70,6 +74,8 @@ export function SettingsForm() {
         store_name: settingsMap.get("store_name") || "",
         store_phone: settingsMap.get("store_phone") || "",
         default_carrier: (settingsMap.get("default_carrier") || "digylog") as CarrierId,
+        store_logo: settingsMap.get("store_logo") || "",
+        store_icon: settingsMap.get("store_icon") || "",
       });
 
       const newCarriers = { ...carriers };
@@ -83,6 +89,28 @@ export function SettingsForm() {
       setCarriers(newCarriers);
     }
   }, [settings]);
+
+  const handleImageUpload = async (file: File, type: 'logo' | 'icon') => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximale est de 2 Mo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      if (type === 'logo') {
+        setFormData({ ...formData, store_logo: base64 });
+      } else {
+        setFormData({ ...formData, store_icon: base64 });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data: { general: typeof formData; carriers: typeof carriers }) => {
@@ -293,6 +321,137 @@ export function SettingsForm() {
                   <p className="text-xs text-muted-foreground">
                     Livraison gratuite au-dessus de ce montant
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Image className="h-5 w-5 text-primary" />
+                <CardTitle>Logo et icône</CardTitle>
+              </div>
+              <CardDescription>
+                Téléchargez le logo et l'icône de votre boutique (max 2 Mo)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <Label>Logo de la boutique</Label>
+                  <div className="flex items-center gap-4">
+                    {formData.store_logo ? (
+                      <div className="relative">
+                        <img
+                          src={formData.store_logo}
+                          alt="Logo"
+                          className="w-20 h-20 rounded-xl object-cover border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={() => setFormData({ ...formData, store_logo: "" })}
+                          data-testid="button-remove-logo"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="w-20 h-20 rounded-xl border-2 border-dashed border-muted-foreground/25 flex items-center justify-center cursor-pointer hover-elevate"
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file, 'logo');
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="gap-2"
+                        data-testid="button-upload-logo"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {formData.store_logo ? "Changer" : "Télécharger"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, JPG ou WebP recommandé
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Icône / Favicon</Label>
+                  <div className="flex items-center gap-4">
+                    {formData.store_icon ? (
+                      <div className="relative">
+                        <img
+                          src={formData.store_icon}
+                          alt="Icône"
+                          className="w-16 h-16 rounded-lg object-cover border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={() => setFormData({ ...formData, store_icon: "" })}
+                          data-testid="button-remove-icon"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="w-16 h-16 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center cursor-pointer hover-elevate"
+                        onClick={() => iconInputRef.current?.click()}
+                      >
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        ref={iconInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file, 'icon');
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => iconInputRef.current?.click()}
+                        className="gap-2"
+                        data-testid="button-upload-icon"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {formData.store_icon ? "Changer" : "Télécharger"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Format carré recommandé (32x32 ou 64x64)
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

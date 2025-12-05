@@ -164,6 +164,8 @@ export async function registerRoutes(
         storePhone: settingsMap.get("store_phone") || "+212 6 00 00 00 00",
         whatsappNumber: settingsMap.get("whatsapp_number") || "212600000000",
         defaultCarrier: settingsMap.get("default_carrier") || "digylog",
+        storeLogo: settingsMap.get("store_logo") || null,
+        storeIcon: settingsMap.get("store_icon") || null,
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

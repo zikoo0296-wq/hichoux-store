@@ -346,7 +346,7 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-const LANGUAGE_STORAGE_KEY = "eshop_language";
+const PUBLIC_LANGUAGE_KEY = "eshop_language";
 const ADMIN_LANGUAGE_KEY = "eshop_admin_language";
 
 // Check if we're in admin area
@@ -355,27 +355,33 @@ function isAdminRoute(): boolean {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  // Public storefront is always Arabic, admin can choose language
   const [language, setLanguageState] = useState<Language>("ar");
 
   useEffect(() => {
     if (isAdminRoute()) {
-      // Admin area: allow language choice
+      // Admin area: allow language choice, default French
       const stored = localStorage.getItem(ADMIN_LANGUAGE_KEY) as Language | null;
       if (stored && ["ar", "fr", "en"].includes(stored)) {
         setLanguageState(stored);
       } else {
-        setLanguageState("fr"); // Default admin language is French
+        setLanguageState("fr");
       }
     } else {
-      // Public storefront: always Arabic
-      setLanguageState("ar");
+      // Public storefront: allow language choice, default Arabic
+      const stored = localStorage.getItem(PUBLIC_LANGUAGE_KEY) as Language | null;
+      if (stored && ["ar", "fr", "en"].includes(stored)) {
+        setLanguageState(stored);
+      } else {
+        setLanguageState("ar");
+      }
     }
   }, []);
 
   useEffect(() => {
     if (isAdminRoute()) {
       localStorage.setItem(ADMIN_LANGUAGE_KEY, language);
+    } else {
+      localStorage.setItem(PUBLIC_LANGUAGE_KEY, language);
     }
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
