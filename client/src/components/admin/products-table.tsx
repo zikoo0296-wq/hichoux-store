@@ -52,9 +52,26 @@ export function ProductsTable() {
       });
     },
     onError: (error: any) => {
+      let errorMessage = "Impossible de supprimer le produit.";
+      
+      if (error.message) {
+        try {
+          // Try to parse JSON from error message like "400: {\"error\":\"message\"}"
+          const jsonMatch = error.message.match(/\{.*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            errorMessage = parsed.error || errorMessage;
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de supprimer le produit.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
