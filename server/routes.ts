@@ -537,14 +537,15 @@ export async function registerRoutes(
       const hasOrders = await storage.productHasOrders(id);
       
       if (hasOrders) {
-        // Soft delete - mark as inactive instead of deleting
-        await storage.updateProduct(id, { isActive: false });
-        res.json({ success: true, softDeleted: true, message: "Product has orders and was deactivated instead of deleted" });
-      } else {
-        // Hard delete - no associated orders
-        await storage.deleteProduct(id);
-        res.json({ success: true });
+        // Cannot delete products with orders - inform the user
+        return res.status(400).json({ 
+          error: "Ce produit ne peut pas être supprimé car il est lié à des commandes existantes. Vous pouvez modifier le stock à 0 pour le rendre indisponible." 
+        });
       }
+      
+      // Hard delete - no associated orders
+      await storage.deleteProduct(id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
