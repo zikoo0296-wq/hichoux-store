@@ -113,11 +113,17 @@ export function SettingsForm() {
     onError: (error: any) => {
       let errorMessage = "Impossible de sauvegarder les paramètres.";
       if (error.message) {
-        if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
-          errorMessage = "Erreur de serveur. Veuillez réessayer.";
-        } else if (error.message.includes(":")) {
-          errorMessage = error.message.split(":").slice(1).join(":").trim();
-        } else {
+        try {
+          const jsonMatch = error.message.match(/\{.*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            errorMessage = parsed.error || errorMessage;
+          } else if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
+            errorMessage = "Erreur de serveur. Veuillez réessayer.";
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
           errorMessage = error.message;
         }
       }
@@ -143,11 +149,17 @@ export function SettingsForm() {
     onError: (error: any) => {
       let errorMessage = "Impossible de synchroniser avec Google Sheets.";
       if (error.message) {
-        if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
-          errorMessage = "Erreur de connexion à Google Sheets. Vérifiez la configuration.";
-        } else if (error.message.includes(":")) {
-          errorMessage = error.message.split(":").slice(1).join(":").trim();
-        } else {
+        try {
+          const jsonMatch = error.message.match(/\{.*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            errorMessage = parsed.error || errorMessage;
+          } else if (error.message.includes("<!DOCTYPE") || error.message.includes("<html")) {
+            errorMessage = "Erreur de connexion à Google Sheets. Vérifiez la configuration.";
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
           errorMessage = error.message;
         }
       }
