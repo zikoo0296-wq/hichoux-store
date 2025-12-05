@@ -710,7 +710,17 @@ export async function registerRoutes(
     try {
       const settingsData = req.body;
       for (const [key, value] of Object.entries(settingsData)) {
-        await storage.setSetting(key, value as string);
+        let processedValue = value as string;
+        
+        // Extract Google Sheets ID from full URL if provided
+        if (key === 'google_sheets_id' && processedValue) {
+          const urlMatch = processedValue.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+          if (urlMatch) {
+            processedValue = urlMatch[1];
+          }
+        }
+        
+        await storage.setSetting(key, processedValue);
       }
       const settings = await storage.getSettings();
       res.json(settings);
