@@ -350,21 +350,22 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                       {images.map((image, index) => (
                         <div
                           key={index}
-                          className="relative aspect-square rounded-lg overflow-hidden border bg-muted group"
+                          className="relative aspect-square rounded-lg overflow-visible border bg-muted"
                         >
                           <img
                             src={image}
                             alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-2 -right-2 rounded-full shadow-md"
                             onClick={() => removeImage(index)}
+                            data-testid={`button-remove-image-${index}`}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       ))}
