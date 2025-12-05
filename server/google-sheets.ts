@@ -85,32 +85,35 @@ export async function syncOrderToGoogleSheets(order: Order, items: (OrderItem & 
 
     const sheets = await getUncachableGoogleSheetClient();
 
-    const productsJson = JSON.stringify(
-      items.map((item) => ({
-        productId: item.productId,
-        title: item.product?.title,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-      }))
-    );
+    // Format products as SKU list and calculate total quantity
+    const productSkus = items.map(item => item.product?.sku || `PROD-${item.productId}`).join(', ');
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const productNames = items.map(item => `${item.product?.title} x${item.quantity}`).join(', ');
 
+    // Columns matching user's sheet:
+    // A: Order Reference, B: Name, C: Phone, D: Address, E: City, 
+    // F: COD Amount, G: Product SKU, H: Quantity, I: Notes, 
+    // J: Tracking Number Status, K: Errors, L: Date
     const values = [
       [
-        order.id.toString(),
-        new Date(order.createdAt).toISOString(),
-        order.customerName,
-        order.phone,
-        order.address,
-        order.city,
-        productsJson,
-        order.totalPrice,
-        order.status,
+        `CMD-${order.id}`,                                    // A: Order Reference
+        order.customerName,                                   // B: Name
+        order.phone,                                          // C: Phone
+        order.address,                                        // D: Address
+        order.city,                                           // E: City
+        parseFloat(order.totalPrice).toFixed(2),              // F: COD Amount
+        productSkus,                                          // G: Product SKU
+        totalQuantity.toString(),                             // H: Quantity
+        productNames,                                         // I: Notes (products detail)
+        order.trackingNumber || '',                           // J: Tracking Number Status
+        '',                                                   // K: Errors
+        new Date(order.createdAt).toLocaleDateString('fr-FR'), // L: Date
       ],
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'Orders!A:I',
+      range: 'A:L',
       valueInputOption: 'RAW',
       requestBody: {
         values,
@@ -187,53 +190,12 @@ export async function ensureSheetExists(): Promise<void> {
   try {
     const sheets = await getUncachableGoogleSheetClient();
 
-    const spreadsheet = await sheets.spreadsheets.get({
+    // Just verify we can access the spreadsheet
+    await sheets.spreadsheets.get({
       spreadsheetId,
     });
-
-    const ordersSheet = spreadsheet.data.sheets?.find(
-      (s) => s.properties?.title === 'Orders'
-    );
-
-    if (!ordersSheet) {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId,
-        requestBody: {
-          requests: [
-            {
-              addSheet: {
-                properties: {
-                  title: 'Orders',
-                },
-              },
-            },
-          ],
-        },
-      });
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: 'Orders!A1:I1',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [
-            [
-              'ID_commande',
-              'Date',
-              'Nom',
-              'Téléphone',
-              'Adresse',
-              'Ville',
-              'Produits',
-              'Prix_total',
-              'Statut',
-            ],
-          ],
-        },
-      });
-    }
   } catch (error: any) {
-    console.error('Error ensuring sheet exists:', error);
-    throw new Error(`Failed to verify Google Sheet: ${error.message}`);
+    console.error('Error verifying sheet access:', error);
+    throw new Error(`Failed to access Google Sheet: ${error.message}`);
   }
 }
