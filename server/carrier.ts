@@ -229,6 +229,7 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
     }
 
     const data = await response.json();
+    console.log('DIGYLOG Response Body:', JSON.stringify(data, null, 2));
     
     let trackingNumber: string | null = null;
     let labelUrl: string | null = null;
