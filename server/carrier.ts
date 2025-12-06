@@ -132,7 +132,10 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
       const storeSetting = await storage.getSetting('carrier_digylog_store');
       const networkSetting = await storage.getSetting('carrier_digylog_network');
       
-      const storeName = storeSetting?.value || 'Default Store';
+      // Decode HTML entities in store name (e.g., &amp; -> &)
+      let storeName = storeSetting?.value || 'Default Store';
+      storeName = storeName.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+      
       const networkId = networkSetting?.value ? parseInt(networkSetting.value) : 1;
       
       shipmentData = {
@@ -159,15 +162,25 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
         }],
       };
       
-      response = await fetch(config.apiUrl + endpoints.create, {
+      const digylogUrl = config.apiUrl + endpoints.create;
+      const digylogHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `bearer ${config.apiKey}`,
+        'Referer': 'https://apiseller.digylog.com',
+      };
+      
+      console.log('DIGYLOG Request URL:', digylogUrl);
+      console.log('DIGYLOG Request Headers:', JSON.stringify({ ...digylogHeaders, Authorization: 'bearer [HIDDEN]' }));
+      console.log('DIGYLOG Request Body:', JSON.stringify(shipmentData, null, 2));
+      
+      response = await fetch(digylogUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `bearer ${config.apiKey}`,
-          'Referer': 'https://apiseller.digylog.com',
-        },
+        headers: digylogHeaders,
         body: JSON.stringify(shipmentData),
       });
+      
+      console.log('DIGYLOG Response Status:', response.status);
     } else {
       // Generic format for other carriers
       shipmentData = {
