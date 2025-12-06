@@ -12,7 +12,7 @@ import {
   type OrderWithItems, type ProductWithCategory,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, gte, lte, and, sql, count, sum } from "drizzle-orm";
+import { eq, desc, gte, lte, and, sql, count, sum, notInArray } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -386,20 +386,40 @@ export class DatabaseStorage implements IStorage {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [statsToday] = await db
-      .select({
-        count: count(),
-        revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalPrice} AS DECIMAL)), 0)`,
-      })
+    // Excluded statuses from revenue calculations (no payment received)
+    const excludedStatuses = ['ANNULEE', 'RETOURNEE', 'INJOIGNABLE'];
+
+    // Orders count today (all orders)
+    const [ordersCountToday] = await db
+      .select({ count: count() })
       .from(orders)
       .where(gte(orders.createdAt, today));
 
-    const [statsTotal] = await db
+    // Revenue today (excluding cancelled/returned orders)
+    const [revenueToday] = await db
       .select({
-        count: count(),
         revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalPrice} AS DECIMAL)), 0)`,
       })
+      .from(orders)
+      .where(
+        and(
+          gte(orders.createdAt, today),
+          notInArray(orders.status, excludedStatuses)
+        )
+      );
+
+    // Total orders count
+    const [ordersCountTotal] = await db
+      .select({ count: count() })
       .from(orders);
+
+    // Total revenue (excluding cancelled/returned orders)
+    const [revenueTotalResult] = await db
+      .select({
+        revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalPrice} AS DECIMAL)), 0)`,
+      })
+      .from(orders)
+      .where(notInArray(orders.status, excludedStatuses));
 
     const [productsStats] = await db.select({ count: count() }).from(products);
 
@@ -412,23 +432,35 @@ export class DatabaseStorage implements IStorage {
     let revenueInPeriod: number | undefined;
 
     if (dateFrom && dateTo) {
-      const [statsPeriod] = await db
+      // Orders count in period
+      const [ordersCountPeriod] = await db
+        .select({ count: count() })
+        .from(orders)
+        .where(and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo)));
+
+      // Revenue in period (excluding cancelled/returned orders)
+      const [revenuePeriod] = await db
         .select({
-          count: count(),
           revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalPrice} AS DECIMAL)), 0)`,
         })
         .from(orders)
-        .where(and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo)));
+        .where(
+          and(
+            gte(orders.createdAt, dateFrom),
+            lte(orders.createdAt, dateTo),
+            notInArray(orders.status, excludedStatuses)
+          )
+        );
       
-      ordersInPeriod = Number(statsPeriod?.count || 0);
-      revenueInPeriod = Number(statsPeriod?.revenue || 0);
+      ordersInPeriod = Number(ordersCountPeriod?.count || 0);
+      revenueInPeriod = Number(revenuePeriod?.revenue || 0);
     }
 
     return {
-      ordersToday: Number(statsToday?.count || 0),
-      ordersTotal: Number(statsTotal?.count || 0),
-      revenueToday: Number(statsToday?.revenue || 0),
-      revenueTotal: Number(statsTotal?.revenue || 0),
+      ordersToday: Number(ordersCountToday?.count || 0),
+      ordersTotal: Number(ordersCountTotal?.count || 0),
+      revenueToday: Number(revenueToday?.revenue || 0),
+      revenueTotal: Number(revenueTotalResult?.revenue || 0),
       productsCount: Number(productsStats?.count || 0),
       pendingOrders: Number(pendingStats?.count || 0),
       ordersInPeriod,
