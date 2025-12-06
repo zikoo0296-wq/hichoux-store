@@ -495,9 +495,24 @@ export async function syncCarrierStatuses(): Promise<{ synced: number; errors: n
   }
 }
 
+// Structured result for bulk sync
+export interface SyncOrderResult {
+  orderId: number;
+  customerName: string;
+  status: 'success' | 'error' | 'skipped';
+  message: string;
+  trackingNumber?: string;
+}
+
 // Send all confirmed orders to carrier
-export async function sendAllConfirmedToCarrier(): Promise<{ sent: number; errors: number; details: string[] }> {
+export async function sendAllConfirmedToCarrier(): Promise<{ 
+  sent: number; 
+  errors: number; 
+  details: string[]; 
+  results: SyncOrderResult[] 
+}> {
   const details: string[] = [];
+  const results: SyncOrderResult[] = [];
   let sent = 0;
   let errors = 0;
 
@@ -513,13 +528,28 @@ export async function sendAllConfirmedToCarrier(): Promise<{ sent: number; error
       try {
         // Check if already has a shipping label using cached set
         if (labeledOrderIds.has(order.id)) {
-          details.push(`Order #${order.id}: Already has shipping label`);
+          const msg = `Already has shipping label`;
+          details.push(`Order #${order.id}: ${msg}`);
+          results.push({
+            orderId: order.id,
+            customerName: order.customerName,
+            status: 'skipped',
+            message: msg,
+          });
           continue;
         }
 
         const fullOrder = await storage.getOrder(order.id);
         if (!fullOrder) {
-          details.push(`Order #${order.id}: Order not found`);
+          const msg = `Order not found`;
+          details.push(`Order #${order.id}: ${msg}`);
+          results.push({
+            orderId: order.id,
+            customerName: order.customerName,
+            status: 'error',
+            message: msg,
+          });
+          errors++;
           continue;
         }
 
@@ -530,22 +560,44 @@ export async function sendAllConfirmedToCarrier(): Promise<{ sent: number; error
           // Add to labeled set to prevent duplicate sends within same sync
           labeledOrderIds.add(order.id);
           sent++;
-          details.push(`Order #${order.id}: Sent successfully - Tracking: ${result.trackingNumber}`);
+          const msg = `Sent successfully - Tracking: ${result.trackingNumber}`;
+          details.push(`Order #${order.id}: ${msg}`);
+          results.push({
+            orderId: order.id,
+            customerName: order.customerName,
+            status: 'success',
+            message: msg,
+            trackingNumber: result.trackingNumber,
+          });
         } else {
           errors++;
-          details.push(`Order #${order.id}: Failed - ${result.error}`);
+          const msg = result.error || 'Unknown error';
+          details.push(`Order #${order.id}: Failed - ${msg}`);
+          results.push({
+            orderId: order.id,
+            customerName: order.customerName,
+            status: 'error',
+            message: msg,
+          });
         }
       } catch (error: any) {
         errors++;
-        details.push(`Order #${order.id}: Error - ${error.message}`);
+        const msg = error.message || 'Unknown error';
+        details.push(`Order #${order.id}: Error - ${msg}`);
+        results.push({
+          orderId: order.id,
+          customerName: order.customerName,
+          status: 'error',
+          message: msg,
+        });
         console.error(`Error sending order #${order.id} to carrier:`, error);
       }
     }
 
-    return { sent, errors, details };
+    return { sent, errors, details, results };
   } catch (error: any) {
     console.error('Error sending confirmed orders to carrier:', error);
-    return { sent, errors: errors + 1, details: [...details, `Global error: ${error.message}`] };
+    return { sent, errors: errors + 1, details: [...details, `Global error: ${error.message}`], results };
   }
 }
 
