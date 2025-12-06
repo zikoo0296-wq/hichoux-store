@@ -1,4 +1,5 @@
 import { storage } from './storage';
+import { updateOrderStatusInSheet } from './google-sheets';
 import type { Order, OrderWithItems } from '@shared/schema';
 
 export interface ShippingLabelResponse {
@@ -569,6 +570,10 @@ export async function sendAllConfirmedToCarrier(): Promise<{
             message: msg,
             trackingNumber: result.trackingNumber,
           });
+          // Update Google Sheet status to "Sent"
+          await updateOrderStatusInSheet(order.id, 'Sent').catch(err => 
+            console.log(`Failed to update Google Sheet status for order ${order.id}:`, err.message)
+          );
         } else {
           errors++;
           const msg = result.error || 'Unknown error';
@@ -579,6 +584,10 @@ export async function sendAllConfirmedToCarrier(): Promise<{
             status: 'error',
             message: msg,
           });
+          // Update Google Sheet with error message
+          await updateOrderStatusInSheet(order.id, '', msg).catch(err => 
+            console.log(`Failed to update Google Sheet error for order ${order.id}:`, err.message)
+          );
         }
       } catch (error: any) {
         errors++;
@@ -590,6 +599,10 @@ export async function sendAllConfirmedToCarrier(): Promise<{
           status: 'error',
           message: msg,
         });
+        // Update Google Sheet with error message
+        await updateOrderStatusInSheet(order.id, '', msg).catch(err => 
+          console.log(`Failed to update Google Sheet error for order ${order.id}:`, err.message)
+        );
         console.error(`Error sending order #${order.id} to carrier:`, error);
       }
     }

@@ -7,7 +7,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists } from "./google-sheets";
+import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists, updateOrderStatusInSheet } from "./google-sheets";
 import { sendOrderToCarrier, syncCarrierStatuses, sendAllConfirmedToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
@@ -461,8 +461,17 @@ export async function registerRoutes(
 
       const result = await sendOrderToCarrier(order);
       if (!result.success) {
+        // Update Google Sheet with error
+        await updateOrderStatusInSheet(id, '', result.error || 'Unknown error').catch(err =>
+          console.log(`Failed to update Google Sheet error for order ${id}:`, err.message)
+        );
         return res.status(400).json({ error: result.error });
       }
+
+      // Update Google Sheet status to "Sent"
+      await updateOrderStatusInSheet(id, 'Sent').catch(err =>
+        console.log(`Failed to update Google Sheet status for order ${id}:`, err.message)
+      );
 
       const updatedOrder = await storage.updateOrderStatus(id, "ENVOYEE");
       res.json({ ...updatedOrder, shippingLabel: result });

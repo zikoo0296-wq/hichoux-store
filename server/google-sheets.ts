@@ -90,30 +90,27 @@ export async function syncOrderToGoogleSheets(order: Order, items: (OrderItem & 
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const productNames = items.map(item => `${item.product?.title} x${item.quantity}`).join(', ');
 
-    // Columns matching user's sheet:
-    // A: Order Reference, B: Name, C: Phone, D: Address, E: City, 
-    // F: COD Amount, G: Product SKU, H: Quantity, I: Notes, 
-    // J: Tracking Number Status, K: Errors, L: Date
+    // Columns matching user's sheet (like Ecomlik):
+    // A: Order Reference, B: Name, C: Phone, D: City, E: Address, 
+    // F: COD Amount, G: Product SKU, H: Quantity, I: Notes, J: Status
     const values = [
       [
         `CMD-${order.id}`,                                    // A: Order Reference
         order.customerName,                                   // B: Name
         order.phone,                                          // C: Phone
-        order.address,                                        // D: Address
-        order.city,                                           // E: City
+        order.city,                                           // D: City
+        order.address,                                        // E: Address
         parseFloat(order.totalPrice).toFixed(2),              // F: COD Amount
         productSkus,                                          // G: Product SKU
         totalQuantity.toString(),                             // H: Quantity
         productNames,                                         // I: Notes (products detail)
-        order.trackingNumber || '',                           // J: Tracking Number Status
-        '',                                                   // K: Errors
-        new Date(order.createdAt).toLocaleDateString('fr-FR'), // L: Date
+        '',                                                   // J: Status (empty, updated when sent to carrier)
       ],
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'A:L',
+      range: 'A:J',
       valueInputOption: 'RAW',
       requestBody: {
         values,
@@ -143,6 +140,60 @@ export async function syncOrderToGoogleSheets(order: Order, items: (OrderItem & 
       console.error('Error creating sync log:', logError);
     }
 
+    return false;
+  }
+}
+
+// Update the status column in Google Sheets for an order
+export async function updateOrderStatusInSheet(orderId: number, status: string, error?: string): Promise<boolean> {
+  try {
+    const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
+    const spreadsheetId = spreadsheetIdSetting?.value;
+
+    if (!spreadsheetId) {
+      console.log('Google Sheets ID not configured, skipping status update');
+      return false;
+    }
+
+    const sheets = await getUncachableGoogleSheetClient();
+    const orderRef = `CMD-${orderId}`;
+
+    // First, find the row with this order reference
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'A:A', // Get all order references in column A
+    });
+
+    const rows = response.data.values || [];
+    let rowIndex = -1;
+
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][0] === orderRef) {
+        rowIndex = i + 1; // Sheets are 1-indexed
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      console.log(`Order ${orderRef} not found in Google Sheet`);
+      return false;
+    }
+
+    // Update the Status column (J) for this row
+    const statusValue = error ? `Error: ${error}` : status;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `J${rowIndex}`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[statusValue]],
+      },
+    });
+
+    console.log(`Updated Google Sheet status for order ${orderId}: ${statusValue}`);
+    return true;
+  } catch (error: any) {
+    console.error('Error updating order status in Google Sheets:', error);
     return false;
   }
 }
