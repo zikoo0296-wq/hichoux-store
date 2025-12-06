@@ -69,7 +69,9 @@ async function getCarrierConfig(carrierName: CarrierName): Promise<CarrierConfig
 
 async function getActiveCarrier(): Promise<{ config: CarrierConfig; name: CarrierName } | null> {
   const defaultCarrierSetting = await storage.getSetting('default_carrier');
-  const defaultCarrier = (defaultCarrierSetting?.value as CarrierName) || 'DIGYLOG';
+  // Normalize carrier name to uppercase to match CARRIER_ENDPOINTS keys
+  const rawDefault = defaultCarrierSetting?.value || 'digylog';
+  const defaultCarrier = rawDefault.toUpperCase() as CarrierName;
   
   const carriers: CarrierName[] = ['DIGYLOG', 'OZON', 'CATHEDIS', 'SENDIT'];
   
