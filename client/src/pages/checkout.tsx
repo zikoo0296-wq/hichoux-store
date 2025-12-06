@@ -10,6 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DIGYLOG_CITIES } from "@/lib/digylog-cities";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ShoppingBag, Truck, CreditCard, Loader2 } from "lucide-react";
@@ -165,14 +173,25 @@ export default function CheckoutPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="city">{t("checkout.city")} *</Label>
-                      <Input
-                        id="city"
+                      <Select
                         value={formData.city}
-                        onChange={(e) => handleChange("city", e.target.value)}
-                        placeholder={t("checkout.cityPlaceholder")}
-                        className={errors.city ? "border-destructive" : ""}
-                        data-testid="input-city"
-                      />
+                        onValueChange={(value) => handleChange("city", value)}
+                      >
+                        <SelectTrigger
+                          id="city"
+                          className={errors.city ? "border-destructive" : ""}
+                          data-testid="input-city"
+                        >
+                          <SelectValue placeholder={t("checkout.cityPlaceholder")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DIGYLOG_CITIES.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {errors.city && (
                         <p className="text-sm text-destructive">{errors.city}</p>
                       )}
