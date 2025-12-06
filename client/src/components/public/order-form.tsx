@@ -14,7 +14,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DIGYLOG_CITIES } from "@/lib/digylog-cities";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ShoppingBag, Truck, CreditCard, CheckCircle, ArrowLeft } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
@@ -286,14 +294,20 @@ ${values.notes ? `ملاحظات: ${values.notes}` : ""}`;
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("order.city")} *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="المدينة" 
-                      className="rounded-xl"
-                      {...field}
-                      data-testid="input-city"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="rounded-xl" data-testid="input-city">
+                        <SelectValue placeholder="اختر المدينة" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-64">
+                      {DIGYLOG_CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
