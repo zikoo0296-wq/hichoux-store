@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists } from "./google-sheets";
-import { sendOrderToCarrier } from "./carrier";
+import { sendOrderToCarrier, syncCarrierStatuses, sendAllConfirmedToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
 import bcrypt from "bcrypt";
@@ -396,10 +396,23 @@ export async function registerRoutes(
       
       const fullOrder = await storage.getOrder(id);
       if (fullOrder) {
-        await sendOrderToCarrier(fullOrder).catch(err => 
-          console.log("Auto carrier sync attempt:", err.message)
+        // 1. Sync to Google Sheets
+        await syncOrderToGoogleSheets(fullOrder, fullOrder.items || []).catch(err => 
+          console.log("Auto Google Sheets sync attempt:", err.message)
         );
 
+        // 2. Send to carrier API
+        const carrierResult = await sendOrderToCarrier(fullOrder).catch(err => {
+          console.log("Auto carrier sync attempt:", err.message);
+          return null;
+        });
+
+        // If carrier sync successful, update status to ENVOYEE
+        if (carrierResult?.success) {
+          await storage.updateOrderStatus(id, "ENVOYEE");
+        }
+
+        // 3. Send customer notification
         const customerMessage = `Bonjour ${order.customerName},\n\nVotre commande #${id} a été confirmée.\nMontant: ${parseFloat(order.totalPrice).toFixed(2)} DH\nVous recevrez votre colis très bientôt.\n\nMerci de votre achat!`;
         
         if (process.env.ENABLE_SMS === "true") {
@@ -415,7 +428,9 @@ export async function registerRoutes(
         }
       }
       
-      res.json(order);
+      // Return updated order with latest status
+      const updatedOrder = await storage.getOrder(id);
+      res.json(updatedOrder || order);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -626,6 +641,26 @@ export async function registerRoutes(
     try {
       const labels = await storage.getShippingLabels();
       res.json(labels);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Sync all confirmed orders to carrier
+  app.post("/api/admin/carrier/sync-confirmed", requireOperatorOrAbove, async (req, res) => {
+    try {
+      const result = await sendAllConfirmedToCarrier();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Sync carrier statuses for all shipped orders
+  app.post("/api/admin/carrier/sync-statuses", requireOperatorOrAbove, async (req, res) => {
+    try {
+      const result = await syncCarrierStatuses();
+      res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

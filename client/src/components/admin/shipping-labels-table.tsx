@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Printer, Truck, Package } from "lucide-react";
+import { Download, Printer, Truck, Package, ExternalLink, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import type { ShippingLabel, Order } from "@shared/schema";
+import { Link } from "wouter";
+import { OrderStatusBadge } from "./order-status-badge";
+import type { ShippingLabel, Order, OrderStatus } from "@shared/schema";
 
 type ShippingLabelWithOrder = ShippingLabel & { order: Order };
 
@@ -90,6 +92,7 @@ export function ShippingLabelsTable() {
                 <TableRow>
                   <TableHead>Commande</TableHead>
                   <TableHead>Client</TableHead>
+                  <TableHead>Statut</TableHead>
                   <TableHead className="hidden md:table-cell">Transporteur</TableHead>
                   <TableHead className="hidden lg:table-cell">N° de suivi</TableHead>
                   <TableHead className="hidden md:table-cell">Date</TableHead>
@@ -110,6 +113,11 @@ export function ShippingLabelsTable() {
                         </span>
                       </div>
                     </TableCell>
+                    <TableCell>
+                      {label.order?.status && (
+                        <OrderStatusBadge status={label.order.status as OrderStatus} />
+                      )}
+                    </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <Badge variant="secondary">
                         {label.providerName || "Standard"}
@@ -123,6 +131,16 @@ export function ShippingLabelsTable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link href={`/admin/orders/${label.orderId}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Voir la commande"
+                            data-testid={`button-view-order-${label.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="icon"
