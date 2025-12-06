@@ -236,9 +236,16 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
     let pdfBase64: string | null = null;
     
     if (name === 'DIGYLOG') {
-      // DIGYLOG returns array: [{ num: "your num", tracking: "S1036052CA", ... }]
+      // DIGYLOG returns array: [{ isSuccess: true/false, num: "your num", tracking: "S1036052CA", errors: [...] }]
       if (Array.isArray(data) && data.length > 0) {
         const orderResult = data[0];
+        
+        // Check if DIGYLOG returned an error
+        if (orderResult.isSuccess === false) {
+          const errorMessages = orderResult.errors?.join(', ') || 'Unknown DIGYLOG error';
+          throw new Error(`DIGYLOG: ${errorMessages}`);
+        }
+        
         trackingNumber = orderResult.tracking || orderResult.trackingNumber || null;
         
         // If we have a BL ID, we can download labels later
@@ -249,6 +256,9 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
         trackingNumber = data.tracking;
       } else if (data.error) {
         throw new Error(`DIGYLOG: ${data.error}`);
+      } else if (data.isSuccess === false) {
+        const errorMessages = data.errors?.join(', ') || 'Unknown DIGYLOG error';
+        throw new Error(`DIGYLOG: ${errorMessages}`);
       }
     } else {
       // Generic response parsing for other carriers
