@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Table,
@@ -35,7 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Folder, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Folder, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 import type { Category } from "@shared/schema";
 
 export function CategoriesTable() {
@@ -43,6 +43,8 @@ export function CategoriesTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({ name: "", slug: "", image: "" });
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ["/api/admin/categories"],
@@ -116,6 +118,61 @@ export function CategoriesTable() {
     setFormData({ name: "", slug: "", image: "" });
     setEditingCategory(null);
     setIsDialogOpen(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataUpload,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'upload");
+      }
+
+      const data = await response.json();
+      setFormData({ ...formData, image: data.url });
+      toast({
+        title: "Image uploadée",
+        description: "L'image a été uploadée avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'uploader l'image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleEdit = (category: Category) => {
@@ -224,14 +281,66 @@ export function CategoriesTable() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="image">URL de l'image</Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                    data-testid="input-category-image"
-                  />
+                  <Label>Image</Label>
+                  <div className="space-y-3">
+                    {formData.image ? (
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
+                        <img
+                          src={formData.image}
+                          alt="Aperçu"
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6"
+                          onClick={removeImage}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="w-24 h-24 rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer hover-elevate"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="gap-2"
+                      >
+                        {isUploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        {isUploading ? "Upload..." : "Importer"}
+                      </Button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      data-testid="input-category-image-file"
+                    />
+                    <Input
+                      value={formData.image}
+                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      placeholder="Ou collez une URL d'image"
+                      className="text-sm"
+                      data-testid="input-category-image-url"
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
