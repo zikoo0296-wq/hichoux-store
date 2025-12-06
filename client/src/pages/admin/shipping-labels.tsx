@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { RefreshCw, Truck, Send, CheckCircle, AlertCircle, Loader2, XCircle, RotateCcw } from "lucide-react";
+import { RefreshCw, Truck, Send, CheckCircle, AlertCircle, Loader2, XCircle, RotateCcw, FileSpreadsheet } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -94,6 +94,7 @@ export default function AdminShippingLabelsPage() {
   });
 
   const [retryingId, setRetryingId] = useState<number | null>(null);
+  const [syncingFromSheetId, setSyncingFromSheetId] = useState<number | null>(null);
   
   const retryOrderMutation = useMutation({
     mutationFn: async (orderId: number) => {
@@ -114,6 +115,53 @@ export default function AdminShippingLabelsPage() {
     },
     onError: (error: Error) => {
       setRetryingId(null);
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync single order from Google Sheets (get corrected data)
+  const syncFromSheetMutation = useMutation({
+    mutationFn: async (orderId: number) => {
+      setSyncingFromSheetId(orderId);
+      const res = await apiRequest("POST", `/api/admin/google-sheets/sync-from/${orderId}`);
+      return res.json();
+    },
+    onSuccess: (data, orderId) => {
+      setSyncingFromSheetId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/orders"] });
+      toast({
+        title: "Données mises à jour",
+        description: `Commande #${orderId} mise à jour depuis Google Sheets. Vous pouvez maintenant réessayer l'envoi.`,
+      });
+    },
+    onError: (error: Error) => {
+      setSyncingFromSheetId(null);
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync all error orders from Google Sheets
+  const syncAllErrorsFromSheetMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/google-sheets/sync-errors");
+      return res.json();
+    },
+    onSuccess: (data: { updated: number; failed: number; details: string[] }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/orders"] });
+      toast({
+        title: "Synchronisation terminée",
+        description: `${data.updated} commandes mises à jour depuis Google Sheets`,
+      });
+    },
+    onError: (error: Error) => {
       toast({
         title: "Erreur",
         description: error.message,
@@ -204,19 +252,36 @@ export default function AdminShippingLabelsPage() {
                 <CardTitle className="text-lg">Commandes non envoyées</CardTitle>
                 <Badge variant="destructive">{failedOrders.length}</Badge>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSyncResults([]);
-                  setSyncDetails([]);
-                }}
-              >
-                Fermer
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => syncAllErrorsFromSheetMutation.mutate()}
+                  disabled={syncAllErrorsFromSheetMutation.isPending}
+                  className="gap-1"
+                  data-testid="button-sync-all-from-sheets"
+                >
+                  {syncAllErrorsFromSheetMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4" />
+                  )}
+                  Importer corrections
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSyncResults([]);
+                    setSyncDetails([]);
+                  }}
+                >
+                  Fermer
+                </Button>
+              </div>
             </div>
             <CardDescription>
-              Ces commandes ont échoué. Corrigez les erreurs et réessayez.
+              Ces commandes ont échoué. Corrigez dans Google Sheets, puis cliquez "Importer corrections" et réessayez.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -226,7 +291,7 @@ export default function AdminShippingLabelsPage() {
                   <TableHead className="w-20"># Cmd</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Erreur</TableHead>
-                  <TableHead className="w-24 text-right">Action</TableHead>
+                  <TableHead className="w-32 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,19 +301,36 @@ export default function AdminShippingLabelsPage() {
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell className="text-destructive text-sm">{order.message}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => retryOrderMutation.mutate(order.orderId)}
-                        disabled={retryingId === order.orderId}
-                        data-testid={`button-retry-order-${order.orderId}`}
-                      >
-                        {retryingId === order.orderId ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <RotateCcw className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => syncFromSheetMutation.mutate(order.orderId)}
+                          disabled={syncingFromSheetId === order.orderId}
+                          title="Importer depuis Google Sheets"
+                          data-testid={`button-sync-from-sheet-${order.orderId}`}
+                        >
+                          {syncingFromSheetId === order.orderId ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileSpreadsheet className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => retryOrderMutation.mutate(order.orderId)}
+                          disabled={retryingId === order.orderId}
+                          title="Réessayer l'envoi"
+                          data-testid={`button-retry-order-${order.orderId}`}
+                        >
+                          {retryingId === order.orderId ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

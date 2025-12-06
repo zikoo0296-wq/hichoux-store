@@ -46,6 +46,7 @@ export interface IStorage {
   getOrder(id: number): Promise<OrderWithItems | undefined>;
   createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  updateOrderDetails(id: number, details: { customerName?: string; phone?: string; city?: string; address?: string; notes?: string }): Promise<Order | undefined>;
   markOrderSynced(id: number): Promise<void>;
   getUnSyncedOrders(): Promise<Order[]>;
 
@@ -277,6 +278,22 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(orders)
       .set({ status, updatedAt: new Date() })
+      .where(eq(orders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateOrderDetails(id: number, details: { customerName?: string; phone?: string; city?: string; address?: string; notes?: string }): Promise<Order | undefined> {
+    const updateData: any = { updatedAt: new Date() };
+    if (details.customerName !== undefined) updateData.customerName = details.customerName;
+    if (details.phone !== undefined) updateData.phone = details.phone;
+    if (details.city !== undefined) updateData.city = details.city;
+    if (details.address !== undefined) updateData.address = details.address;
+    if (details.notes !== undefined) updateData.notes = details.notes;
+
+    const [updated] = await db
+      .update(orders)
+      .set(updateData)
       .where(eq(orders.id, id))
       .returning();
     return updated || undefined;

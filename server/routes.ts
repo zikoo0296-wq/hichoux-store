@@ -7,7 +7,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists, updateOrderStatusInSheet } from "./google-sheets";
+import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists, updateOrderStatusInSheet, syncOrderFromSheet, syncAllErrorOrdersFromSheet } from "./google-sheets";
 import { sendOrderToCarrier, syncCarrierStatuses, sendAllConfirmedToCarrier } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
@@ -854,6 +854,30 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Google Sheets sync error:", error);
       res.status(500).json({ error: error.message || "Failed to sync with Google Sheets" });
+    }
+  });
+
+  // Sync corrected order from Google Sheets back to database
+  app.post("/api/admin/google-sheets/sync-from/:id", requireOperatorOrAbove, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await syncOrderFromSheet(id);
+      if (!result.success) {
+        return res.status(400).json({ error: result.message });
+      }
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Sync all orders with errors from Google Sheets
+  app.post("/api/admin/google-sheets/sync-errors", requireOperatorOrAbove, async (req, res) => {
+    try {
+      const result = await syncAllErrorOrdersFromSheet();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

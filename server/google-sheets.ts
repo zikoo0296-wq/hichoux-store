@@ -230,6 +230,133 @@ export async function syncAllUnSyncedOrders(): Promise<{ synced: number; failed:
   }
 }
 
+// Read corrected order data from Google Sheets and update the database
+export async function syncOrderFromSheet(orderId: number): Promise<{ success: boolean; message: string; updates?: any }> {
+  try {
+    const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
+    const spreadsheetId = spreadsheetIdSetting?.value;
+
+    if (!spreadsheetId) {
+      return { success: false, message: 'Google Sheets ID not configured' };
+    }
+
+    const sheets = await getUncachableGoogleSheetClient();
+    const orderRef = `CMD-${orderId}`;
+
+    // Get all data from the sheet (columns A to J)
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'A:J',
+    });
+
+    const rows = response.data.values || [];
+    let orderRow: string[] | null = null;
+
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][0] === orderRef) {
+        orderRow = rows[i];
+        break;
+      }
+    }
+
+    if (!orderRow) {
+      return { success: false, message: `Order ${orderRef} not found in Google Sheet` };
+    }
+
+    // Parse the row data
+    // A: Order Reference, B: Name, C: Phone, D: City, E: Address, 
+    // F: COD Amount, G: Product SKU, H: Quantity, I: Notes, J: Status
+    const updates = {
+      customerName: orderRow[1] || '',
+      phone: orderRow[2] || '',
+      city: orderRow[3] || '',
+      address: orderRow[4] || '',
+      notes: orderRow[8] || '',
+    };
+
+    // Update the order in the database
+    await storage.updateOrderDetails(orderId, updates);
+
+    // Clear the error status in the sheet (set to empty for retry)
+    const rowIndex = rows.findIndex(r => r[0] === orderRef) + 1;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `J${rowIndex}`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [['']],
+      },
+    });
+
+    return { 
+      success: true, 
+      message: `Order ${orderId} updated from Google Sheets`, 
+      updates 
+    };
+  } catch (error: any) {
+    console.error('Error syncing order from Google Sheets:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+// Sync all orders with errors from Google Sheets
+export async function syncAllErrorOrdersFromSheet(): Promise<{ updated: number; failed: number; details: string[] }> {
+  try {
+    const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
+    const spreadsheetId = spreadsheetIdSetting?.value;
+
+    if (!spreadsheetId) {
+      return { updated: 0, failed: 0, details: ['Google Sheets ID not configured'] };
+    }
+
+    const sheets = await getUncachableGoogleSheetClient();
+
+    // Get all data from the sheet
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'A:J',
+    });
+
+    const rows = response.data.values || [];
+    let updated = 0;
+    let failed = 0;
+    const details: string[] = [];
+
+    for (let i = 1; i < rows.length; i++) { // Skip header row
+      const row = rows[i];
+      const orderRef = row[0];
+      const status = row[9] || '';
+
+      // Only process orders with error status
+      if (!orderRef?.startsWith('CMD-') || !status.startsWith('Error:')) {
+        continue;
+      }
+
+      const orderId = parseInt(orderRef.replace('CMD-', ''));
+      if (isNaN(orderId)) continue;
+
+      try {
+        const result = await syncOrderFromSheet(orderId);
+        if (result.success) {
+          updated++;
+          details.push(`Order #${orderId}: Updated from sheet`);
+        } else {
+          failed++;
+          details.push(`Order #${orderId}: ${result.message}`);
+        }
+      } catch (err: any) {
+        failed++;
+        details.push(`Order #${orderId}: ${err.message}`);
+      }
+    }
+
+    return { updated, failed, details };
+  } catch (error: any) {
+    console.error('Error syncing error orders from Google Sheets:', error);
+    return { updated: 0, failed: 0, details: [error.message] };
+  }
+}
+
 export async function ensureSheetExists(): Promise<void> {
   const spreadsheetIdSetting = await storage.getSetting('google_sheets_id');
   const spreadsheetId = spreadsheetIdSetting?.value;
