@@ -396,23 +396,12 @@ export async function registerRoutes(
       
       const fullOrder = await storage.getOrder(id);
       if (fullOrder) {
-        // 1. Sync to Google Sheets
+        // Sync to Google Sheets only - carrier sync is done manually via shipping labels page
         await syncOrderToGoogleSheets(fullOrder, fullOrder.items || []).catch(err => 
           console.log("Auto Google Sheets sync attempt:", err.message)
         );
 
-        // 2. Send to carrier API
-        const carrierResult = await sendOrderToCarrier(fullOrder).catch(err => {
-          console.log("Auto carrier sync attempt:", err.message);
-          return null;
-        });
-
-        // If carrier sync successful, update status to ENVOYEE
-        if (carrierResult?.success) {
-          await storage.updateOrderStatus(id, "ENVOYEE");
-        }
-
-        // 3. Send customer notification
+        // Send customer notification
         const customerMessage = `Bonjour ${order.customerName},\n\nVotre commande #${id} a été confirmée.\nMontant: ${parseFloat(order.totalPrice).toFixed(2)} DH\nVous recevrez votre colis très bientôt.\n\nMerci de votre achat!`;
         
         if (process.env.ENABLE_SMS === "true") {
