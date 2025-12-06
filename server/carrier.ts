@@ -19,26 +19,34 @@ export interface CarrierConfig {
 
 export type CarrierName = 'DIGYLOG' | 'OZON' | 'CATHEDIS' | 'SENDIT';
 
-const CARRIER_ENDPOINTS: Record<CarrierName, { create: string; track: string; quote: string }> = {
+const CARRIER_ENDPOINTS: Record<CarrierName, { create: string; track: string; quote: string; labels: string; historics: string }> = {
   DIGYLOG: {
-    create: '/api/shipments/create',
-    track: '/api/shipments/track',
-    quote: '/api/shipments/quote',
+    create: '/orders',
+    track: '/order',
+    quote: '/deliverycost',
+    labels: '/labels',
+    historics: '/historics',
   },
   OZON: {
     create: '/api/v1/orders',
     track: '/api/v1/tracking',
     quote: '/api/v1/rates',
+    labels: '/api/v1/labels',
+    historics: '/api/v1/history',
   },
   CATHEDIS: {
     create: '/shipping/create',
     track: '/shipping/track',
     quote: '/shipping/rates',
+    labels: '/shipping/labels',
+    historics: '/shipping/history',
   },
   SENDIT: {
     create: '/v1/shipments',
     track: '/v1/tracking',
     quote: '/v1/quotes',
+    labels: '/v1/labels',
+    historics: '/v1/history',
   },
 };
 
@@ -109,33 +117,85 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
     const { config, name } = activeCarrier;
     const endpoints = CARRIER_ENDPOINTS[name];
     
-    const shipmentData = {
-      order_id: order.id.toString(),
-      recipient: {
-        name: order.customerName,
-        phone: order.phone,
-        address: order.address,
-        city: order.city,
-      },
-      cod_amount: parseFloat(order.totalPrice),
-      notes: order.notes || '',
-      items: order.items?.map(item => ({
-        product_id: item.productId,
-        quantity: item.quantity,
-        unit_price: parseFloat(item.unitPrice),
-        name: item.product?.title || `Product #${item.productId}`,
-      })) || [],
-    };
+    if (!endpoints) {
+      throw new Error(`Carrier ${name} endpoints not configured`);
+    }
+    
+    let response: Response;
+    let shipmentData: any;
+    
+    if (name === 'DIGYLOG') {
+      // DIGYLOG specific format according to their API v2.4
+      // Get store and network from settings
+      const storeSetting = await storage.getSetting('carrier_digylog_store');
+      const networkSetting = await storage.getSetting('carrier_digylog_network');
+      
+      const storeName = storeSetting?.value || 'Default Store';
+      const networkId = networkSetting?.value ? parseInt(networkSetting.value) : 1;
+      
+      shipmentData = {
+        mode: 1, // Standard order
+        network: networkId,
+        store: storeName,
+        status: 1, // 1 = add & send orders immediately
+        checkDuplicate: 1, // Check for duplicate orders
+        orders: [{
+          num: `CMD-${order.id}`,
+          type: 1, // Normal delivery
+          name: order.customerName,
+          phone: order.phone,
+          address: order.address,
+          city: order.city,
+          price: parseFloat(order.totalPrice),
+          openproduct: 0,
+          port: 1, // Shipping cost paid by customer (COD)
+          note: order.notes || '',
+          refs: order.items?.map(item => ({
+            designation: item.product?.title || `Produit #${item.productId}`,
+            quantity: item.quantity,
+          })) || [{ designation: 'Commande', quantity: 1 }],
+        }],
+      };
+      
+      response = await fetch(config.apiUrl + endpoints.create, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `bearer ${config.apiKey}`,
+          'Referer': 'https://apiseller.digylog.com',
+        },
+        body: JSON.stringify(shipmentData),
+      });
+    } else {
+      // Generic format for other carriers
+      shipmentData = {
+        order_id: order.id.toString(),
+        recipient: {
+          name: order.customerName,
+          phone: order.phone,
+          address: order.address,
+          city: order.city,
+        },
+        cod_amount: parseFloat(order.totalPrice),
+        notes: order.notes || '',
+        items: order.items?.map(item => ({
+          product_id: item.productId,
+          quantity: item.quantity,
+          unit_price: parseFloat(item.unitPrice),
+          name: item.product?.title || `Product #${item.productId}`,
+        })) || [],
+      };
 
-    const response = await fetch(config.apiUrl + endpoints.create, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-        'X-API-Key': config.apiKey,
-      },
-      body: JSON.stringify(shipmentData),
-    });
+      response = await fetch(config.apiUrl + endpoints.create, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`,
+          'X-API-Key': config.apiKey,
+        },
+        body: JSON.stringify(shipmentData),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -143,12 +203,38 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
     }
 
     const data = await response.json();
+    
+    let trackingNumber: string | null = null;
+    let labelUrl: string | null = null;
+    let pdfBase64: string | null = null;
+    
+    if (name === 'DIGYLOG') {
+      // DIGYLOG returns array: [{ num: "your num", tracking: "S1036052CA", ... }]
+      if (Array.isArray(data) && data.length > 0) {
+        const orderResult = data[0];
+        trackingNumber = orderResult.tracking || orderResult.trackingNumber || null;
+        
+        // If we have a BL ID, we can download labels later
+        if (orderResult.bl) {
+          labelUrl = `${config.apiUrl}/bl/${orderResult.bl}/pdf`;
+        }
+      } else if (data.tracking) {
+        trackingNumber = data.tracking;
+      } else if (data.error) {
+        throw new Error(`DIGYLOG: ${data.error}`);
+      }
+    } else {
+      // Generic response parsing for other carriers
+      trackingNumber = data.tracking_number || data.trackingNumber || data.tracking_id || null;
+      labelUrl = data.label_url || data.labelUrl || null;
+      pdfBase64 = data.pdf_base64 || data.pdfBase64 || null;
+    }
 
     await storage.createShippingLabel({
       orderId: order.id,
-      labelUrl: data.label_url || data.labelUrl || null,
-      pdfBase64: data.pdf_base64 || data.pdfBase64 || null,
-      trackingNumber: data.tracking_number || data.trackingNumber || data.tracking_id || null,
+      labelUrl,
+      pdfBase64,
+      trackingNumber,
       providerName: name,
     });
 
@@ -156,14 +242,14 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
       orderId: order.id,
       action: 'SEND_TO_CARRIER',
       result: 'SUCCESS',
-      details: `Shipped via ${name} - Tracking: ${data.tracking_number || data.trackingNumber || 'N/A'}`,
+      details: `Shipped via ${name} - Tracking: ${trackingNumber || 'N/A'}`,
     });
 
     return {
       success: true,
-      labelUrl: data.label_url || data.labelUrl,
-      pdfBase64: data.pdf_base64 || data.pdfBase64,
-      trackingNumber: data.tracking_number || data.trackingNumber || data.tracking_id,
+      labelUrl: labelUrl || undefined,
+      pdfBase64: pdfBase64 || undefined,
+      trackingNumber: trackingNumber || undefined,
       providerName: name,
     };
   } catch (error: any) {
@@ -193,19 +279,37 @@ export async function getTrackingInfo(trackingNumber: string, carrierName: Carri
 
     const endpoints = CARRIER_ENDPOINTS[carrierName];
     
-    const response = await fetch(`${config.apiUrl}${endpoints.track}/${trackingNumber}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'X-API-Key': config.apiKey,
-      },
-    });
+    if (carrierName === 'DIGYLOG') {
+      // DIGYLOG uses GET /order/:tracking/infos for single order
+      // or GET /historics?trackings=tracking1,tracking2 for multiple
+      const response = await fetch(`${config.apiUrl}${endpoints.track}/${trackingNumber}/infos`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `bearer ${config.apiKey}`,
+          'Referer': 'https://apiseller.digylog.com',
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`Tracking API error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Tracking API error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } else {
+      const response = await fetch(`${config.apiUrl}${endpoints.track}/${trackingNumber}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'X-API-Key': config.apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Tracking API error: ${response.statusText}`);
+      }
+
+      return await response.json();
     }
-
-    return await response.json();
   } catch (error: any) {
     console.error('Error getting tracking info:', error);
     return { status: 'error', message: error.message };

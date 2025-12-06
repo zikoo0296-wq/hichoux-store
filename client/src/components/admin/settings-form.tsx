@@ -34,6 +34,8 @@ interface CarrierConfig {
   apiKey: string;
   apiUrl: string;
   accountId: string;
+  store?: string; // DIGYLOG specific
+  network?: string; // DIGYLOG specific
 }
 
 export function SettingsForm() {
@@ -53,7 +55,7 @@ export function SettingsForm() {
   });
 
   const [carriers, setCarriers] = useState<Record<CarrierId, CarrierConfig>>({
-    digylog: { enabled: false, apiKey: "", apiUrl: "https://api.digylog.ma/v1", accountId: "" },
+    digylog: { enabled: false, apiKey: "", apiUrl: "https://api.digylog.com/api/v2/seller", accountId: "", store: "", network: "1" },
     ozon: { enabled: false, apiKey: "", apiUrl: "https://api.ozon.ma/v1", accountId: "" },
     cathedis: { enabled: false, apiKey: "", apiUrl: "https://api.cathedis.ma/v1", accountId: "" },
     sendit: { enabled: false, apiKey: "", apiUrl: "https://api.sendit.ma/v1", accountId: "" },
@@ -85,6 +87,12 @@ export function SettingsForm() {
         const apiUrl = settingsMap.get(`carrier_${carrier.id}_api_url`) || carriers[carrier.id].apiUrl;
         const accountId = settingsMap.get(`carrier_${carrier.id}_account_id`) || "";
         newCarriers[carrier.id] = { enabled, apiKey, apiUrl, accountId };
+        
+        // DIGYLOG specific fields
+        if (carrier.id === "digylog") {
+          newCarriers[carrier.id].store = settingsMap.get(`carrier_digylog_store`) || "";
+          newCarriers[carrier.id].network = settingsMap.get(`carrier_digylog_network`) || "1";
+        }
       });
       setCarriers(newCarriers);
     }
@@ -126,6 +134,14 @@ export function SettingsForm() {
         settingsToSave[`carrier_${carrier.id}_api_key`] = config.apiKey;
         settingsToSave[`carrier_${carrier.id}_api_url`] = config.apiUrl;
         settingsToSave[`carrier_${carrier.id}_account_id`] = config.accountId;
+        
+        // DIGYLOG specific fields
+        if (carrier.id === "digylog" && config.store) {
+          settingsToSave[`carrier_digylog_store`] = config.store;
+        }
+        if (carrier.id === "digylog" && config.network) {
+          settingsToSave[`carrier_digylog_network`] = config.network;
+        }
       });
 
       const response = await apiRequest("POST", "/api/admin/settings", settingsToSave);
@@ -529,7 +545,7 @@ export function SettingsForm() {
                       <Input
                         value={carriers[carrier.id].apiUrl}
                         onChange={(e) => updateCarrier(carrier.id, "apiUrl", e.target.value)}
-                        placeholder={`https://api.${carrier.id}.ma/v1`}
+                        placeholder={carrier.id === "digylog" ? "https://api.digylog.com/api/v2/seller" : `https://api.${carrier.id}.ma/v1`}
                         data-testid={`input-carrier-${carrier.id}-url`}
                       />
                     </div>
@@ -544,15 +560,46 @@ export function SettingsForm() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Clé API</Label>
+                    <Label>Clé API (Token)</Label>
                     <Input
                       type="password"
                       value={carriers[carrier.id].apiKey}
                       onChange={(e) => updateCarrier(carrier.id, "apiKey", e.target.value)}
-                      placeholder="sk_live_..."
+                      placeholder={carrier.id === "digylog" ? "Votre token DIGYLOG" : "sk_live_..."}
                       data-testid={`input-carrier-${carrier.id}-key`}
                     />
                   </div>
+                  
+                  {carrier.id === "digylog" && (
+                    <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t">
+                      <div className="space-y-2">
+                        <Label>Nom du Store DIGYLOG *</Label>
+                        <Input
+                          value={carriers.digylog.store || ""}
+                          onChange={(e) => updateCarrier("digylog", "store", e.target.value)}
+                          placeholder="Nom de votre store (obligatoire)"
+                          data-testid="input-carrier-digylog-store"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Le nom de votre store tel que configuré dans DIGYLOG
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>ID Network DIGYLOG *</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={carriers.digylog.network || "1"}
+                          onChange={(e) => updateCarrier("digylog", "network", e.target.value)}
+                          placeholder="1"
+                          data-testid="input-carrier-digylog-network"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          ID du réseau (ex: 1 pour Agadir, 2 pour Casablanca)
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               )}
             </Card>
