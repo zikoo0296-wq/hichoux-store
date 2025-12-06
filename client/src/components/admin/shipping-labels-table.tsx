@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -11,46 +12,144 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Printer, Truck, Package, ExternalLink, Eye } from "lucide-react";
+import { Download, Printer, Truck, Package, ExternalLink, Eye, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Link } from "wouter";
 import { OrderStatusBadge } from "./order-status-badge";
+import { useToast } from "@/hooks/use-toast";
 import type { ShippingLabel, Order, OrderStatus } from "@shared/schema";
 
 type ShippingLabelWithOrder = ShippingLabel & { order: Order };
 
 export function ShippingLabelsTable() {
+  const { toast } = useToast();
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  
   const { data: labels, isLoading } = useQuery<ShippingLabelWithOrder[]>({
     queryKey: ["/api/admin/shipping-labels"],
   });
 
-  const handleDownload = (label: ShippingLabelWithOrder) => {
-    if (label.labelUrl) {
-      window.open(label.labelUrl, "_blank");
-    } else if (label.pdfBase64) {
+  const handleDownload = async (label: ShippingLabelWithOrder) => {
+    // If we have local content, use it directly
+    if (label.pdfBase64) {
       const link = document.createElement("a");
       link.href = `data:application/pdf;base64,${label.pdfBase64}`;
-      link.download = `etiquette-${label.orderId}.pdf`;
+      link.download = `etiquette-${label.trackingNumber || label.orderId}.pdf`;
       link.click();
+      return;
+    }
+    
+    // For DIGYLOG labels with tracking, fetch from API
+    if (label.providerName === 'DIGYLOG' && label.trackingNumber) {
+      try {
+        setDownloadingId(label.id);
+        const response = await fetch(`/api/admin/shipping-labels/${label.id}/download`);
+        
+        if (!response.ok) {
+          let errorMsg = 'Erreur lors du téléchargement';
+          try {
+            const error = await response.json();
+            errorMsg = error.error || errorMsg;
+          } catch {
+            errorMsg = await response.text() || errorMsg;
+          }
+          throw new Error(errorMsg);
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `etiquette-${label.trackingNumber}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Étiquette téléchargée",
+          description: `Étiquette ${label.trackingNumber} prête`,
+        });
+      } catch (error: any) {
+        toast({
+          title: "Erreur",
+          description: error.message || "Impossible de télécharger l'étiquette",
+          variant: "destructive",
+        });
+      } finally {
+        setDownloadingId(null);
+      }
+      return;
+    }
+    
+    // Fallback to label URL
+    if (label.labelUrl) {
+      window.open(label.labelUrl, "_blank");
+    } else {
+      toast({
+        title: "Aucune étiquette",
+        description: "Cette commande n'a pas encore d'étiquette disponible",
+        variant: "destructive",
+      });
     }
   };
 
-  const handlePrint = (label: ShippingLabelWithOrder) => {
-    if (label.labelUrl) {
-      const printWindow = window.open(label.labelUrl, "_blank");
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
-    } else if (label.pdfBase64) {
+  const handlePrint = async (label: ShippingLabelWithOrder) => {
+    // If we have local content, use it directly
+    if (label.pdfBase64) {
       const blob = new Blob(
         [Uint8Array.from(atob(label.pdfBase64), (c) => c.charCodeAt(0))],
         { type: "application/pdf" }
       );
       const url = URL.createObjectURL(blob);
       const printWindow = window.open(url, "_blank");
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+      return;
+    }
+    
+    // For DIGYLOG labels, fetch and print
+    if (label.providerName === 'DIGYLOG' && label.trackingNumber) {
+      try {
+        setDownloadingId(label.id);
+        const response = await fetch(`/api/admin/shipping-labels/${label.id}/download`);
+        
+        if (!response.ok) {
+          let errorMsg = 'Erreur lors du téléchargement';
+          try {
+            const error = await response.json();
+            errorMsg = error.error || errorMsg;
+          } catch {
+            errorMsg = await response.text() || errorMsg;
+          }
+          throw new Error(errorMsg);
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open(url, "_blank");
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+      } catch (error: any) {
+        toast({
+          title: "Erreur",
+          description: error.message || "Impossible d'imprimer l'étiquette",
+          variant: "destructive",
+        });
+      } finally {
+        setDownloadingId(null);
+      }
+      return;
+    }
+    
+    // Fallback to label URL
+    if (label.labelUrl) {
+      const printWindow = window.open(label.labelUrl, "_blank");
       if (printWindow) {
         printWindow.onload = () => {
           printWindow.print();
@@ -145,16 +244,22 @@ export function ShippingLabelsTable() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDownload(label)}
-                          title="Télécharger"
+                          disabled={downloadingId === label.id}
+                          title="Télécharger l'étiquette 10x10"
                           data-testid={`button-download-${label.id}`}
                         >
-                          <Download className="h-4 w-4" />
+                          {downloadingId === label.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handlePrint(label)}
-                          title="Imprimer"
+                          disabled={downloadingId === label.id}
+                          title="Imprimer l'étiquette"
                           data-testid={`button-print-${label.id}`}
                         >
                           <Printer className="h-4 w-4" />

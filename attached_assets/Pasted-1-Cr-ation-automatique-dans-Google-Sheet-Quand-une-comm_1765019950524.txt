@@ -1,0 +1,107 @@
+1. Création automatique dans Google Sheet
+
+Quand une commande dans mon admin passe au statut “Confirmée” :
+
+Elle doit être automatiquement ajoutée dans un Google Sheet sous cette forme (colonnes strictement identiques) :
+
+Order Reference
+
+Name
+
+Phone
+
+City
+
+Address
+
+COD Amount
+
+Product SKU
+
+Quantity
+
+Notes
+
+Status
+
+Errors
+
+La colonne Status doit être automatiquement mise à “Pending” (en attendant l’envoi vers Digylog).
+
+2. Bouton “Sync” dans l’Admin
+
+Un bouton Sync doit être ajouté dans l’admin.
+
+Fonctions du bouton Sync :
+
+✔ A. Envoyer automatiquement toutes les commandes “Pending” vers l’API Digylog
+
+Le système doit lire le Google Sheet.
+
+Pour chaque ligne où Status = Pending :
+
+Envoyer la commande vers Digylog via leur API.
+
+Si l’API répond OK, alors :
+
+Mettre Status = Sent
+
+Récupérer l’étiquette (format 10×10), fournie par Digylog
+
+Enregistrer l’étiquette pour impression (PDF ou image)
+
+L’afficher dans l’admin pour pouvoir l’imprimer
+
+Si l’API retourne une erreur :
+
+L’écrire dans la colonne Errors (exemple : “Invalid phone”, “City not supported”, etc.)
+
+Laisser Status = Pending ou le passer à Error (à définir ensemble)
+
+3. Affichage des étiquettes 10×10
+
+Après synchronisation réussie :
+
+Le ticket Digylog (étiquette 10×10) doit apparaître dans l’admin.
+
+Je dois pouvoir imprimer chaque étiquette individuellement.
+
+L’étiquette doit être associée à la commande correspondante.
+
+4. Mise à jour automatique des statuts depuis Digylog
+
+Le système doit :
+
+soit via le bouton Sync
+
+soit automatiquement via un cron (à définir)
+
+interroger l’API Digylog pour récupérer les statuts :
+
+Livré
+
+En cours de livraison
+
+Annulé
+
+Retourné
+
+Injoignable
+
+Etc.
+
+Et mettre à jour :
+
+La colonne Status dans le Google Sheet
+
+Le statut de la commande dans mon admin
+
+5. Comportement attendu
+
+Tout est centralisé : admin → Google Sheet → Digylog → retour statuts.
+
+Aucune double saisie.
+
+Les erreurs API doivent être visibles clairement dans la colonne “Errors”.
+
+Les étiquettes 10×10 doivent être imprimables juste après le Sync.

@@ -132,17 +132,19 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
       const storeSetting = await storage.getSetting('carrier_digylog_store');
       const networkSetting = await storage.getSetting('carrier_digylog_network');
       
-      // Decode HTML entities in store name (e.g., &amp; -> &)
+      // Decode HTML entities in store name (may be double-encoded)
       let storeName = storeSetting?.value || 'Default Store';
-      const originalStoreName = storeName;
-      // Decode common HTML entities
-      storeName = storeName
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-      console.log('DIGYLOG Store name - Original:', originalStoreName, '-> Decoded:', storeName);
+      // Decode multiple times to handle double-encoding
+      const decodeHtmlEntities = (str: string): string => {
+        return str
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+      };
+      // Apply decode twice to handle double-encoding
+      storeName = decodeHtmlEntities(decodeHtmlEntities(storeName));
       
       const networkId = networkSetting?.value ? parseInt(networkSetting.value) : 1;
       
@@ -595,5 +597,86 @@ export async function handleCarrierWebhook(
   } catch (error: any) {
     console.error('Error processing carrier webhook:', error);
     return { success: false, message: error.message };
+  }
+}
+
+// Helper to safely join URL parts without double slashes
+function joinUrl(base: string, path: string): string {
+  const baseClean = base.replace(/\/+$/, '');
+  const pathClean = path.replace(/^\/+/, '');
+  return `${baseClean}/${pathClean}`;
+}
+
+// Download labels from DIGYLOG (10x10 format)
+export async function downloadDigylogLabels(trackingNumbers: string[]): Promise<{ success: boolean; pdfBase64?: string; error?: string }> {
+  try {
+    const config = await getCarrierConfig('DIGYLOG');
+    
+    if (!config || !config.enabled) {
+      return { success: false, error: 'DIGYLOG is not configured' };
+    }
+    
+    // POST /labels with tracking numbers
+    const response = await fetch(joinUrl(config.apiUrl, '/labels'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/pdf',
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Referer': 'https://apiseller.digylog.com',
+      },
+      body: JSON.stringify({ orders: trackingNumbers }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DIGYLOG labels error:', response.status, errorText);
+      return { success: false, error: `Failed to download labels: ${response.status}` };
+    }
+    
+    // Get the PDF as base64
+    const buffer = await response.arrayBuffer();
+    const pdfBase64 = Buffer.from(buffer).toString('base64');
+    
+    return { success: true, pdfBase64 };
+  } catch (error: any) {
+    console.error('Error downloading DIGYLOG labels:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Download a single label by BL ID
+export async function downloadDigylogBlLabel(blId: string): Promise<{ success: boolean; pdfBase64?: string; error?: string }> {
+  try {
+    const config = await getCarrierConfig('DIGYLOG');
+    
+    if (!config || !config.enabled) {
+      return { success: false, error: 'DIGYLOG is not configured' };
+    }
+    
+    // GET /bl/:id/pdf
+    const response = await fetch(joinUrl(config.apiUrl, `/bl/${blId}/pdf`), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/pdf',
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Referer': 'https://apiseller.digylog.com',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DIGYLOG BL label error:', response.status, errorText);
+      return { success: false, error: `Failed to download BL label: ${response.status}` };
+    }
+    
+    // Get the PDF as base64
+    const buffer = await response.arrayBuffer();
+    const pdfBase64 = Buffer.from(buffer).toString('base64');
+    
+    return { success: true, pdfBase64 };
+  } catch (error: any) {
+    console.error('Error downloading DIGYLOG BL label:', error);
+    return { success: false, error: error.message };
   }
 }

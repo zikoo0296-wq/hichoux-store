@@ -666,7 +666,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/shipping-labels/:id/download", requireOperatorOrAbove, async (req, res) => {
+  app.get("/api/admin/shipping-labels/:id/download", requireOperatorOrAbove, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const label = await storage.getShippingLabel(id);
@@ -674,10 +674,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Label not found" });
       }
 
-      if (label.labelUrl) {
-        return res.redirect(label.labelUrl);
-      }
-
+      // If label already has PDF content, return it
       if (label.pdfBase64) {
         const buffer = Buffer.from(label.pdfBase64, "base64");
         res.setHeader("Content-Type", "application/pdf");
@@ -685,7 +682,52 @@ export async function registerRoutes(
         return res.send(buffer);
       }
 
+      // For DIGYLOG labels with tracking number, fetch from API
+      if (label.providerName === 'DIGYLOG' && label.trackingNumber) {
+        const { downloadDigylogLabels } = await import('./carrier');
+        const result = await downloadDigylogLabels([label.trackingNumber]);
+        if (result.success && result.pdfBase64) {
+          // Save the PDF to the label for future use
+          await storage.updateShippingLabelPdf(label.id, result.pdfBase64);
+          
+          const buffer = Buffer.from(result.pdfBase64, "base64");
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader("Content-Disposition", `attachment; filename=etiquette-${label.trackingNumber}.pdf`);
+          return res.send(buffer);
+        }
+        return res.status(500).json({ error: result.error || "Failed to download label from DIGYLOG" });
+      }
+
+      // If there's a label URL, redirect to it
+      if (label.labelUrl) {
+        return res.redirect(label.labelUrl);
+      }
+
       res.status(404).json({ error: "No label content available" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Download multiple labels at once (for batch printing)
+  app.post("/api/admin/shipping-labels/download-batch", requireOperatorOrAbove, async (req, res) => {
+    try {
+      const { trackingNumbers } = req.body;
+      if (!trackingNumbers || !Array.isArray(trackingNumbers) || trackingNumbers.length === 0) {
+        return res.status(400).json({ error: "trackingNumbers array is required" });
+      }
+
+      const { downloadDigylogLabels } = await import('./carrier');
+      const result = await downloadDigylogLabels(trackingNumbers);
+      
+      if (!result.success) {
+        return res.status(500).json({ error: result.error });
+      }
+
+      const buffer = Buffer.from(result.pdfBase64!, "base64");
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=etiquettes-${Date.now()}.pdf`);
+      res.send(buffer);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
