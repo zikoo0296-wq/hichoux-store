@@ -134,7 +134,15 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
       
       // Decode HTML entities in store name (e.g., &amp; -> &)
       let storeName = storeSetting?.value || 'Default Store';
-      storeName = storeName.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+      const originalStoreName = storeName;
+      // Decode common HTML entities
+      storeName = storeName
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+      console.log('DIGYLOG Store name - Original:', originalStoreName, '-> Decoded:', storeName);
       
       const networkId = networkSetting?.value ? parseInt(networkSetting.value) : 1;
       
@@ -166,7 +174,7 @@ export async function sendOrderToCarrier(order: OrderWithItems): Promise<Shippin
       const digylogHeaders = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `bearer ${config.apiKey}`,
+        'Authorization': `Bearer ${config.apiKey}`,
         'Referer': 'https://apiseller.digylog.com',
       };
       
