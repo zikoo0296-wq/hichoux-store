@@ -288,7 +288,20 @@ export async function registerRoutes(
   // Admin API routes
   app.get("/api/admin/dashboard", requireAnyRole, async (req, res) => {
     try {
-      const stats = await storage.getDashboardStats();
+      const { from, to } = req.query;
+      let dateFrom: Date | undefined;
+      let dateTo: Date | undefined;
+      
+      if (from) {
+        dateFrom = new Date(from as string);
+        dateFrom.setUTCHours(0, 0, 0, 0);
+      }
+      if (to) {
+        dateTo = new Date(to as string);
+        dateTo.setUTCHours(23, 59, 59, 999);
+      }
+      
+      const stats = await storage.getDashboardStats(dateFrom, dateTo);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -340,7 +353,20 @@ export async function registerRoutes(
 
   app.get("/api/admin/orders/recent", requireAnyRole, async (req, res) => {
     try {
-      const orders = await storage.getRecentOrders(10);
+      const { from, to } = req.query;
+      let dateFrom: Date | undefined;
+      let dateTo: Date | undefined;
+      
+      if (from) {
+        dateFrom = new Date(from as string);
+        dateFrom.setUTCHours(0, 0, 0, 0);
+      }
+      if (to) {
+        dateTo = new Date(to as string);
+        dateTo.setUTCHours(23, 59, 59, 999);
+      }
+      
+      const orders = await storage.getRecentOrders(10, dateFrom, dateTo);
       res.json(orders);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

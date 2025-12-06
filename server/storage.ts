@@ -42,7 +42,7 @@ export interface IStorage {
 
   // Orders
   getOrders(): Promise<Order[]>;
-  getRecentOrders(limit?: number): Promise<Order[]>;
+  getRecentOrders(limit?: number, dateFrom?: Date, dateTo?: Date): Promise<Order[]>;
   getOrder(id: number): Promise<OrderWithItems | undefined>;
   createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
@@ -71,13 +71,15 @@ export interface IStorage {
   setSetting(key: string, value: string | null): Promise<Setting>;
 
   // Analytics
-  getDashboardStats(): Promise<{
+  getDashboardStats(dateFrom?: Date, dateTo?: Date): Promise<{
     ordersToday: number;
     ordersTotal: number;
     revenueToday: number;
     revenueTotal: number;
     productsCount: number;
     pendingOrders: number;
+    ordersInPeriod?: number;
+    revenueInPeriod?: number;
   }>;
   getAnalytics(startDate: Date, endDate: Date): Promise<{
     revenue: number;
@@ -226,7 +228,15 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(orders).orderBy(desc(orders.createdAt));
   }
 
-  async getRecentOrders(limit = 10): Promise<Order[]> {
+  async getRecentOrders(limit = 10, dateFrom?: Date, dateTo?: Date): Promise<Order[]> {
+    if (dateFrom && dateTo) {
+      return db
+        .select()
+        .from(orders)
+        .where(and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo)))
+        .orderBy(desc(orders.createdAt))
+        .limit(limit);
+    }
     return db.select().from(orders).orderBy(desc(orders.createdAt)).limit(limit);
   }
 
@@ -372,7 +382,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Analytics
-  async getDashboardStats() {
+  async getDashboardStats(dateFrom?: Date, dateTo?: Date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -398,6 +408,22 @@ export class DatabaseStorage implements IStorage {
       .from(orders)
       .where(eq(orders.status, "NOUVELLE"));
 
+    let ordersInPeriod: number | undefined;
+    let revenueInPeriod: number | undefined;
+
+    if (dateFrom && dateTo) {
+      const [statsPeriod] = await db
+        .select({
+          count: count(),
+          revenue: sql<number>`COALESCE(SUM(CAST(${orders.totalPrice} AS DECIMAL)), 0)`,
+        })
+        .from(orders)
+        .where(and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo)));
+      
+      ordersInPeriod = Number(statsPeriod?.count || 0);
+      revenueInPeriod = Number(statsPeriod?.revenue || 0);
+    }
+
     return {
       ordersToday: Number(statsToday?.count || 0),
       ordersTotal: Number(statsTotal?.count || 0),
@@ -405,6 +431,8 @@ export class DatabaseStorage implements IStorage {
       revenueTotal: Number(statsTotal?.revenue || 0),
       productsCount: Number(productsStats?.count || 0),
       pendingOrders: Number(pendingStats?.count || 0),
+      ordersInPeriod,
+      revenueInPeriod,
     };
   }
 

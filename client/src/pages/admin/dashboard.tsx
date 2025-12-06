@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StatsCard } from "@/components/admin/stats-card";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import {
@@ -12,10 +15,14 @@ import {
   TrendingUp,
   ArrowRight,
   Eye,
+  CalendarIcon,
+  X,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import type { Order, OrderStatus } from "@shared/schema";
+import type { DateRange } from "react-day-picker";
 
 interface DashboardStats {
   ordersToday: number;
@@ -24,24 +31,132 @@ interface DashboardStats {
   revenueTotal: number;
   productsCount: number;
   pendingOrders: number;
+  ordersInPeriod?: number;
+  revenueInPeriod?: number;
 }
 
+const DATE_PRESETS = [
+  { label: "Aujourd'hui", getValue: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
+  { label: "Hier", getValue: () => ({ from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) }) },
+  { label: "7 derniers jours", getValue: () => ({ from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) }) },
+  { label: "30 derniers jours", getValue: () => ({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) }) },
+  { label: "Ce mois", getValue: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
+  { label: "Mois dernier", getValue: () => ({ from: startOfMonth(subMonths(new Date(), 1)), to: endOfMonth(subMonths(new Date(), 1)) }) },
+];
+
 export default function AdminDashboardPage() {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const dateParams = dateRange?.from && dateRange?.to
+    ? `?from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`
+    : "";
+
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/admin/dashboard"],
+    queryKey: ["/api/admin/dashboard", dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/dashboard${dateParams}`);
+      if (!res.ok) throw new Error("Erreur lors du chargement des statistiques");
+      return res.json();
+    },
   });
 
   const { data: recentOrders, isLoading: ordersLoading } = useQuery<Order[]>({
-    queryKey: ["/api/admin/orders/recent"],
+    queryKey: ["/api/admin/orders/recent", dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/orders/recent${dateParams}`);
+      if (!res.ok) throw new Error("Erreur lors du chargement des commandes");
+      return res.json();
+    },
   });
+
+  const handlePresetClick = (preset: typeof DATE_PRESETS[0]) => {
+    setDateRange(preset.getValue());
+    setIsCalendarOpen(false);
+  };
+
+  const clearDateFilter = () => {
+    setDateRange(undefined);
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <p className="text-muted-foreground mt-1">
-          Vue d'ensemble de votre activité
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de bord</h1>
+          <p className="text-muted-foreground mt-1">
+            Vue d'ensemble de votre activité
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal gap-2",
+                  !dateRange && "text-muted-foreground"
+                )}
+                data-testid="button-date-filter"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd MMM", { locale: fr })} -{" "}
+                      {format(dateRange.to, "dd MMM yyyy", { locale: fr })}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd MMM yyyy", { locale: fr })
+                  )
+                ) : (
+                  "Filtrer par date"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="flex">
+                <div className="border-r p-2 space-y-1">
+                  {DATE_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.label}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => handlePresetClick(preset)}
+                      data-testid={`preset-${preset.label.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+                <div className="p-3">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={1}
+                    locale={fr}
+                  />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {dateRange && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={clearDateFilter}
+              data-testid="button-clear-date-filter"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {statsLoading ? (
@@ -53,14 +168,14 @@ export default function AdminDashboardPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
-            title="Commandes aujourd'hui"
-            value={stats?.ordersToday || 0}
+            title={dateRange ? "Commandes (période)" : "Commandes aujourd'hui"}
+            value={dateRange ? (stats?.ordersInPeriod ?? stats?.ordersToday ?? 0) : (stats?.ordersToday || 0)}
             description={`${stats?.ordersTotal || 0} au total`}
             icon={ShoppingCart}
           />
           <StatsCard
-            title="Revenu aujourd'hui"
-            value={`${(stats?.revenueToday || 0).toFixed(2)} DH`}
+            title={dateRange ? "Revenu (période)" : "Revenu aujourd'hui"}
+            value={`${(dateRange ? (stats?.revenueInPeriod ?? stats?.revenueToday ?? 0) : (stats?.revenueToday || 0)).toFixed(2)} DH`}
             description={`${(stats?.revenueTotal || 0).toFixed(2)} DH au total`}
             icon={DollarSign}
           />
