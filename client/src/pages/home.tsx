@@ -34,7 +34,7 @@ export default function HomePage() {
         <Hero />
 
         {/* Products Section FIRST */}
-        <section className="max-w-7xl mx-auto px-4 py-12">
+        <section className="max-w-7xl mx-auto px-4 py-6 sm:py-12">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
             <div>
               <h2 className="text-xl md:text-2xl font-bold">{t("products.featured")}</h2>
@@ -49,13 +49,13 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
+                <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
               ))}
             </div>
           ) : featuredProducts && featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
