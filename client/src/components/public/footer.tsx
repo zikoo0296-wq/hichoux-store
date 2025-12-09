@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, Clock, Truck } from "lucide-react";
 import { SiWhatsapp, SiFacebook, SiInstagram } from "react-icons/si";
 import { useI18n } from "@/lib/i18n";
 import { useStoreConfig } from "@/lib/store-config";
+import zhLogo from "@assets/generated_images/z&h_fashion_brand_logo.png";
 
 export function PublicFooter() {
   const { t } = useI18n();
@@ -23,19 +24,13 @@ export function PublicFooter() {
           {/* Brand column */}
           <div>
             <Link href="/" className="flex items-center gap-3 mb-4">
-              {config?.storeLogo ? (
-                <img 
-                  src={config.storeLogo} 
-                  alt={config?.storeName || t("store.name")} 
-                  className="w-10 h-10 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>م</span>
-                </div>
-              )}
+              <img 
+                src={config?.storeLogo || zhLogo} 
+                alt={config?.storeName || "Z&H"} 
+                className="h-10 w-auto object-contain"
+              />
               <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-heading)' }}>
-                {config?.storeName || t("store.name")}
+                {config?.storeName || "Z&H"}
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">{t("footer.description")}</p>
@@ -103,7 +98,7 @@ export function PublicFooter() {
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>contact@matjarna.ma</span>
+                <span>contact@zh-store.ma</span>
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
@@ -135,7 +130,7 @@ export function PublicFooter() {
 
         {/* Bottom bar */}
         <div className="border-t mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} {t("store.name")}. {t("footer.rights")}</p>
+          <p>&copy; {new Date().getFullYear()} {config?.storeName || "Z&H"}. {t("footer.rights")}</p>
           <div className="flex items-center gap-4">
             <Link href="#" className="hover:text-foreground transition-colors">{t("footer.privacy")}</Link>
             <Link href="#" className="hover:text-foreground transition-colors">{t("footer.terms")}</Link>

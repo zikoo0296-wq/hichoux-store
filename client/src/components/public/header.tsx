@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useI18n, Language } from "@/lib/i18n";
 import { useStoreConfig } from "@/lib/store-config";
+import zhLogo from "@assets/generated_images/z&h_fashion_brand_logo.png";
 
 export function PublicHeader() {
   const [location] = useLocation();
@@ -41,20 +42,14 @@ export function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3">
-            {config?.storeLogo ? (
-              <img 
-                src={config.storeLogo} 
-                alt={config?.storeName || t("store.name")} 
-                className="w-10 h-10 rounded-xl object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>م</span>
-              </div>
-            )}
+            <img 
+              src={config?.storeLogo || zhLogo} 
+              alt={config?.storeName || "Z&H"} 
+              className="h-10 w-auto object-contain"
+            />
             <div className="hidden sm:block">
-              <span className="font-bold text-lg block" style={{ fontFamily: 'var(--font-heading)' }}>
-                {config?.storeName || t("store.name")}
+              <span className="font-bold text-xl block tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+                {config?.storeName || "Z&H"}
               </span>
               <span className="text-xs text-muted-foreground">{t("store.tagline")}</span>
             </div>
