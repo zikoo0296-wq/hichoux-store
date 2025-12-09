@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { syncOrderToGoogleSheets, syncAllUnSyncedOrders, ensureSheetExists, updateOrderStatusInSheet, syncOrderFromSheet, syncAllErrorOrdersFromSheet } from "./google-sheets";
-import { sendOrderToCarrier, syncCarrierStatuses, sendAllConfirmedToCarrier } from "./carrier";
+import { sendOrderToCarrier, syncCarrierStatuses, sendAllConfirmedToCarrier, handleCarrierWebhook } from "./carrier";
 import { sendSMS, sendWhatsApp } from "./twilio";
 import { insertOrderSchema, insertCategorySchema, insertProductSchema, orderFormSchema, UserRole, USER_ROLES } from "@shared/schema";
 import bcrypt from "bcrypt";
@@ -169,6 +169,28 @@ export async function registerRoutes(
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public webhook endpoint for carrier status updates (DIGYLOG, etc.)
+  // This endpoint is called automatically by the carrier when delivery status changes
+  app.post("/api/webhooks/carrier/:carrierName", async (req, res) => {
+    try {
+      const { carrierName } = req.params;
+      const payload = req.body;
+      
+      console.log(`Webhook received from ${carrierName}:`, JSON.stringify(payload));
+      
+      const result = await handleCarrierWebhook(carrierName.toUpperCase() as any, payload);
+      
+      if (result.success) {
+        res.json({ status: 'ok', message: result.message });
+      } else {
+        res.status(400).json({ status: 'error', message: result.message });
+      }
+    } catch (error: any) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ status: 'error', message: error.message });
     }
   });
 

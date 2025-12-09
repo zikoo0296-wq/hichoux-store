@@ -68,6 +68,7 @@ export const ORDER_STATUSES = [
   "INJOIGNABLE",
   "ENVOYEE",
   "LIVREE",
+  "RETOURNEE",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
