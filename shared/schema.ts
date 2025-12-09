@@ -324,6 +324,7 @@ export const orderFormSchema = z.object({
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
   city: z.string().min(2, "La ville est requise"),
   notes: z.string().optional(),
+  deliveryCost: z.number().optional(),
   items: z
     .array(
       z.object({
