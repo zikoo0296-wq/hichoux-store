@@ -33,11 +33,50 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
 
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+        {/* Products Section FIRST */}
+        <section className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold">{t("categories.title")}</h2>
-              <p className="text-muted-foreground mt-1">{t("categories.titleDesc")}</p>
+              <h2 className="text-xl md:text-2xl font-bold">{t("products.featured")}</h2>
+              <p className="text-muted-foreground text-sm mt-1">{t("products.featuredDesc")}</p>
+            </div>
+            <Link href="/products">
+              <Button variant="ghost" className="gap-2" data-testid="link-all-products">
+                {t("common.viewAll")}
+                <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+              </Button>
+            </Link>
+          </div>
+
+          {productsLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
+              ))}
+            </div>
+          ) : featuredProducts && featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-xl">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <Package className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium">{t("products.noProducts")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{t("products.comingSoon")}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Categories Section SECOND */}
+        <section className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold">{t("categories.title")}</h2>
+              <p className="text-muted-foreground text-sm mt-1">{t("categories.titleDesc")}</p>
             </div>
             <Link href="/categories">
               <Button variant="ghost" className="gap-2" data-testid="link-all-categories">
@@ -70,47 +109,11 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold">{t("products.featured")}</h2>
-              <p className="text-muted-foreground mt-1">{t("products.featuredDesc")}</p>
-            </div>
-            <Link href="/products">
-              <Button variant="ghost" className="gap-2" data-testid="link-all-products">
-                {t("common.viewAll")}
-                <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
-              </Button>
-            </Link>
-          </div>
-
-          {productsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
-              ))}
-            </div>
-          ) : featuredProducts && featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-muted/30 rounded-xl">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <Package className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="font-medium">{t("products.noProducts")}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{t("products.comingSoon")}</p>
-            </div>
-          )}
-        </section>
-
-        <section className="bg-primary text-primary-foreground py-16">
+        {/* CTA Section - simplified without free delivery mention */}
+        <section className="bg-primary text-primary-foreground py-12">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">{t("home.deliverySection")}</h2>
-            <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">{t("home.deliverySectionDesc")}</p>
+            <h2 className="text-xl md:text-2xl font-bold mb-3">{t("home.deliverySection")}</h2>
+            <p className="text-primary-foreground/80 max-w-xl mx-auto mb-6 text-sm">{t("home.deliverySectionDesc")}</p>
             <Link href="/products">
               <Button size="lg" variant="secondary" className="gap-2" data-testid="button-cta-shop">
                 {t("home.startShopping")}
