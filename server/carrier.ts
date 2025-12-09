@@ -408,20 +408,52 @@ export async function syncCarrierStatuses(): Promise<{ synced: number; errors: n
   let synced = 0;
   let errors = 0;
 
-  // Status mapping from carrier to internal status
+  // Status mapping from DIGYLOG carrier to internal status
+  // DIGYLOG statuses: Pending, Sent, En cours de livraison, Livré, Annulé, Retourné, Injoignable
   const statusMap: Record<string, string> = {
+    // DIGYLOG specific statuses (French)
+    'en attente': 'EN_ATTENTE',
+    'pending': 'EN_ATTENTE',
+    'sent': 'ENVOYEE',
+    'envoyee': 'ENVOYEE',
+    'envoye': 'ENVOYEE',
+    'pris en charge': 'ENVOYEE',
+    'ramassee': 'ENVOYEE',
+    'ramasse': 'ENVOYEE',
     'picked_up': 'ENVOYEE',
+    'pickup': 'ENVOYEE',
+    'en cours de livraison': 'ENVOYEE',
+    'en transit': 'ENVOYEE',
     'in_transit': 'ENVOYEE',
+    'in transit': 'ENVOYEE',
     'out_for_delivery': 'ENVOYEE',
-    'delivered': 'LIVREE',
+    'en cours': 'ENVOYEE',
+    'sortie pour livraison': 'ENVOYEE',
+    'en distribution': 'ENVOYEE',
+    'livre': 'LIVREE',
     'livree': 'LIVREE',
+    'delivered': 'LIVREE',
+    'livraison effectuee': 'LIVREE',
+    'echec': 'INJOIGNABLE',
     'failed': 'INJOIGNABLE',
     'unreachable': 'INJOIGNABLE',
     'injoignable': 'INJOIGNABLE',
-    'returned': 'RETOURNEE',
+    'non joignable': 'INJOIGNABLE',
+    'tentative echouee': 'INJOIGNABLE',
+    'client absent': 'INJOIGNABLE',
+    'no answer': 'INJOIGNABLE',
+    'retourne': 'RETOURNEE',
     'retournee': 'RETOURNEE',
-    'cancelled': 'ANNULEE',
+    'returned': 'RETOURNEE',
+    'return': 'RETOURNEE',
+    'retour': 'RETOURNEE',
+    'retour expediteur': 'RETOURNEE',
+    'annule': 'ANNULEE',
     'annulee': 'ANNULEE',
+    'cancelled': 'ANNULEE',
+    'canceled': 'ANNULEE',
+    'refuse': 'ANNULEE',
+    'refusee': 'ANNULEE',
   };
 
   try {
@@ -460,13 +492,28 @@ export async function syncCarrierStatuses(): Promise<{ synced: number; errors: n
           continue;
         }
 
-        const response = await fetch(`${config.apiUrl}${endpoints.track}/${label.trackingNumber}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${config.apiKey}`,
-            'X-API-Key': config.apiKey,
-          },
-        });
+        let response: Response;
+        let data: any;
+        
+        if (carrierName === 'DIGYLOG') {
+          // DIGYLOG uses GET /order/:tracking/infos for single order tracking
+          response = await fetch(`${config.apiUrl}${endpoints.track}/${label.trackingNumber}/infos`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `bearer ${config.apiKey}`,
+              'Accept': 'application/json',
+              'Referer': 'https://apiseller.digylog.com',
+            },
+          });
+        } else {
+          response = await fetch(`${config.apiUrl}${endpoints.track}/${label.trackingNumber}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${config.apiKey}`,
+              'X-API-Key': config.apiKey,
+            },
+          });
+        }
 
         if (!response.ok) {
           errors++;
@@ -474,8 +521,19 @@ export async function syncCarrierStatuses(): Promise<{ synced: number; errors: n
           continue;
         }
 
-        const data = await response.json();
-        const carrierStatus = (data.status || data.shipment_status || '').toLowerCase().replace(/[^a-z_]/g, '_');
+        data = await response.json();
+        
+        // DIGYLOG returns status in different format - normalize it
+        let carrierStatus = '';
+        if (carrierName === 'DIGYLOG') {
+          // DIGYLOG status could be in 'status', 'etat', or 'statut' field
+          carrierStatus = (data.status || data.etat || data.statut || '').toString().toLowerCase().trim();
+        } else {
+          carrierStatus = (data.status || data.shipment_status || '').toLowerCase().replace(/[^a-z_]/g, '_');
+        }
+        
+        // Remove accents for matching
+        carrierStatus = carrierStatus.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const mappedStatus = statusMap[carrierStatus];
 
         if (mappedStatus && label.order?.status !== mappedStatus) {
