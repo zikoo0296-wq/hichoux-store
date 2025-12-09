@@ -162,10 +162,17 @@ export async function registerRoutes(
         freeDeliveryThreshold: parseFloat(settingsMap.get("free_delivery_threshold") || "300"),
         storeName: settingsMap.get("store_name") || "متجرنا",
         storePhone: settingsMap.get("store_phone") || "+212 6 00 00 00 00",
+        storeEmail: settingsMap.get("store_email") || "",
+        storeAddress: settingsMap.get("store_address") || "",
+        storeDescription: settingsMap.get("store_description") || "",
         whatsappNumber: settingsMap.get("whatsapp_number") || "212600000000",
         defaultCarrier: settingsMap.get("default_carrier") || "digylog",
         storeLogo: settingsMap.get("store_logo") || null,
         storeIcon: settingsMap.get("store_icon") || null,
+        facebookUrl: settingsMap.get("facebook_url") || "",
+        instagramUrl: settingsMap.get("instagram_url") || "",
+        tiktokUrl: settingsMap.get("tiktok_url") || "",
+        youtubeUrl: settingsMap.get("youtube_url") || "",
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

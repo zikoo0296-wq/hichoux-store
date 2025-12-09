@@ -6,10 +6,17 @@ interface StoreConfig {
   freeDeliveryThreshold: number;
   storeName: string;
   storePhone: string;
+  storeEmail: string;
+  storeAddress: string;
+  storeDescription: string;
   whatsappNumber: string;
   defaultCarrier: string;
   storeLogo: string | null;
   storeIcon: string | null;
+  facebookUrl: string;
+  instagramUrl: string;
+  tiktokUrl: string;
+  youtubeUrl: string;
 }
 
 interface StoreConfigContextType {
@@ -22,10 +29,17 @@ const defaultConfig: StoreConfig = {
   freeDeliveryThreshold: 300,
   storeName: "متجرنا",
   storePhone: "+212 6 00 00 00 00",
+  storeEmail: "",
+  storeAddress: "",
+  storeDescription: "",
   whatsappNumber: "212600000000",
   defaultCarrier: "digylog",
   storeLogo: null,
   storeIcon: null,
+  facebookUrl: "",
+  instagramUrl: "",
+  tiktokUrl: "",
+  youtubeUrl: "",
 };
 
 const StoreConfigContext = createContext<StoreConfigContextType>({

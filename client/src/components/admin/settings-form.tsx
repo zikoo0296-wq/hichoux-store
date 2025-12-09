@@ -49,6 +49,13 @@ export function SettingsForm() {
     free_delivery_threshold: "300",
     store_name: "",
     store_phone: "",
+    store_email: "",
+    store_address: "",
+    store_description: "",
+    facebook_url: "",
+    instagram_url: "",
+    tiktok_url: "",
+    youtube_url: "",
     default_carrier: "digylog" as CarrierId,
     store_logo: "",
     store_icon: "",
@@ -75,6 +82,13 @@ export function SettingsForm() {
         free_delivery_threshold: settingsMap.get("free_delivery_threshold") || "300",
         store_name: settingsMap.get("store_name") || "",
         store_phone: settingsMap.get("store_phone") || "",
+        store_email: settingsMap.get("store_email") || "",
+        store_address: settingsMap.get("store_address") || "",
+        store_description: settingsMap.get("store_description") || "",
+        facebook_url: settingsMap.get("facebook_url") || "",
+        instagram_url: settingsMap.get("instagram_url") || "",
+        tiktok_url: settingsMap.get("tiktok_url") || "",
+        youtube_url: settingsMap.get("youtube_url") || "",
         default_carrier: (settingsMap.get("default_carrier") || "digylog") as CarrierId,
         store_logo: settingsMap.get("store_logo") || "",
         store_icon: settingsMap.get("store_icon") || "",
@@ -310,6 +324,44 @@ export function SettingsForm() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
+                  <Label htmlFor="store_email">Email</Label>
+                  <Input
+                    id="store_email"
+                    type="email"
+                    value={formData.store_email}
+                    onChange={(e) => setFormData({ ...formData, store_email: e.target.value })}
+                    placeholder="contact@example.com"
+                    data-testid="input-store-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="store_address">Adresse</Label>
+                  <Input
+                    id="store_address"
+                    value={formData.store_address}
+                    onChange={(e) => setFormData({ ...formData, store_address: e.target.value })}
+                    placeholder="123 Rue Example, Casablanca"
+                    data-testid="input-store-address"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="store_description">Description de la boutique</Label>
+                <Input
+                  id="store_description"
+                  value={formData.store_description}
+                  onChange={(e) => setFormData({ ...formData, store_description: e.target.value })}
+                  placeholder="Votre boutique en ligne pour..."
+                  data-testid="input-store-description"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Utilisé pour le SEO et la page À propos
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
                   <Label htmlFor="delivery_cost">Coût de livraison (DH)</Label>
                   <Input
                     id="delivery_cost"
@@ -468,6 +520,68 @@ export function SettingsForm() {
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <CardTitle>Réseaux sociaux</CardTitle>
+              </div>
+              <CardDescription>
+                Ajoutez les liens vers vos pages sur les réseaux sociaux
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="facebook_url">Facebook</Label>
+                  <Input
+                    id="facebook_url"
+                    type="url"
+                    value={formData.facebook_url}
+                    onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                    placeholder="https://facebook.com/votreboutique"
+                    data-testid="input-facebook-url"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instagram_url">Instagram</Label>
+                  <Input
+                    id="instagram_url"
+                    type="url"
+                    value={formData.instagram_url}
+                    onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                    placeholder="https://instagram.com/votreboutique"
+                    data-testid="input-instagram-url"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="tiktok_url">TikTok</Label>
+                  <Input
+                    id="tiktok_url"
+                    type="url"
+                    value={formData.tiktok_url}
+                    onChange={(e) => setFormData({ ...formData, tiktok_url: e.target.value })}
+                    placeholder="https://tiktok.com/@votreboutique"
+                    data-testid="input-tiktok-url"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="youtube_url">YouTube</Label>
+                  <Input
+                    id="youtube_url"
+                    type="url"
+                    value={formData.youtube_url}
+                    onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                    placeholder="https://youtube.com/@votreboutique"
+                    data-testid="input-youtube-url"
+                  />
                 </div>
               </div>
             </CardContent>

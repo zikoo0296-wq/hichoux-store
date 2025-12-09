@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Phone, Mail, MapPin, Clock, Truck } from "lucide-react";
-import { SiWhatsapp, SiFacebook, SiInstagram } from "react-icons/si";
+import { SiWhatsapp, SiFacebook, SiInstagram, SiTiktok, SiYoutube } from "react-icons/si";
 import { useI18n } from "@/lib/i18n";
 import { useStoreConfig } from "@/lib/store-config";
 import zhLogo from "@assets/generated_images/z&h_fashion_brand_logo.png";
@@ -27,7 +27,7 @@ export function PublicFooter() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">{t("footer.description")}</p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <a
                 href={`https://wa.me/${config?.whatsappNumber || "212600000000"}`}
                 target="_blank"
@@ -37,20 +37,50 @@ export function PublicFooter() {
               >
                 <SiWhatsapp className="h-5 w-5" />
               </a>
-              <a
-                href="#"
-                className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
-                data-testid="link-facebook"
-              >
-                <SiFacebook className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
-                data-testid="link-instagram"
-              >
-                <SiInstagram className="h-5 w-5" />
-              </a>
+              {config?.facebookUrl && (
+                <a
+                  href={config.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
+                  data-testid="link-facebook"
+                >
+                  <SiFacebook className="h-5 w-5" />
+                </a>
+              )}
+              {config?.instagramUrl && (
+                <a
+                  href={config.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
+                  data-testid="link-instagram"
+                >
+                  <SiInstagram className="h-5 w-5" />
+                </a>
+              )}
+              {config?.tiktokUrl && (
+                <a
+                  href={config.tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
+                  data-testid="link-tiktok"
+                >
+                  <SiTiktok className="h-5 w-5" />
+                </a>
+              )}
+              {config?.youtubeUrl && (
+                <a
+                  href={config.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-muted hover-elevate transition-colors"
+                  data-testid="link-youtube"
+                >
+                  <SiYoutube className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -89,14 +119,20 @@ export function PublicFooter() {
                 <Phone className="h-4 w-4 mt-0.5 shrink-0" />
                 <span dir="ltr">{config?.storePhone || "+212 6 00 00 00 00"}</span>
               </li>
-              <li className="flex items-start gap-3 text-muted-foreground">
-                <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>contact@zh-store.ma</span>
-              </li>
-              <li className="flex items-start gap-3 text-muted-foreground">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>{t("footer.location")}</span>
-              </li>
+              {config?.storeEmail && (
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <Mail className="h-4 w-4 mt-0.5 shrink-0" />
+                  <a href={`mailto:${config.storeEmail}`} className="hover:text-foreground transition-colors">
+                    {config.storeEmail}
+                  </a>
+                </li>
+              )}
+              {config?.storeAddress && (
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>{config.storeAddress}</span>
+                </li>
+              )}
             </ul>
           </div>
 
