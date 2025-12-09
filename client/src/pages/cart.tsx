@@ -126,9 +126,6 @@ export default function CartPage() {
                       )}
                     </span>
                   </div>
-                  {deliveryCost > 0 && (
-                    <p className="text-xs text-muted-foreground">{t("cart.freeDeliveryNote")}</p>
-                  )}
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>{t("cart.total")}</span>
