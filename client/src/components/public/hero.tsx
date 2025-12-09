@@ -18,7 +18,7 @@ export function Hero() {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L25 17l-5 3.5zM0 20h20v2.5L25 19l-5-3.5V18H0v2z' fill='%23000' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`
       }} />
       
-      <div className="max-w-7xl mx-auto px-4 py-10 md:py-16 relative">
+      <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Text content */}
           <div className="space-y-5 text-center lg:text-start">
@@ -29,13 +29,13 @@ export function Hero() {
             </div>
             
             {/* Main heading with brand */}
-            <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                 <span className="text-primary">Z&H</span>
                 <br />
                 {t("hero.title")}
               </h1>
-              <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
                 {t("hero.subtitle")}
               </p>
             </div>

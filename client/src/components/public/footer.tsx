@@ -11,13 +11,6 @@ export function PublicFooter() {
 
   return (
     <footer className="bg-card border-t mt-auto">
-      {/* Free delivery banner */}
-      <div className="bg-primary text-primary-foreground py-3">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2 text-sm font-medium">
-          <Truck className="h-4 w-4" />
-          {t("footer.freeDeliveryBanner")}
-        </div>
-      </div>
       
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
