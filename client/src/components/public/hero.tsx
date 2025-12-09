@@ -2,11 +2,36 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Truck, Shield, CreditCard, Sparkles, Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useIsMobile } from "@/hooks/use-mobile";
 import zhLogo from "@assets/generated_images/z&h_fashion_brand_logo.png";
 
 export function Hero() {
   const { t, isRTL } = useI18n();
+  const isMobile = useIsMobile();
 
+  // Compact mobile hero - just a small banner to show products faster
+  if (isMobile) {
+    return (
+      <section className="bg-primary text-primary-foreground">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <p className="text-sm font-medium truncate">{t("hero.deliveryBadge")}</p>
+            </div>
+            <Link href="/products">
+              <Button size="sm" variant="secondary" className="shrink-0 gap-1 rounded-full" data-testid="button-shop-now">
+                {t("hero.cta")}
+                {isRTL ? <ArrowLeft className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Full desktop hero
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
       {/* Decorative elements */}
@@ -18,7 +43,7 @@ export function Hero() {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L25 17l-5 3.5zM0 20h20v2.5L25 19l-5-3.5V18H0v2z' fill='%23000' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`
       }} />
       
-      <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 relative">
+      <div className="max-w-7xl mx-auto px-4 py-16 relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Text content */}
           <div className="space-y-5 text-center lg:text-start">
@@ -29,34 +54,34 @@ export function Hero() {
             </div>
             
             {/* Main heading with brand */}
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+            <div className="space-y-3">
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                 <span className="text-primary">Z&H</span>
                 <br />
                 {t("hero.title")}
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+              <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
                 {t("hero.subtitle")}
               </p>
             </div>
             
             {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-row gap-4 justify-center lg:justify-start">
               <Link href="/products">
-                <Button size="lg" className="w-full sm:w-auto gap-2 rounded-full text-base px-8 shadow-lg shadow-primary/20" data-testid="button-shop-now">
+                <Button size="lg" className="gap-2 rounded-full px-8 shadow-lg shadow-primary/20" data-testid="button-shop-now">
                   {t("hero.cta")}
                   {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
                 </Button>
               </Link>
               <Link href="/categories">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full text-base px-8" data-testid="button-categories">
+                <Button variant="outline" size="lg" className="rounded-full px-8" data-testid="button-categories">
                   {t("hero.browseCategories")}
                 </Button>
               </Link>
             </div>
             
             {/* Trust indicators */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-1">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -72,7 +97,7 @@ export function Hero() {
             </div>
           </div>
           
-          {/* Logo/Visual - smaller */}
+          {/* Logo/Visual */}
           <div className="hidden lg:flex justify-center items-center relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl scale-75" />
             <div className="relative bg-card/50 backdrop-blur-sm rounded-2xl p-8 border shadow-xl">
@@ -86,7 +111,7 @@ export function Hero() {
         </div>
         
         {/* Features grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-10">
+        <div className="grid grid-cols-3 gap-3 mt-8">
           <div className="flex items-center gap-3 p-4 rounded-xl bg-card/80 backdrop-blur-sm border hover-elevate transition-all">
             <div className="p-2 rounded-lg bg-primary/10 shrink-0">
               <Truck className="h-5 w-5 text-primary" />
