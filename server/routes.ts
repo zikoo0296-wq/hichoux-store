@@ -1054,6 +1054,10 @@ export async function registerRoutes(
 
   const express = await import("express");
   app.use("/uploads", express.default.static(uploadsDir));
+  
+  // Serve attached_assets (stock images for categories)
+  const assetsDir = path.join(process.cwd(), "attached_assets");
+  app.use("/attached_assets", express.default.static(assetsDir));
 
   // User Management Routes (Super Admin only)
   app.get("/api/admin/users", requireSuperAdmin, async (req, res) => {
